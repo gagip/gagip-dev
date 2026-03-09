@@ -1,0 +1,8 @@
+{
+  "name": "android",
+  "description": "Android 개발 전용 도구",
+  "version": "0.1.0",
+  "author": {
+    "name": "gagip"
+  }
+}

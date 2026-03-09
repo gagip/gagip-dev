@@ -1,0 +1,18 @@
+{
+  "name": "gagip-dev",
+  "owner": {
+    "name": "gagip"
+  },
+  "plugins": [
+    {
+      "name": "common",
+      "source": "./plugins/common",
+      "description": "언어/플랫폼 무관 공통 개발 도구"
+    },
+    {
+      "name": "android",
+      "source": "./plugins/android",
+      "description": "Android 개발 전용 도구"
+    }
+  ]
+}
