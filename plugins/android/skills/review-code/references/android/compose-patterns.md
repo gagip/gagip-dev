@@ -108,6 +108,30 @@ fun PlayerScreen(
 }
 ```
 
+### Nullable State 처리
+
+nullable state를 `?.let { }` 체인으로 처리하면 중첩이 깊어져 가독성이 떨어진다. 로컬 변수로 추출한 뒤 `if`로 제어하는 방식을 사용한다.
+
+```kotlin
+// Bad: let 중첩으로 깊이 증가
+uiState.track?.let { track ->
+    track.album?.let { album ->
+        Text(album.title)
+    }
+}
+
+// Good: 변수 추출 후 if 제어
+val track = uiState.track ?: return
+val album = track.album ?: return
+Text(album.title)
+
+// Good: 단순 단일 nullable은 변수 추출 후 if
+val track = uiState.track
+if (track != null) {
+    TrackItem(track = track)
+}
+```
+
 ### Private Helper Composable
 
 - 파일 내부에서만 쓰이는 Composable은 `private` 선언
