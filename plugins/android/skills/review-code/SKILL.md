@@ -5,6 +5,7 @@ description: >
   "코드 점검", "코드 검토" 등 코드 품질·개선 관련 요청을 할 때 반드시 사용한다.
   인자 없으면 git diff 기준, 인자 있으면 지정 파일/폴더 기준으로 가독성·정확성·보안·아키텍처·테스트를 체크한다.
 argument-hint: "[파일경로 또는 폴더경로 (선택)]"
+allowed-tools: Bash, Read, Glob, Grep
 ---
 
 ## 입력

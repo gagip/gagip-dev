@@ -4,6 +4,7 @@ description: >
   현재 브랜치의 변경사항을 분석하여 GitHub PR을 생성하거나 기존 PR 본문을 업데이트하는 스킬.
   "PR 만들어줘", "풀리퀘 올려줘", "PR 생성해줘", "pull request 만들어줘",
   "PR 본문 업데이트해줘" 등의 표현이 나오면 반드시 이 스킬을 사용할 것.
+allowed-tools: Bash
 ---
 
 ## 작업 순서

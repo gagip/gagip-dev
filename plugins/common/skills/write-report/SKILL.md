@@ -1,6 +1,7 @@
 ---
 name: write-report
 description: 작업이 끝났을 때 dev/report/에 작업 보고서를 작성. 사용자가 "보고서 써줘", "작업 정리해줘", "결과 기록해줘", "보고서 남겨줘" 등을 요청하거나, 작업 완료 후 문서화가 필요할 때 사용.
+allowed-tools: Read, Glob, Bash, Write
 ---
 
 ## 입력

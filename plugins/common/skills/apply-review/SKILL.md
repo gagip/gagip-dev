@@ -3,6 +3,7 @@ name: apply-review
 description: |
   GitHub PR 리뷰 코멘트를 가져와 우선순위 순으로 하나씩 검토하고, 사용자 승인 후 코드 수정까지 수행.
   "PR 리뷰 반영해줘", "코드리뷰 코멘트 처리해줘", "리뷰 적용해", "리뷰 피드백 수정해줘", "review comment 처리" 같은 요청에 반드시 이 스킬을 사용할 것.
+allowed-tools: Bash, Read, Edit
 ---
 
 ## 요구사항
