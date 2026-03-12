@@ -9,7 +9,6 @@ import os
 import sys
 
 
-BLOCKED_FILENAMES = {".env", ".env.local", ".env.production", ".env.development"}
 BLOCKED_EXTENSIONS = {".pem", ".key", ".p12", ".pfx", ".jks", ".keystore"}
 BLOCKED_PATTERNS = ["secrets", "credentials", "service-account"]
 
@@ -18,7 +17,7 @@ def is_sensitive(file_path: str) -> bool:
     basename = os.path.basename(file_path).lower()
     _, ext = os.path.splitext(basename)
 
-    if basename in BLOCKED_FILENAMES:
+    if basename.startswith(".env"):
         return True
     if ext in BLOCKED_EXTENSIONS:
         return True
