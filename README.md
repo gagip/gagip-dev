@@ -97,6 +97,12 @@ Git 커밋 이력을 분석해 CHANGELOG 초안을 작성하고, 승인 후 `CHA
 /write-test src/feature/login/LoginViewModel.kt
 ```
 
+## 에이전트
+
+### `skill-consistency-reviewer` (common)
+
+플러그인 내 모든 SKILL.md를 분석하여 `[STOP]` 패턴, `allowed-tools` 일관성, 출력 형식 통일성을 점검하고 리포트를 출력한다.
+
 ## 설치
 
 ```bash
