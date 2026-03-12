@@ -55,9 +55,9 @@ def main():
         print(json.dumps({}))
         sys.exit(0)
 
-    # 커밋 성공 여부 확인 (exit code 0이어야 커밋된 것)
-    exit_code = input_data.get("tool_response", {}).get("exitCode", 1)
-    if exit_code != 0:
+    # 커밋 성공 여부 확인 (is_error가 True면 커밋 실패)
+    is_error = input_data.get("tool_response", {}).get("is_error", False)
+    if is_error:
         print(json.dumps({}))
         sys.exit(0)
 
