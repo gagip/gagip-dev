@@ -1,6 +1,18 @@
 {
-  "description": "common plugin hooks - commit message convention validation",
+  "description": "common plugin hooks - commit message convention validation, sensitive file protection",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/block_sensitive_files.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Bash",
