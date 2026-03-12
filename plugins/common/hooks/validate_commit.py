@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""PostToolUse hook: validate commit message convention.
+"""PreToolUse hook: validate commit message convention before committing.
 
-커밋 명령 실행 후 커밋 메시지가 컨벤션을 따르는지 검증한다.
+커밋 명령 실행 전 커밋 메시지가 컨벤션을 따르는지 검증하고, 위반 시 차단한다.
 형식: <type>: <요약>
 허용 type: feat, fix, refactor, style, test, docs, chore, ai
 """
 
 import json
 import re
-import subprocess
 import sys
 
 
@@ -23,19 +22,19 @@ def is_commit_command(command: str) -> bool:
     return "git commit" in command and "--no-verify" not in command
 
 
-def get_last_commit_message() -> str | None:
-    """가장 최근 커밋 메시지의 첫 줄을 반환한다."""
-    try:
-        result = subprocess.run(
-            ["git", "log", "-1", "--pretty=%s"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        if result.returncode == 0:
-            return result.stdout.strip()
-    except Exception:
-        pass
+def extract_commit_message(command: str) -> str | None:
+    """-m 플래그 또는 HEREDOC에서 커밋 메시지 첫 줄을 추출한다."""
+    # -m "..." 또는 -m '...' 패턴
+    m = re.search(r'-m\s+["\']([^\n"\']+)', command)
+    if m:
+        return m.group(1).strip()
+
+    # HEREDOC 패턴: cat <<'EOF' ... EOF 또는 cat <<EOF ... EOF
+    m = re.search(r"cat\s+<<'?EOF'?\s*\n(.*?)\nEOF", command, re.DOTALL)
+    if m:
+        first_line = m.group(1).strip().splitlines()[0]
+        return first_line.strip()
+
     return None
 
 
@@ -55,24 +54,19 @@ def main():
         print(json.dumps({}))
         sys.exit(0)
 
-    # 커밋 성공 여부 확인 (is_error가 True면 커밋 실패)
-    is_error = input_data.get("tool_response", {}).get("is_error", False)
-    if is_error:
-        print(json.dumps({}))
-        sys.exit(0)
-
-    subject = get_last_commit_message()
+    subject = extract_commit_message(command)
     if not subject:
+        # 메시지를 추출할 수 없으면 통과 (interactive 커밋 등)
         print(json.dumps({}))
         sys.exit(0)
 
     if not CONVENTION_PATTERN.match(subject):
         message = (
-            f"⚠️ 커밋 메시지 컨벤션 위반: '{subject}'\n"
+            f"커밋 메시지 컨벤션 위반: '{subject}'\n"
             f"형식: <type>: <요약> (예: feat: 로그인 기능 추가)\n"
             f"허용 type: {', '.join(sorted(VALID_TYPES))}"
         )
-        print(json.dumps({"systemMessage": message}))
+        print(json.dumps({"decision": "block", "reason": message}))
     else:
         print(json.dumps({}))
 

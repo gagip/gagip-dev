@@ -20,9 +20,7 @@
             "timeout": 10
           }
         ]
-      }
-    ],
-    "PostToolUse": [
+      },
       {
         "matcher": "Bash",
         "hooks": [

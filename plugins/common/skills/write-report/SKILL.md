@@ -1,6 +1,7 @@
 ---
 name: write-report
-description: 작업이 끝났을 때 dev/report/에 작업 보고서를 작성. 사용자가 "보고서 써줘", "작업 정리해줘", "결과 기록해줘", "보고서 남겨줘" 등을 요청하거나, 작업 완료 후 문서화가 필요할 때 사용.
+description: dev/report/에 작업 보고서를 작성하는 스킬. 사용자가 명시적으로 보고서 작성을 지시하거나, implement 스킬 등 다른 스킬이 보고서 작성이 필요하다고 판단할 때만 호출할 것. 커밋, 일반 코드 수정 등 단순 작업 후에는 호출하지 말 것.
+user-invocable: false
 allowed-tools: Read, Glob, Bash, Write
 ---
 
@@ -76,7 +77,7 @@ dev/active/<task-name>/ 폴더를 삭제할까요?
 완료: dev/report/<task-name>-YYYY-MM-DD.md
 ```
 
-## 원칙
+## 행동 원칙
 
 - 보고서는 간결하게, 섹션당 5줄 이내
 - 코드 발췌 금지 (파일 경로와 함수명 언급으로 대체)
