@@ -4,7 +4,7 @@ description: >
   변경사항을 분석하여 커밋 메시지를 작성하고 git 커밋을 수행하는 스킬.
   사용자가 "커밋해줘", "변경사항 정리해줘", "커밋 메시지 만들어줘", "git commit" 등의
   표현을 사용할 때 반드시 이 스킬을 사용할 것.
-allowed-tools: Bash
+allowed-tools: Bash, Read
 ---
 
 ## 작업 순서
