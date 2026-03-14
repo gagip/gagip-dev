@@ -24,16 +24,16 @@ def is_commit_command(command: str) -> bool:
 
 def extract_commit_message(command: str) -> str | None:
     """-m 플래그 또는 HEREDOC에서 커밋 메시지 첫 줄을 추출한다."""
-    # -m "..." 또는 -m '...' 패턴
-    m = re.search(r'-m\s+["\']([^\n"\']+)', command)
-    if m:
-        return m.group(1).strip()
-
-    # HEREDOC 패턴: cat <<'EOF' ... EOF 또는 cat <<EOF ... EOF
+    # HEREDOC 패턴 우선: -m "$(cat <<'EOF' ... EOF)" 또는 cat <<'EOF' ... EOF
     m = re.search(r"cat\s+<<'?EOF'?\s*\n(.*?)\nEOF", command, re.DOTALL)
     if m:
         first_line = m.group(1).strip().splitlines()[0]
         return first_line.strip()
+
+    # -m "..." 또는 -m '...' 패턴
+    m = re.search(r'-m\s+["\']([^\n"\']+)', command)
+    if m:
+        return m.group(1).strip()
 
     return None
 
