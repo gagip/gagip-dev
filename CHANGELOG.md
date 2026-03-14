@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [common/0.2.2] — 2026-03-14
+
+### 🐛 Bug Fixes
+- 훅 실행 명령을 `python3` → `python`으로 변경 (Windows 호환) ([`e62549f`])
+- `validate_commit` 훅의 HEREDOC 커밋 메시지 파싱 순서 수정 ([`6c5418e`])
+- 커밋 스킬 `allowed-tools`에 `Read` 추가 ([`41d81ce`])
+
+### ✨ New Features
+- `release` 스킬 플러그인 및 버전 자동 감지로 개선 ([`059bef6`])
+
 ## [0.2.0] — 2026-03-13
 
 ### ✨ New Features
