@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/block_sensitive_files.py",
+            "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/block_sensitive_files.py",
             "timeout": 10
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/block_sensitive_files.py",
+            "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/block_sensitive_files.py",
             "timeout": 10
           }
         ]
@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/validate_commit.py",
+            "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/validate_commit.py",
             "timeout": 10
           }
         ]
