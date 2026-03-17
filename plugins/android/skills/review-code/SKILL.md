@@ -46,7 +46,8 @@ $ARGUMENTS
 **아키텍처** _(플랫폼별 references 기준 적용)_
 - 레이어 규칙이 지켜지는가
 - 의존성 방향이 올바른가
-- 플랫폼별 패턴이 프로젝트 규칙과 일치하는가
+- 플랫폼별 패턴이 프로젝트 규칙과 일치하는가 (`references/android/kotlin-conventions.md`, `references/android/compose-patterns.md` 기준)
+- Service 관련 코드는 `references/android/service-guidelines.md` 기준 적용
 
 **테스트**
 - 핵심 기능의 테스트가 있는가 (핵심 흐름과 경계 조건 중심)
