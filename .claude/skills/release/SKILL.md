@@ -23,6 +23,7 @@ git diff --name-only HEAD~1..HEAD 2>/dev/null || git diff --name-only --cached
 - `plugins/common/` 파일 변경 → common 플러그인만 처리
 - `plugins/android/` 파일 변경 → android 플러그인만 처리
 - 둘 다 변경 → 변경된 두 플러그인 모두 순서대로 처리
+- `plugins/` 외부 파일 변경은 무시한다
 
 **버전 유형이 없는 경우**: 마지막 태그 이후 커밋 이력을 분석하여 자동 판단
 
