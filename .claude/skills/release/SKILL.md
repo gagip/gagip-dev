@@ -30,7 +30,7 @@ git diff --name-only HEAD~1..HEAD 2>/dev/null || git diff --name-only --cached
 git log <마지막 태그>..HEAD --oneline 2>/dev/null || git log --oneline
 ```
 
-판단 기준:
+자동 판단 기준 (초안용):
 - `feat!`, `fix!`, `BREAKING CHANGE` 포함 → `major`
 - `feat:` 포함 → `minor`
 - 그 외 (`fix:`, `chore:`, `docs:` 등) → `patch`
@@ -39,6 +39,28 @@ git log <마지막 태그>..HEAD --oneline 2>/dev/null || git log --oneline
 ```bash
 cat plugins/<플러그인명>/.claude-plugin/plugin.json
 ```
+
+자동 판단 후 사용자에게 반드시 확인:
+
+```
+마지막 태그 이후 변경사항:
+- <커밋 해시> <커밋 메시지>
+- <커밋 해시> <커밋 메시지>
+...
+
+변경 내용 요약:
+- <변경된 파일/스킬명>: <한 줄 설명>
+...
+
+커밋 이력을 분석한 결과 <판단 유형>으로 판단했습니다.
+
+버전 유형을 선택해주세요 (엔터 시 <판단 유형> 적용):
+1. patch (x.y.z+1)
+2. minor (x.y+1.0)
+3. major (x+1.0.0)
+```
+
+사용자가 다른 유형을 선택하면 해당 유형으로 버전을 계산한다.
 
 ---
 
