@@ -1,7 +1,7 @@
 {
   "name": "common",
   "description": "언어/플랫폼 무관 공통 개발 도구",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "author": {
     "name": "gagip"
   }
