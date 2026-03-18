@@ -102,6 +102,9 @@ Android 프로젝트(`.kt` 파일, `build.gradle`, `AndroidManifest.xml` 등이 
 `docs/testing.md`가 있으면 해당 문서의 규칙을 따른다. 없으면 아래 기본 원칙 적용:
 
 - 테스트 이름: `상황 시 기대 결과` 형식으로 의도를 명확하게
+- 시나리오 서술: 사용자 동작과 관찰 가능한 결과로 서술, 내부 상태값/메서드명 직접 노출 금지
+  - ❌ `PomodoroPlayPause → timerState==RUNNING`
+  - ✅ `재생 버튼을 누르면 → 집중 타이머가 시작된다`
 - 검증 대상: 행동(behavior), 내부 구현 세부사항 금지
 - Fake/Mock 위치: 대상 파일과 같은 feature 패키지 하위에 배치
 
