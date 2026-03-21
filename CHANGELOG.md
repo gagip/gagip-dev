@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## [common/0.4.0] — 2026-03-22
+
+### ♻️ Refactoring
+- 플러그인 핵심 워크플로 스킬만 유지 — `implement`, `create-issue`, `write-report` 등 제거, `apply-review`·`commit`·`create-pr`·`setup-skills` 유지 ([`20941a6`])
+
+### 🐛 Bug Fixes
+- `setup-skills` 스킬 설명·트리거·지침 개선 ([`2a45fb0`])
+
+---
+
+## [android/0.4.0] — 2026-03-22
+
+### ♻️ Refactoring
+- 플러그인 리뷰/테스트 스킬만 유지 — 기존 스킬 정리 ([`14da819`])
+
+### 🐛 Bug Fixes
+- `reference` 문서를 기술 철학에 맞게 수정 ([`bb39a0e`])
+
+---
+
 ## [android/0.3.1] — 2026-03-18
 
 ### ✨ New Features
