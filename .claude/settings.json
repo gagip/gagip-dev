@@ -1,5 +1,23 @@
 {
   "enabledPlugins": {
     "plugin-dev@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Skill(plugin-commit)",
+      "Skill(release)",
+      "WebFetch(*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git tag*)",
+      "Bash(git push*)",
+      "Bash(ls*)",
+      "Bash(bash .claude/skills/*/scripts/*.sh*)",
+      "Bash(python .claude/skills/*/scripts/*.py*)"
+    ]
   }
 }
