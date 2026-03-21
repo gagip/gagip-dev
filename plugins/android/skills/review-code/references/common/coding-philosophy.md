@@ -136,12 +136,16 @@ class OrderService:
 
 ## 5. 에러 표현 (Error Representation)
 
-에러를 타입으로 명확히 표현한다. 선호 순서:
+에러를 타입으로 명확히 표현한다. **null은 "없음"의 이유를 말해주지 않는다** — 상태가 여러 가지일 수 있다면 반드시 타입으로 구분한다.
+
+선호 순서:
 
 1. **구분된 에러 타입 (Result/Either/sealed class 등)** — 이상적, 성공/실패가 타입으로 구분됨
 2. **단순 Result 래퍼** — 성공/실패만 구분하면 되는 경우
-3. **nullable/optional** — "없음"이 정상 상태일 때만 사용
+3. **nullable/optional** — "없음"이 유일한 실패 상태이고, 그것이 정상일 때만 사용
 4. **예외** — 프로그래밍 오류(계약 위반)에만 사용
+
+**nullable 허용 기준**: "이 null이 왜 null인지 호출자가 알 필요가 없는가?" — Yes면 nullable 허용, No면 타입으로 구분.
 
 ```
 // 이상적 — 실패 원인이 타입으로 구분됨
@@ -152,15 +156,17 @@ function loadConfig() -> Result:
     try: return Success(parseConfig())
     catch: return Failure()
 
-// 주의 — null/None은 "없음"이 정상일 때만
-function findById(id) -> Item?       // OK: 없을 수 있음
-function getCurrent() -> Item?       // 주의: 상태를 타입으로 구분해야 함
+// OK — "없음"이 유일한 상태이고 정상
+function findById(id) -> Item?       // 검색 결과가 없을 수 있음
+
+// 잘못된 예 — null이 여러 상태를 숨김
+function getCurrent() -> Item?       // null이 "로딩 중"인지 "에러"인지 "없음"인지 알 수 없음
 ```
 
 **리뷰 체크포인트**
-- null/None이 "에러 상태"를 표현하는 데 사용되고 있는가?
+- null/None이 여러 실패 상태를 숨기고 있는가? (타입으로 구분해야 함)
 - 성공과 실패 경로가 타입으로 구분되어 있는가?
-- 복잡한 에러가 단순 null/None으로 처리되고 있는가?
+- "이 null이 왜 null인지" 호출자가 구분해야 하는 상황인가?
 
 ---
 
@@ -168,31 +174,32 @@ function getCurrent() -> Item?       // 주의: 상태를 타입으로 구분해
 
 핵심 기능을 자동화 테스트로 검증한다. 커버리지 100%는 목표가 아니다.
 
-엔드투엔드(E2E) 테스트를 선호한다. 단위 테스트는 도메인 로직의 경계 조건처럼 E2E로 재현하기 어려운 케이스에 한해 작성한다.
+단위/통합/E2E 같은 레벨이 아니라, **"이 테스트가 무엇을 증명하는가"**가 기준이다.
 
-**테스트 우선순위**
-1. E2E 테스트 — 실제 사용자 흐름 전체를 검증, 리팩터링에 강하다
-2. 단위 테스트 — E2E로 재현하기 어려운 경계 조건·도메인 로직에 한정
-3. 통합 테스트 — 외부 시스템(DB, API) 연동이 필요한 경우
+**목적 기반 테스트**
 
-**단위 테스트 vs E2E 테스트 선택 기준**
-
-| 상황 | 선택 |
+| 목적 | 방법 |
 |------|------|
-| 사용자가 겪는 전체 흐름 | E2E |
-| E2E로 재현이 어려운 경계 조건 | 단위 테스트 |
-| 복잡한 도메인 로직의 세부 케이스 | 단위 테스트 |
-| 내부 구현 세부사항 | 테스트하지 않음 |
+| 상태 전환이 올바른가 | 상태 관리 테스트 |
+| 화면 흐름이 정상인가 | UI 테스트 |
+| 슬라이스 간 연동이 되는가 | 통합 테스트 |
+| 잘못된 입력에도 안전한가 | 경계값/에러 케이스 테스트 |
+
+각 테스트가 증명하는 것이 다르므로 모두 필요하다. "이게 깨지면 앱이 성립하지 않는가?" 순서로 우선순위를 정한다.
+
+**테스트하지 않는 것**
+- 내부 구현 세부사항 (private 필드, 메서드 호출 순서)
+- 단순 getter/setter
+- 라이브러리 코드 동작
 
 ```
-// E2E — 사용자 흐름 전체를 검증
-test "만료된 쿠폰으로 주문하면 할인이 적용되지 않는다":
-    user = createUser()
-    coupon = createCoupon(expiredAt = yesterday)
-    order = user.placeOrder(items = [item1], coupon = coupon)
-    assert order.totalPrice == item1.price
+// 올바른 예 — 행동을 검증
+test "셔플 모드에서 다음 곡은 무작위 순서를 따른다":
+    player.setShuffle(true)
+    player.next()
+    assert player.currentTrack != previousTrack
 
-// 단위 테스트 — E2E로 재현하기 어려운 경계 조건
+// 올바른 예 — 경계 조건 검증
 test "쿠폰 만료 시각이 정확히 현재 시각과 같으면 만료로 처리된다":
     coupon = Coupon(expiredAt = now)
     assert coupon.isExpired() == true
@@ -203,9 +210,10 @@ test "_isExpired가 true로 설정된다":
 ```
 
 **리뷰 체크포인트**
-- 단위 테스트로만 작성되어 있는가? E2E로 대체할 수 있는가?
+- 테스트가 "무엇을 증명하는가"가 명확한가?
 - 테스트가 행동(behavior)을 검증하는가, 구현 세부사항(implementation detail)을 검증하는가?
-- 테스트 이름이 상황과 기대 결과를 설명하는가?
+- 테스트 이름이 상황과 기대 결과를 한글로 서술되어 있는가?
+- 핵심 기능("이게 깨지면 앱이 성립하지 않는가")의 테스트가 있는가?
 
 ---
 

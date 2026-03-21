@@ -172,6 +172,41 @@ private suspend fun processNext() {
 
 ---
 
+## 에러 처리 (safeCatching)
+
+`runCatching`은 `CancellationException`까지 잡아서 코루틴 취소가 깨진다. `safeCatching` 래퍼를 사용한다.
+
+```kotlin
+inline fun <T> safeCatching(block: () -> T): Result<T> =
+    try {
+        Result.success(block())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+```
+
+| 상황 | 선택 |
+|------|------|
+| suspend 함수에서 예외 처리 | `safeCatching` |
+| 코루틴 아닌 코드에서 예외 처리 | `runCatching` 허용 |
+| 복구 불가능한 예외 | 잡지 않고 전파 |
+
+```kotlin
+// 올바른 예
+suspend fun fetchUser(id: String): Result<User> = safeCatching {
+    api.getUser(id)
+}
+
+// 잘못된 예 — CancellationException이 잡힘
+suspend fun fetchUser(id: String): Result<User> = runCatching {
+    api.getUser(id)
+}
+```
+
+---
+
 ## Null 처리
 
 | 패턴 | 용도 |
