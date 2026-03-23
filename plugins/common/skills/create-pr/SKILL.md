@@ -68,21 +68,33 @@ PR 존재 여부 확인:
 gh pr view --json number,url 2>/dev/null
 ```
 
-**PR이 없는 경우** — 생성:
+**PR이 없는 경우** — 생성 (기본 draft):
 ```bash
-gh pr create --title "<PR 제목>" --body "$(cat <<'EOF'
+gh pr create --draft --title "<PR 제목>" --body "$(cat <<'EOF'
 <PR 본문>
 EOF
 )"
 ```
 
+사용자가 "바로 올려줘", "draft 말고", "ready로" 등 명시적으로 요청한 경우 `--draft` 옵션을 제거한다.
+
 **PR이 이미 있는 경우** — 업데이트:
+
+기존 본문을 먼저 읽어 내용을 보존한다:
+```bash
+gh pr view --json body --jq '.body'
+```
+
+기존 본문을 기반으로 필요한 부분만 수정하여 업데이트:
 ```bash
 gh pr edit --title "<PR 제목>" --body "$(cat <<'EOF'
 <PR 본문>
 EOF
 )"
 ```
+
+- 기존 본문의 구조와 내용을 최대한 유지하고, 변경된 부분만 반영한다
+- draft/ready for review 상태는 변경하지 않는다
 
 - 필요시 `--reviewer`, `--label` 옵션 추가
 - 완료 후 PR URL 사용자에게 전달
@@ -92,3 +104,6 @@ EOF
 - 스킬 호출 자체를 PR 생성 승인으로 간주하지 않는다 — 반드시 사용자 명시적 지시 후에만 생성한다
 - PR 제목은 `<type>: <요약>` 형식을 따른다 (commit-guidelines.md의 커밋 타입 기준)
 - remote push는 PR 생성에 필요한 경우에만 자동으로 수행한다
+- PR은 기본적으로 draft로 생성한다 — 사용자가 명시적으로 draft 해제를 요청한 경우에만 일반 PR로 생성한다
+- PR 업데이트 시 draft/ready for review 상태는 변경하지 않는다
+- PR 본문 업데이트 시 기존 본문을 먼저 읽고 내용을 기반으로 필요한 부분만 수정한다 — 전체를 새로 작성하지 않는다
