@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.5.0] — 2026-03-23
+
+### ✨ New Features
+- create-pr 스킬: PR을 기본 draft로 생성하도록 변경 (`44ad9aa`)
+- create-pr 스킬: PR 업데이트 시 draft/ready 상태 유지 및 기존 본문 기반 수정 원칙 추가 (`44ad9aa`)
+
+### 📝 Documentation
+- README 스킬 목록을 실제 구성과 일치하도록 수정 (`7c388a7`)
+
 ## [0.3.0] — 2026-03-18
 
 ### ✨ New Features
