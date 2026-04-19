@@ -26,11 +26,14 @@ allowed-tools: Bash, Read, Write, Glob, Grep
 | --- | --- |
 | `fundamentals.md` | 근본 원칙 — 모든 스킬이 참조하는 기반 |
 | `code.md` | 자명한 코드 — 코드 레벨 실천 |
-| `architecture.md` | 아키텍처 — 구조 설계 원칙 |
 | `testing.md` | 테스트 전략 — 검증 원칙 |
 | `ai-collaboration.md` | AI 협업 — 하네스와 역할 분담 |
+| `vsa/vsa-common.md` | VSA 공통 아키텍처 — 모든 플랫폼에 적용되는 슬라이스 기반 원칙 |
+| `vsa/vsa-android.md` | VSA Android — Kotlin + Hilt 프로젝트 적용 규칙 |
+| `vsa/vsa-flutter.md` | VSA Flutter — Dart + Riverpod 프로젝트 적용 규칙 |
+| `vsa/vsa-godot.md` | VSA Godot — GDScript 프로젝트 적용 규칙 |
 
-추천/생성할 스킬 유형에 따라 관련 원칙 문서만 참조한다. `fundamentals.md`는 항상 읽는다.
+추천/생성할 스킬 유형에 따라 관련 원칙 문서만 참조한다. `fundamentals.md`는 항상 읽는다. 아키텍처 관련 스킬이라면 `vsa/vsa-common.md`도 항상 읽고, 플랫폼이 특정되면 해당 vsa 문서(android/flutter/godot)를 추가로 읽는다.
 
 원칙은 언제든 수정될 수 있다. 이 스킬을 다시 실행하면 현재 원칙과 기존 커스텀 스킬 사이의 차이를 감지하고, 업데이트가 필요한 스킬을 알려준다.
 
@@ -83,7 +86,7 @@ allowed-tools: Bash, Read, Write, Glob, Grep
 
 ### 1. [스킬 이름]
 - 목적: 한 줄 설명
-- 원칙 근거: principles.md의 어떤 원칙을 구체화하는지
+- 원칙 근거: 어떤 원칙 문서(fundamentals/code/testing/vsa 등)를 구체화하는지
 - 예시 사용: 어떤 상황에서 쓰이는지
 
 ### 2. [스킬 이름]
@@ -113,7 +116,7 @@ allowed-tools: Bash, Read, Write, Glob, Grep
 
 **스킬 작성 원칙:**
 
-- principles.md의 원칙을 해당 프로젝트의 언어/프레임워크 맥락으로 번역한다
+- `references/`의 원칙 문서를 해당 프로젝트의 언어/프레임워크 맥락으로 번역한다
 - 추상적 지침("명확하게 작성하라")이 아니라 구체적 행동("변수명에 단위를 포함하라: `timeMinutes`")을 제시한다
 - 프로젝트에서 실제로 사용하는 패턴을 예시로 포함한다
 - 스킬은 독립적으로 동작해야 한다 — principles.md를 매번 참조하지 않아도 되도록 구체화한다
@@ -150,4 +153,4 @@ description: [트리거 설명]
 - 프로젝트 분석이 불충분하면 사용자에게 질문한다 — 추측보다 확인이 명확하다
 - 추천을 먼저 보여주고, 사용자가 선택하면 생성한다 — 사람이 결정한다 (AI 협업 원칙)
 - 이미 존재하는 스킬과 중복 생성하지 않는다
-- 생성된 스킬은 principles.md 없이도 독립적으로 동작할 수 있을 만큼 구체적이어야 한다
+- 생성된 스킬은 references/ 문서 없이도 독립적으로 동작할 수 있을 만큼 구체적이어야 한다
