@@ -5,6 +5,7 @@ description: >
   사용자가 "커밋해줘", "변경사항 정리해줘", "커밋 메시지 만들어줘", "git commit" 등의
   표현을 사용할 때 반드시 이 스킬을 사용할 것.
 allowed-tools: Bash, Read
+argument-hint: (선택) 커밋 타입(feat/fix/refactor 등). 생략 시 변경사항을 분석해 자동 결정
 ---
 
 ## 작업 순서

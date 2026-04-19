@@ -5,6 +5,7 @@ description: >
   "PR 만들어줘", "풀리퀘 올려줘", "PR 생성해줘", "pull request 만들어줘",
   "PR 본문 업데이트해줘" 등의 표현이 나오면 반드시 이 스킬을 사용할 것.
 allowed-tools: Bash
+argument-hint: (선택) PR 제목 또는 추가 지시사항. 생략 시 변경사항을 분석해 자동 생성
 ---
 
 ## 작업 순서

@@ -4,6 +4,7 @@ description: |
   GitHub PR 리뷰 코멘트를 가져와 분석 보고서를 마크다운 파일로 저장한 뒤, 사용자 승인 후 코드 수정까지 수행.
   "PR 리뷰 반영해줘", "코드리뷰 코멘트 처리해줘", "리뷰 적용해", "리뷰 피드백 수정해줘", "review comment 처리", "리뷰 보고서 만들어줘" 같은 요청에 반드시 이 스킬을 사용할 것.
 allowed-tools: Bash, Read, Edit
+argument-hint: (선택) PR 번호. 생략 시 현재 브랜치의 PR을 자동 감지
 ---
 
 ## 요구사항
