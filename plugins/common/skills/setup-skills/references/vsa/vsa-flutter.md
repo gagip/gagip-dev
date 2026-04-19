@@ -10,9 +10,6 @@
 ```
 lib/
 ├── app/
-│   ├── home/
-│   │   ├── home_page.dart
-│   │   └── home_notifier.dart
 │   ├── router/
 │   │   └── app_router.dart
 │   └── di/
@@ -20,36 +17,35 @@ lib/
 │
 ├── features/
 │   ├── auth/
-│   │   ├── login/
-│   │   │   ├── login_page.dart
-│   │   │   ├── login_notifier.dart   (또는 login_cubit.dart)
-│   │   │   ├── login_state.dart
-│   │   │   └── login_provider.dart   ← Riverpod Provider
-│   │   ├── register/
-│   │   │   ├── register_page.dart
-│   │   │   ├── register_notifier.dart
-│   │   │   └── register_provider.dart
-│   │   └── shared/                   ← register 생기면 생성
-│   │       ├── auth_repository.dart        (abstract class)
-│   │       ├── auth_repository_impl.dart
-│   │       ├── auth_repository_provider.dart
-│   │       ├── user_model.dart
-│   │       └── auth_exception.dart
+│   │   ├── data/
+│   │   │   ├── auth_repository.dart
+│   │   │   └── auth_mapper.dart
+│   │   ├── domain/
+│   │   │   ├── user.dart
+│   │   │   └── auth_exception.dart
+│   │   └── presentation/
+│   │       ├── screens/
+│   │       │   ├── login_screen.dart
+│   │       │   └── register_screen.dart
+│   │       └── providers/
+│   │           ├── auth_provider.dart
+│   │           └── login_form_provider.dart
 │   └── product/
-│       ├── list/
-│       ├── detail/
-│       └── shared/
-│           ├── product_repository.dart
-│           └── product_model.dart
+│       ├── data/
+│       │   └── product_repository.dart
+│       ├── domain/
+│       │   └── product.dart
+│       └── presentation/
+│           ├── screens/
+│           │   ├── product_list_screen.dart
+│           │   └── product_detail_screen.dart
+│           └── providers/
+│               └── product_list_provider.dart
 │
 ├── shared/
-│   ├── contracts/
-│   │   └── i_user_provider.dart
-│   ├── models/
-│   │   └── user_summary.dart
-│   ├── events/
-│   │   ├── app_event.dart
-│   │   └── event_bus.dart
+│   ├── database/          ← DB 스키마 및 연결 (여러 feature 공유)
+│   ├── providers/         ← 전역 공유 Provider (Repository 등)
+│   ├── models/            ← 최소 공유 모델 (*_summary, *_info)
 │   ├── network/
 │   │   └── api_client.dart
 │   └── utils/
@@ -62,106 +58,129 @@ lib/
 
 ## 슬라이스 단위
 
-**Page + Notifier(또는 Cubit) + State** 묶음
+**도메인 기준**으로 슬라이스를 나누고, 각 슬라이스 내부에 `data/domain/presentation` 레이어를 둔다.
 
 ```
-features/auth/login/
-  login_page.dart      ← UI (ConsumerWidget)
-  login_notifier.dart  ← 상태 + 로직
-  login_state.dart     ← 상태 정의
-  login_provider.dart  ← Riverpod Provider 정의
+features/auth/
+  data/
+    auth_repository.dart   ← DB/API 접근, 도메인 에러로 변환
+    auth_mapper.dart       ← DB 모델 ↔ 도메인 모델 변환
+  domain/
+    user.dart              ← 도메인 모델 (Freezed)
+    auth_exception.dart    ← 도메인 에러
+  presentation/
+    screens/
+      login_screen.dart    ← UI (ConsumerWidget)
+    providers/
+      auth_provider.dart   ← Riverpod Provider + 상태 + 로직
 ```
+
+슬라이스 분리 트리거 (vsa-common.md 참조):
+- 단일 파일 ~500줄 초과
+- 두 기능이 서로 다른 이유로 변경될 때
+- 같은 로직을 다른 슬라이스에서 복붙할 때 (두 번째 발생 시)
 
 ---
 
 ## Repository 패턴
 
+구현체가 하나인 경우(로컬 DB 등) — 구현체만 사용한다. 테스트는 Riverpod `overrideWithValue`로 Fake를 주입한다.
+
 ```dart
-// abstract class — 계약
-// features/auth/shared/auth_repository.dart
-abstract class AuthRepository {
-  Future<User> login(String email, String password);
-  Future<User> getCurrentUser();
+// features/auth/data/auth_repository.dart
+class AuthRepository {
+  AuthRepository(this._db);
+
+  final AppDatabase _db;
+
+  Future<User> login(String email, String password) async { ... }
 }
 
-// 구현체 — 피처군 shared 소유
-// features/auth/shared/auth_repository_impl.dart
-class AuthRepositoryImpl implements AuthRepository {
-  final ApiClient _api;
-
-  AuthRepositoryImpl(this._api);
-
-  @override
-  Future<User> login(String email, String password) async {
-    final res = await _api.post('/auth/login', {
-      'email': email,
-      'password': password,
-    });
-    return User.fromJson(res);
-  }
-}
-
-// Provider — 피처군 shared 소유
-// features/auth/shared/auth_repository_provider.dart
+// shared/providers/auth_repository_provider.dart
 @Riverpod(keepAlive: true)
 AuthRepository authRepository(Ref ref) {
-  final api = ref.watch(apiClientProvider);
-  return AuthRepositoryImpl(api);
+  return AuthRepository(ref.watch(databaseProvider));
 }
+
+// 테스트 — abstract class 없이 Fake 주입
+final container = ProviderContainer(overrides: [
+  authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+]);
+```
+
+구현체가 여러 개가 되는 경우(네트워크 + 로컬 캐시, 환경 분리 등) — 그때 abstract class로 계약을 추가한다.
+
+```dart
+// 구현체 교체가 실제로 필요해진 시점에 추가
+abstract class AuthRepository {
+  Future<User> login(String email, String password);
+}
+
+class RemoteAuthRepository implements AuthRepository { ... }
+class CachedAuthRepository implements AuthRepository { ... }
 ```
 
 ---
 
 ## 상태 관리 (Riverpod)
 
+기본은 `AsyncValue`를 사용한다. 도메인 고유 상태가 필요한 경우에만 `sealed class`로 정의한다.
+
+### 기본 — AsyncValue
+
+데이터 로딩, CRUD 결과 등 loading/error/data로 충분한 경우.
+
 ```dart
-// login_state.dart
-sealed class LoginState {
-  const LoginState();
-}
-
-class LoginIdle extends LoginState { const LoginIdle(); }
-class LoginLoading extends LoginState { const LoginLoading(); }
-class LoginSuccess extends LoginState {
-  final User user;
-  const LoginSuccess(this.user);
-}
-class LoginError extends LoginState {
-  final String message;
-  const LoginError(this.message);
-}
-
-// login_notifier.dart
+// features/flow/presentation/providers/flow_list_provider.dart
 @riverpod
-class LoginNotifier extends _$LoginNotifier {
-  @override
-  LoginState build() => const LoginIdle();
-
-  Future<void> login(String email, String password) async {
-    state = const LoginLoading();
-    try {
-      final repo = ref.read(authRepositoryProvider);
-      final user = await repo.login(email, password);
-      state = LoginSuccess(user);
-    } on AuthException catch (e) {
-      state = LoginError(e.message);
-    }
-  }
+Stream<List<Flow>> flowList(Ref ref) {
+  return ref.watch(flowRepositoryProvider).watchAll();
 }
 
-// login_page.dart — 상태 구독
-class LoginPage extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(loginNotifierProvider);
+// 화면에서 .when()으로 분기
+ref.watch(flowListProvider).when(
+  data: (flows) => FlowListView(flows),
+  loading: () => const CircularProgressIndicator(),
+  error: (e, _) => ErrorView(e.toString()),
+);
+```
 
-    return switch (state) {
-      LoginIdle() || LoginError() => _LoginForm(),
-      LoginLoading()              => const LoadingIndicator(),
-      LoginSuccess(:final user)   => _navigateToHome(user),
-    };
-  }
+### 예외 — sealed class
+
+도메인 고유 상태가 있어 loading/error/data로 표현이 불충분한 경우.
+
+```dart
+// features/timer/domain/timer_state.dart
+sealed class TimerState {}
+class TimerIdle extends TimerState {}
+class TimerRunning extends TimerState {
+  final Duration elapsed;
+  TimerRunning(this.elapsed);
 }
+class TimerPaused extends TimerState {
+  final Duration elapsed;
+  TimerPaused(this.elapsed);
+}
+class TimerFinished extends TimerState {}
+
+// features/timer/presentation/providers/timer_provider.dart
+@riverpod
+class TimerNotifier extends _$TimerNotifier {
+  @override
+  TimerState build() => TimerIdle();
+
+  void start() => state = TimerRunning(Duration.zero);
+  void pause() => state = TimerPaused((state as TimerRunning).elapsed);
+  void finish() => state = TimerFinished();
+}
+
+// 화면에서 switch로 분기
+return switch (ref.watch(timerNotifierProvider)) {
+  TimerIdle()               => StartButton(),
+  TimerRunning(:final elapsed) => TimerDisplay(elapsed),
+  TimerPaused(:final elapsed)  => ResumeButton(elapsed),
+  TimerFinished()           => CompletionView(),
+};
 ```
 
 ---
@@ -200,42 +219,35 @@ final userProvider = ref.read(userProviderProvider);
 final user = await userProvider.getCurrentUser();
 ```
 
-### 이벤트 전파 — EventBus (Stream)
+### 이벤트 전파 — ref.listen + StateNotifier
+
+EventBus(Static StreamController)는 Riverpod 환경에서 비권장. Riverpod 내장 메커니즘으로 대체한다.
 
 ```dart
-// shared/events/app_event.dart
+// shared/providers/app_event_provider.dart
 sealed class AppEvent {}
-
 class UserLoggedIn extends AppEvent {
   final String userId;
   UserLoggedIn(this.userId);
 }
 
-class OrderCompleted extends AppEvent {
-  final String orderId;
-  OrderCompleted(this.orderId);
+@Riverpod(keepAlive: true)
+class AppEventNotifier extends _$AppEventNotifier {
+  @override
+  AppEvent? build() => null;
+
+  void emit(AppEvent event) => state = event;
 }
 
-// shared/events/event_bus.dart
-class EventBus {
-  static final _controller = StreamController<AppEvent>.broadcast();
-  static Stream<AppEvent> get stream => _controller.stream;
-  static void emit(AppEvent event) => _controller.add(event);
-}
+// 발신 — features/auth/presentation/providers/auth_provider.dart
+ref.read(appEventNotifierProvider.notifier).emit(UserLoggedIn(user.id));
 
-// 발신 — features/auth/login/login_notifier.dart
-EventBus.emit(UserLoggedIn(user.id));
-
-// 수신 — features/cart/cart_notifier.dart
+// 수신 — features/cart/presentation/providers/cart_provider.dart
 @override
 CartState build() {
-  ref.listen(
-    Stream.fromFuture(Future.value(null)), // Riverpod stream 연결
-    (_, __) {},
-  );
-  EventBus.stream
-    .whereType<UserLoggedIn>()
-    .listen((_) => clearCart());
+  ref.listen(appEventNotifierProvider, (_, event) {
+    if (event is UserLoggedIn) clearCart();
+  });
   return const CartEmpty();
 }
 ```
