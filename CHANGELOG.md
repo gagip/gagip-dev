@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [common/0.5.2] — 2026-04-20
+
+### ♻️ Refactoring
+- `setup-skills` VSA Flutter 아키텍처 문서 업데이트 및 폴더 구조 정리 ([`ab38e8f`])
+
+---
+
 ## [common/0.4.0] — 2026-03-22
 
 ### ♻️ Refactoring
