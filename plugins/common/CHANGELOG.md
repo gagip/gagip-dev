@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [0.5.1] - 2026-04-19
+
+### ♻️ Refactor
+- **apply-review**: 인터랙티브 코멘트 선택 방식 제거, 전체 분석 보고서(마크다운 파일) 저장 방식으로 개편
+  - 보고서 형식에 배경/문제코드/원인분석/수정전후코드/기대효과 섹션 추가
+  - 논의 완료 후 에이전트 자율 실행(수정 → 검증 → 커밋) 흐름으로 변경
+- **setup-skills**: SKILL.md 수정 및 미사용 architecture.md 삭제
+
+### ✨ Feat
+- **모든 스킬**: `argument-hint` frontmatter 필드 추가 (apply-review, commit, create-pr, setup-skills)
+
 ## [0.5.0] — 2026-03-23
 
 ### ✨ New Features
