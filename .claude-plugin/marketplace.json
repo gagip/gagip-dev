@@ -13,6 +13,11 @@
       "name": "android",
       "source": "./plugins/android",
       "description": "Android 개발 전용 도구"
+    },
+    {
+      "name": "tauri",
+      "source": "./plugins/tauri",
+      "description": "Tauri v2 모바일 개발 가이드라인"
     }
   ]
 }
