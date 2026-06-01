@@ -11,6 +11,8 @@ description: >
   "초안 계획서", "private/plans에 저장" 같은 표현을 쓰면 반드시 이 스킬을 사용한다.
   인자가 이슈 번호이면 gh로 본문을 가져와 분석 자료로 활용하고, 코드베이스와 이슈 내용 간
   괴리가 있거나 모호한 부분이 있으면 AskUserQuestion으로 사용자에게 확인한 뒤 진행한다.
+allowed-tools: Bash, Read, Write, Edit
+argument-hint: (선택) GitHub 이슈 번호 또는 계획서 주제. 생략 시 주제를 질문
 ---
 
 # Draft Plan 스킬
