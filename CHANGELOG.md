@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [common/0.6.1] — 2026-06-02
+
+### 🐛 Bug Fixes
+- `retrospective` 볼트 기록을 회사/개인으로 분리, 하드코딩된 경로를 CLAUDE.md 참조 방식으로 변경 ([`855e488`])
+
+---
+
 ## [common/0.5.2] — 2026-04-20
 
 ### ♻️ Refactoring
