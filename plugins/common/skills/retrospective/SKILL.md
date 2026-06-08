@@ -7,7 +7,7 @@ description: >
   "지난 주 회고", "주간 회고", "지난 N일 돌아봐", "여러 세션 정리해줘", "배운 것 정리해줘",
   "피드백 반영해줘" 같은 표현을 쓰면 반드시 이 스킬을 사용한다.
   작업 완료 후 같은 실수를 반복하지 않고 LLM이 다음 대화에서 더 잘 도울 수 있도록 맥락을 남기는 것이 목적이다.
-allowed-tools: Bash, Read, Write, Edit
+allowed-tools: Bash, Read, Write, Edit, Agent
 argument-hint: (선택) 회고 초점이나 특정 주제. 생략 시 전체 세션을 회고
 ---
 
