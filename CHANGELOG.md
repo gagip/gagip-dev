@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [common/0.7.0] — 2026-06-10
+
+### ✨ New Features
+- `notion-context`·`notion-knowledge`·`notion-report` 스킬 3종 추가 — 대화 결정사항을 Notion Context DB에 누적 반영, Knowledge DB 검색, 작업 보고서를 Reports DB에 작성 ([`a585655`])
+- `draft-plan` 구현 방식 대안을 판단 기준과 함께 비교 제시하는 규칙 추가 ([`bdb5ff9`])
+- `create-pr`·`report-issue` 본문에서 private 정보 제외 규칙 추가 ([`38e1539`])
+- `retrospective` 다중 세션·주간/기간 단위 회고 워크플로우 추가 ([`2504ef4`])
+
+### 🐛 Bug Fixes
+- `notion` 스킬 MCP 도구명 정정(`fetch`→`notion-fetch`, `search`→`notion-search`) 및 `notion-report` 파일명 `SKILL.md`로 통일 — 대소문자 구분 FS 호환 ([`fe1af0f`])
+- `retrospective` `allowed-tools`에 `Agent` 추가 ([`e92aefd`])
+
+### ♻️ Refactoring
+- `draft-plan` 계획서 저장을 `notion-report` 스킬로 위임 ([`aded3d7`])
+
+---
+
 ## [common/0.6.2] — 2026-06-05
 
 ### ✨ New Features
