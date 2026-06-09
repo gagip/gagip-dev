@@ -8,7 +8,7 @@ description: >
     (예: Android 코드 작성, 테스트 코드 작성, 아키텍처 설계 등)
   - 특정 기술의 컨벤션이나 베스트 프랙티스가 궁금할 때
   Knowledge DB에 없으면 Obsidian 볼트를 대안으로 검색한다.
-allowed-tools: mcp__claude_ai_Notion__fetch, mcp__claude_ai_Notion__search, Read, Bash
+allowed-tools: mcp__claude_ai_Notion__notion-fetch, mcp__claude_ai_Notion__notion-search, Read, Bash
 argument-hint: (선택) 검색 키워드 또는 주제. 생략 시 현재 작업 맥락에서 자동 파악
 ---
 
@@ -46,7 +46,7 @@ echo $DS_ID
 
 ### Step 3: Knowledge DB 검색
 
-`mcp__claude_ai_Notion__search`로 키워드를 검색한다.  
+`mcp__claude_ai_Notion__notion-search`로 키워드를 검색한다.  
 결과 중 Knowledge DB(`$NOTION_KNOWLEDGE_DS_ID`) 하위 페이지만 필터링한다.
 
 관련도 높은 항목을 최대 5개까지 추린다.
@@ -58,7 +58,7 @@ echo $DS_ID
 
 ### Step 5: Notion 내용 확인 및 요약
 
-`mcp__claude_ai_Notion__fetch`로 각 항목의 내용을 읽는다.  
+`mcp__claude_ai_Notion__notion-fetch`로 각 항목의 내용을 읽는다.  
 현재 작업에 직접 관련된 핵심 내용만 추출해 요약한다.  
 관련 없는 항목은 포함하지 않는다.
 

@@ -7,7 +7,7 @@ description: >
   - 대화 중 기술 스택 선택("JWT로 가자", "React 쓰기로 함"), 기능 범위 변경("모바일은 빼자"),
     아키텍처 방향 결정("레이어드 아키텍처로"), 제약사항 확정 등 명시적 결정이 내려졌을 때
   결정이 내려진 직후 자동으로 실행하는 것이 기본이며, 사용자가 명시적으로 요청할 때도 실행한다.
-allowed-tools: mcp__claude_ai_Notion__fetch, mcp__claude_ai_Notion__search, mcp__claude_ai_Notion__notion-create-pages, mcp__claude_ai_Notion__notion-update-page
+allowed-tools: mcp__claude_ai_Notion__notion-fetch, mcp__claude_ai_Notion__notion-search, mcp__claude_ai_Notion__notion-create-pages, mcp__claude_ai_Notion__notion-update-page
 argument-hint: (선택) 프로젝트명. 생략 시 대화 맥락에서 자동 파악
 ---
 
@@ -54,7 +54,7 @@ echo $DS_ID
 
 ### Step 4: Context DB에서 프로젝트 검색
 
-`mcp__claude_ai_Notion__search`로 프로젝트명을 검색한다.  
+`mcp__claude_ai_Notion__notion-search`로 프로젝트명을 검색한다.  
 검색 결과 중 Context DB(`$NOTION_CONTEXT_DS_ID`)의 하위 페이지인 것을 찾는다.
 
 - 해당 페이지 발견 → Step 5
@@ -62,7 +62,7 @@ echo $DS_ID
 
 ### Step 5: 기존 페이지 업데이트
 
-`mcp__claude_ai_Notion__fetch`로 페이지 내용을 읽어 현재 구조를 파악한다.
+`mcp__claude_ai_Notion__notion-fetch`로 페이지 내용을 읽어 현재 구조를 파악한다.
 
 결정 내용을 해당 섹션에 bullet로 추가한다 (기존 내용은 건드리지 않고 누적):
 

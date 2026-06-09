@@ -7,7 +7,7 @@ description: >
   "구현계획 보고해줘", "완료 보고해줘", "분석 보고해줘", "의사결정 요청해줘".
   작업을 완료했거나, 구현 계획을 제안하거나, 분석 결과를 정리했거나,
   사용자에게 선택을 요청해야 할 때도 자동으로 이 스킬을 사용한다.
-allowed-tools: Bash, mcp__claude_ai_Notion__notion-create-pages, mcp__claude_ai_Notion__fetch, mcp__claude_ai_Notion__notion-update-data-source
+allowed-tools: Bash, mcp__claude_ai_Notion__notion-create-pages, mcp__claude_ai_Notion__notion-fetch, mcp__claude_ai_Notion__notion-update-data-source
 argument-hint: (선택) 보고서 유형 - 구현계획 / 완료보고 / 분석 / 의사결정. 생략 시 맥락에서 자동 판단
 ---
 
@@ -48,7 +48,7 @@ argument 또는 대화 맥락에서 유형을 판단한다:
 `기타` 이외의 프로젝트명이 결정됐다면, DB 스키마에 해당 옵션이 있는지 확인 후 없으면 추가한다.
 
 **옵션 존재 여부 확인:**  
-`mcp__claude_ai_Notion__fetch`로 Data Source ID를 조회해 `프로젝트` 컬럼의 `options` 목록에 해당 이름이 있는지 확인한다. 있으면 이 단계를 건너뛴다.
+`mcp__claude_ai_Notion__notion-fetch`로 Data Source ID를 조회해 `프로젝트` 컬럼의 `options` 목록에 해당 이름이 있는지 확인한다. 있으면 이 단계를 건너뛴다.
 
 **새 프로젝트 옵션 추가 방법:**
 
