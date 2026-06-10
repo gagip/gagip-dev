@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [common/0.8.2] — 2026-06-11
+
+### ✨ New Features
+- `draft-plan` 계획서 구조를 목표 → 목표 달성 기준 → 구현 성공 기준 → 검증의 4층 흐름으로 재편 — 구현 성공 기준과 검증(확인 방법)을 명확히 분리하고 각 층을 상호 매핑하도록 명시 ([`49e1c99`])
+- `draft-plan`에 `WebSearch`/`WebFetch` 추가 — 외부 근거 조사를 허용하되 출처(URL) 명시 의무화 ([`49e1c99`])
+
+### ♻️ Refactoring
+- `draft-plan` 승인 흐름 변경 — `ExitPlanMode` 승인 게이트 제거, 초안 완성 시 `notion-report`로 즉시 자동 저장하고 피드백은 노션 댓글로 받도록 전환 ([`49e1c99`])
+
+---
+
 ## [common/0.8.1] — 2026-06-10
 
 ### ✨ New Features
