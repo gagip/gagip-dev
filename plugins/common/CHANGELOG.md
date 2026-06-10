@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [0.8.0] - 2026-06-10
+
+### ✨ Feat
+- **notion-doctor**: Notion 워크플로우 셋업(env·DB 스키마·볼트 폴백 경로) 점검·구성 스킬 추가
+
+### ♻️ Refactor
+- **draft-plan**: 옛 `private/plans/` 로컬 저장 잔재를 Notion Reports DB 위임으로 정정
+- **notion-knowledge**: 볼트 폴백 경로를 `$HOME/personal/gagip-obsidian/wiki/`로 수정(깨진 외장 경로 제거), 위치 문구를 회사 워크스페이스로 갱신
+- **notion-context**: 위치 문구를 회사 워크스페이스로 갱신
+
 ## [0.6.0] - 2026-06-01
 
 ### ✨ Feat

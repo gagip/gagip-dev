@@ -19,13 +19,13 @@ Knowledge DB가 비어있거나 결과가 없으면 Obsidian 볼트를 대안으
 
 ## Knowledge DB 정보
 
-- **DB 페이지 URL**: `$NOTION_KNOWLEDGE_DS_ID`
-- **위치**: HappySealStudio > Knowledge
+- **Data Source ID**: 환경변수 `$NOTION_KNOWLEDGE_DS_ID`에서 읽음
+- **위치**: 회사 Notion 워크스페이스 > 워크플로우 > Knowledge
 
 ## Obsidian 볼트 대안 경로
 
-- `/Volumes/OneTouch/workspace/gagip-obsidian/wiki/`
-- 하위 폴더: `topics/dev-guidelines/`, `topics/architecture/`, `topics/basic/`, `topics/android/` 등
+- `$HOME/personal/gagip-obsidian/wiki/`
+- 하위 폴더 예시: `topics/android/`, `topics/architecture/`, `topics/basic/`, `topics/ai/`, `concepts/` 등
 
 ---
 
@@ -67,7 +67,7 @@ echo $DS_ID
 Knowledge DB에 결과가 없으면 Obsidian 볼트 wiki 폴더를 검색한다.
 
 ```bash
-grep -r "<키워드>" /Volumes/OneTouch/workspace/gagip-obsidian/wiki/ -l --include="*.md"
+grep -r "<키워드>" "$HOME/personal/gagip-obsidian/wiki/" -l --include="*.md"
 ```
 
 관련 파일이 있으면 `Read`로 내용을 읽어 요약한다.  

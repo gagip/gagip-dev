@@ -18,7 +18,7 @@ argument-hint: (선택) GitHub 이슈 번호 또는 계획서 주제. 생략 시
 # Draft Plan 스킬
 
 GitHub 이슈 또는 자연어 주제를 기반으로 논의·QA를 진행하며 구현 계획서를 작성하고,
-`private/plans/` 에 로컬 문서로 저장하는 스킬이다.
+`notion-report` 스킬을 통해 Notion Reports DB(`$NOTION_REPORTS_DS_ID`)에 보고서로 저장하는 스킬이다.
 
 **핵심 원칙**:
 - 이 스킬은 **문서 편집 도구**다. 코드를 수정하거나 구현을 시작하지 않는다.
@@ -49,7 +49,7 @@ owner/repo/number를 파싱해 위와 동일하게 `gh issue view` 로 조회한
 **인자 없음**:
 사용자에게 무엇에 대한 계획서인지 묻는다.
 
-**기존 계획서 파일 경로** (`@private/plans/foo.md`, `private/plans/foo.md`):
+**기존 계획서 파일 경로** (`@path/to/plan.md` 등 로컬 계획서 .md):
 파일을 Read로 읽은 뒤 아래 항목을 점검하고, 누락된 항목을 사용자에게 알린 다음 보강 여부를 확인한다.
 - YAML 프론트매터 (`created`, `status`) 존재 여부
 - Context 섹션에 브랜치명 명시 여부
@@ -59,7 +59,7 @@ owner/repo/number를 파싱해 위와 동일하게 `gh issue view` 로 조회한
 보강이 필요하면 Step 2 논의로 진입하고, 이미 완비되어 있으면 그대로 논의를 이어간다.
 
 **git 레포가 아닌 디렉터리**:
-경고 메시지를 출력하되 계속 진행한다. 저장 경로는 그대로 `./private/plans/` 를 사용한다.
+브랜치명 안내를 생략하고 계속 진행한다. 저장은 Notion Reports DB이므로 로컬 경로와 무관하다.
 
 ---
 
