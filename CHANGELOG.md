@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [common/0.8.4] — 2026-06-12
+
+### ✨ New Features
+- `apply-review` 리뷰 보고서 저장을 Notion Report DB 우선으로 전환 — 보고서를 `유형=분석 · 상태=초안`으로 Notion Report DB에 우선 생성하고, 자율 실행 완료 후 같은 페이지를 갱신(상태→검토중, "처리 결과" 추가). Notion 미셋업·로컬 요청 시 기존 파일 경로(`review-report-PR{N}-{YYYYMMDD}.md`)로 폴백 ([`6cfcfd6`])
+
+### 🐛 Bug Fixes
+- `apply-review` allowed-tools에 Notion MCP 도구(`notion-create-pages`·`notion-fetch`·`notion-update-page`) 추가 — 본문이 지시하는 노션 우선 저장 경로가 실제 동작하도록 정합성 확보 ([`7a2e96b`])
+
+---
+
 ## [common/0.8.3] — 2026-06-11
 
 ### ✨ New Features
