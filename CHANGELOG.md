@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [common/0.8.7] — 2026-06-15
+
+### ♻️ Refactoring
+- `create-ppt` 스크립트를 컴포넌트 조립 방식으로 전면 재설계 — 기존 단일 파일에 18장 순서를 하드코딩하던 구조를 `scripts/components/` 디렉터리에 16개 슬라이드 컴포넌트로 분리. 각 컴포넌트는 `render(slide, ctx) → str` 계약을 구현하고, `generate_ppt.py`는 JSON의 `slides` 배열을 순회하며 해당 컴포넌트를 호출하는 조립기 역할만 수행. `slides` 미지정 시 기존 18장 DEFAULT_PRESET을 자동 사용해 회귀 없음. 배지 번호·섹션 번호·목차는 조립 시점 `ctx`에서 동적 계산되어 하드코딩 완전 제거. SKILL.md를 컴포넌트 카탈로그 + `slides` 인라인 JSON 방식으로 전면 갱신 ([`aad11a7`])
+
+---
+
 ## [common/0.8.6] — 2026-06-15
 
 ### ♻️ Refactoring
