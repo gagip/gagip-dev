@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [common/0.9.0] — 2026-06-16
+
+### ♻️ Refactoring (Breaking)
+- 노션 의존 스킬 생태계를 로컬 .md 기반으로 전면 전환 — 노션 동기화 부담·env(DS_ID) 셋업 피로·구현계획서 일회성을 이유로 워크플로우 DB 의존을 폐지. `notion-context`·`notion-knowledge`·`notion-doctor` 3개 스킬 삭제, `notion-report` → `report` 리네임 + 저장을 Notion API에서 프로젝트 `private/<유형>-<slug>-<날짜>.md`로 전환(렌더 문법 변환·DS_ID·옵션 등록 제거, 노션 MCP 3개 대신 Write 추가, YAML 프론트매터 도입). 구현계획 유형은 `report`에서 제거해 `draft-plan`으로 일원화 ([`6e12499`], [`c21eead`])
+
+### ♻️ Refactoring
+- `draft-plan`을 커스텀 플랜 모드로 재정의 — Step 5의 노션 저장(`notion-report` 위임)을 `private/plan-<slug>-<날짜>.md` 직접 Write로 교체, allowed-tools에 Write 추가(Edit는 제외해 코드 수정 불가 유지), 기본 Plan 모드(`EnterPlanMode`/`ExitPlanMode`)와의 관계 및 피드백 흐름(노션 댓글 → 대화)을 명시 ([`ff5b535`])
+- `apply-review` 보고서 저장을 로컬 전용으로 환원 — 노션 우선 저장과 노션 MCP 3개를 제거하고 `private/analysis-pr{N}-<날짜>.md`로 통일(Write 추가, `report`와 프론트매터 컨벤션 공유). `retrospective`의 범위 확장 옵션에서 사용 불가가 된 '노션 미팅 노트' 항목 제거 ([`adea035`])
+- `draft-plan` 코드 리뷰 단계에 `/simplify` 선행 추가 — `/code-review`(버그 검출) 전에 `/simplify`(재사용·단순화·효율 정리)를 먼저 실행하도록 골격·작성 가이드에 명시. code-review 항목은 단순 정리·효율의 중복 반영을 배제 ([`a1b5626`])
+
+---
+
 ## [common/0.8.7] — 2026-06-15
 
 ### ♻️ Refactoring
