@@ -11,6 +11,8 @@ description: |
   "메모리 정리해줘", "세션 메모리 저장해줘", "memory curator", "메모리 큐레이션",
   "메모리 리뷰", "memory review", "지침 정리해줘", "문서화할 거 추려줘",
   "이번 세션 메모리", "놓친 메모리 있어?", "메모리 업데이트해줘"
+allowed-tools: Bash, Read, Write, Edit
+argument-hint: (선택) review 입력 시 전체 메모리 정리 모드. 생략 시 현재 세션 메모리 추출·저장
 ---
 
 # memory-curator
