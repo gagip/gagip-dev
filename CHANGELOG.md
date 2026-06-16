@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [common/0.10.0] — 2026-06-16
+
+### ✨ New Features
+- `memory-curator` 스킬 추가 — 세션 JSONL에서 메모리 후보를 추출·저장하는 기본 모드와, 누적 메모리를 정리(중복·상충·만료 식별, CLAUDE.md 승격·문서화 후보 제안)하는 리뷰 모드 2종. 중복 방지 필터(코드·git·PR·기존 메모리·CLAUDE.md에 이미 있으면 거름)를 메모리 비대화를 막는 단일 관문으로 둠 ([`ca63889`], [`21f3486`])
+
+### ♻️ Refactoring
+- `retrospective` 메모리 처리를 `memory-curator`에 위임 — 회고는 메모리 "후보"만 식별하고 저장·중복판정·MEMORY.md 인덱스 검증은 memory-curator 단일 관문에 일임해 두 스킬이 같은 세션을 중복 수집하지 않게 분리. 함께 신규 스킬 추천·문서화 공백 카테고리를 추가하고, CLAUDE.md 반영을 전역/프로젝트/디렉토리/로컬(`CLAUDE.local.md`) 4계층으로 분류 ([`ca63889`])
+
+---
+
 ## [common/0.9.0] — 2026-06-16
 
 ### ♻️ Refactoring (Breaking)
