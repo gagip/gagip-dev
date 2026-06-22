@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [common/0.11.0] — 2026-06-22
+
+### ✨ New Features
+- `skill-metrics` 스킬 추가 — Claude Code 세션 JSONL을 집계해 스킬/워크플로우 사용을 정량 지표로 환산. ① AutoScore(자동화 우선순위 = 주간호출 × (평균후속체인+1) × (1+마찰율))로 무엇을 먼저 자동화할지 산정하고, ③ Reach(도달률·빈도·일별분포)로 채택 추이를 추적. 미사용 세션을 거시적 미활용 신호로 본다(작업별 미활용은 수동 매핑 부담으로 제외). 측정 코어는 `scripts/measure.py`에 위임해 토큰을 아낀다 ([`ef7a81d`])
+- `finish` 스킬 추가 — 작업 끝의 `정리→리뷰→커밋→push→PR` 체인을 한 호출로 오케스트레이션. 커밋/push 스킬을 하드코딩하지 않고 프로젝트 CLAUDE.md 규칙으로 감지하며(가용성 확인 후 없으면 `common:commit`/`git push`로 폴백), code-review effort를 유효값으로 정규화하고 push 전 사용자 확인 게이트를 둔다 ([`39b12f6`])
+
+---
+
 ## [common/0.10.0] — 2026-06-16
 
 ### ✨ New Features
