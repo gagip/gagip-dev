@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [common/0.13.1] — 2026-06-29
+
+### ♻️ Refactoring
+- `retrospective` 메모리 처리를 "후보 식별 후 위임"에서 "적격성 게이트 통과분 자동 전달"로 변경 — 재사용성·비자명성·durable·타입적합·행동변화 5개 게이트를 모두 통과한 후보만 사용자 확인 없이 `memory-curator`에 자동 전달. retrospective 게이트(품질)와 memory-curator 필터(중복)로 역할을 분리하고, 메모리 외 항목(스킬·볼트·문서화)은 기존대로 사용자 확인을 유지. `allowed-tools`에 `Skill` 추가 ([`73b1f2c`])
+
+---
+
 ## [common/0.13.0] — 2026-06-23
 
 ### ✨ New Features
