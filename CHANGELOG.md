@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [mobile/0.2.0] — 2026-07-01
+
+### ♻️ Refactoring
+- `android`·`tauri` 플러그인을 `mobile`로 통합 — `android-review`(Android 코드 리뷰), `android-test`(Android 테스트 작성), `tauri-guideline`(Tauri v2 아키텍처·디버깅·테스트 가이드라인) 3개 스킬을 mobile 플러그인으로 이전. marketplace.json에서 android·tauri 항목 제거, mobile 설명 업데이트 ([`80490a5`])
+
+---
+
 ## [mobile/0.1.0] — 2026-06-30
 
 ### ✨ New Features
