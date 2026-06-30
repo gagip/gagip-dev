@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [mobile/0.1.0] — 2026-06-30
+
+### ✨ New Features
+- 신규 `mobile` 플러그인 + `review-quality` 스킬 추가 — 모바일 앱 코드베이스를 플랫폼 공식 품질 기준(Android Core App Quality + Apple App Review Guidelines·HIG)에 비춰 정적 검토하는 진단 전용 스킬. 스택(Android/iOS 네이티브·RN·Flutter·Tauri·Capacitor)을 자동 감지해 해당 플랫폼 항목만 점검하고, 지적마다 Android 항목 ID / Apple 조항 근거를 인용하며 확정·의심·확인 불가(런타임) 3단계로 강도를 구분. Android↔Apple 1:1 품질 매핑 표와 스택 감지·점검 단서를 references 자산화. voltera-app-rn 실검증으로 모노레포 비대화형 폴백·SEC-22(공개 클라이언트 시크릿)·`allowBackup`·iOS 릴리스 엔타이틀먼트·하이브리드 터치영역/대비 런타임 분류 5개 개선 반영 ([`fec2ef2`])
+
+---
+
 ## [common/0.13.1] — 2026-06-29
 
 ### ♻️ Refactoring
