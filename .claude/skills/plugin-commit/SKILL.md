@@ -32,10 +32,9 @@ allowed-tools: Bash, Read
 
 | 변경 파일 경로          | scope      |
 |------------------------|------------|
-| `plugins/common/` 하위  | `common`   |
-| `plugins/android/` 하위 | `android`  |
+| `plugins/<name>/` 하위  | `<name>` (common·android·tauri·mobile 등 — **디렉터리명이 곧 scope**, 하드코딩하지 않는다) |
 | 그 외 (루트, `.claude/` 등) | scope 없음 |
-| 두 플러그인 동시 변경   | 각각 별도 커밋 제안 |
+| 여러 플러그인 동시 변경 | 각각 별도 커밋 제안 |
 
 ## 작업 순서
 

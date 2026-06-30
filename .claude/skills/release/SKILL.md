@@ -21,10 +21,9 @@ argument-hint: "[patch|minor|major|x.y.z] - 버전 유형 (생략 시 커밋 이
 git diff --name-only HEAD~1..HEAD 2>/dev/null || git diff --name-only --cached
 ```
 
-- `plugins/common/` 파일 변경 → common 플러그인
-- `plugins/android/` 파일 변경 → android 플러그인
-- 둘 다 변경 → 두 플러그인 모두 처리
-- `plugins/` 외부 파일 변경은 무시한다
+- `plugins/<name>/` 파일 변경 → 해당 `<name>` 플러그인 (common·android·tauri·mobile 등 — **디렉터리명이 곧 플러그인명**, 특정 이름을 하드코딩하지 않는다)
+- 여러 플러그인 동시 변경 → 각 플러그인 모두 처리
+- `plugins/` 외부 파일 변경(루트 `.claude/` 등)은 플러그인 릴리스 대상이 아니므로 무시한다
 
 **버전 유형 판단** — `$ARGUMENTS`에 버전 유형이 없으면 커밋 이력으로 자동 판단:
 
@@ -36,6 +35,8 @@ git log <마지막 태그>..HEAD --oneline 2>/dev/null || git log --oneline
 - `feat!`, `fix!`, `BREAKING CHANGE` 포함 → `major`
 - `feat:` 포함 → `minor`
 - 그 외 (`fix:`, `chore:`, `docs:` 등) → `patch`
+
+**신규 플러그인 예외** — 해당 플러그인의 기존 태그(`<name>/v*`)가 하나도 없으면 첫 릴리스다. 자동 범프하지 말고 `plugin.json`의 현재 버전을 그대로 첫 릴리스로 쓴다 (`tauri/v0.1.0`·`mobile/v0.1.0` 선례 — 보통 0.1.0). 릴리스 계획에 "신규 플러그인 첫 릴리스 — 범프 없음"임을 명시한다.
 
 **스킬 검증** — 대상 플러그인의 모든 SKILL.md 점검:
 
