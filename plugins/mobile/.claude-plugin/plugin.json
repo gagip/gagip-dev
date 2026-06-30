@@ -1,7 +1,7 @@
 {
   "name": "mobile",
-  "description": "모바일 앱(Android/iOS) 플랫폼 품질 검토 도구",
-  "version": "0.1.0",
+  "description": "모바일 제품 개발(Android/iOS/Tauri) 전반을 아우르는 도구",
+  "version": "0.2.0",
   "author": {
     "name": "gagip"
   }

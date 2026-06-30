@@ -1,5 +1,5 @@
 ---
-name: review-code
+name: android-review
 description: >
   코드 리뷰를 수행한다. 사용자가 "리뷰해줘", "코드 봐줘", "PR 리뷰", "변경사항 확인",
   "코드 점검", "코드 검토" 등 코드 품질·개선 관련 요청을 할 때 반드시 사용한다.
