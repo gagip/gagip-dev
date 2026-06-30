@@ -18,6 +18,11 @@
       "name": "tauri",
       "source": "./plugins/tauri",
       "description": "Tauri v2 모바일 개발 가이드라인"
+    },
+    {
+      "name": "mobile",
+      "source": "./plugins/mobile",
+      "description": "모바일 앱(Android/iOS) 플랫폼 품질 검토 도구"
     }
   ]
 }

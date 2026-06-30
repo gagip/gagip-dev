@@ -1,0 +1,8 @@
+{
+  "name": "mobile",
+  "description": "모바일 앱(Android/iOS) 플랫폼 품질 검토 도구",
+  "version": "0.1.0",
+  "author": {
+    "name": "gagip"
+  }
+}
