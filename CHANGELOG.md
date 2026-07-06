@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [mobile/0.2.1] — 2026-07-06
+
+### ✨ New Features
+- `review-quality` 스킬에 Wear OS 앱 품질 기준 편입 — Wear OS App Quality(시각 환경·성능/기능·Google Play·예정 요구사항 4카테고리 36항목)를 Android 단독 폼팩터로 추가. `quality-map`에 §7 `WO-*`(WO-V/P/G/S) 매핑 신설, `detection-hints`에 워치/Watch Face 감지 신호와 §2-1 점검 단서(grep) 추가. WO-*를 [모든 Wear 앱]/[Watch Face 전용]/[스토어·런타임] 3분류로 구분해 Watch Face가 아닌 앱엔 전용 항목을 자동 제외(노이즈 차단). watchOS(Apple) 매핑은 제외하고 Wear OS를 Android 폼팩터로만 다룸. 사내 Wear OS 앱으로 감지·분류·판정 정확성 검증 ([`e22a5c6`])
+
+---
+
 ## [mobile/0.2.0] — 2026-07-01
 
 ### ♻️ Refactoring
@@ -10,7 +17,7 @@
 ## [mobile/0.1.0] — 2026-06-30
 
 ### ✨ New Features
-- 신규 `mobile` 플러그인 + `review-quality` 스킬 추가 — 모바일 앱 코드베이스를 플랫폼 공식 품질 기준(Android Core App Quality + Apple App Review Guidelines·HIG)에 비춰 정적 검토하는 진단 전용 스킬. 스택(Android/iOS 네이티브·RN·Flutter·Tauri·Capacitor)을 자동 감지해 해당 플랫폼 항목만 점검하고, 지적마다 Android 항목 ID / Apple 조항 근거를 인용하며 확정·의심·확인 불가(런타임) 3단계로 강도를 구분. Android↔Apple 1:1 품질 매핑 표와 스택 감지·점검 단서를 references 자산화. voltera-app-rn 실검증으로 모노레포 비대화형 폴백·SEC-22(공개 클라이언트 시크릿)·`allowBackup`·iOS 릴리스 엔타이틀먼트·하이브리드 터치영역/대비 런타임 분류 5개 개선 반영 ([`fec2ef2`])
+- 신규 `mobile` 플러그인 + `review-quality` 스킬 추가 — 모바일 앱 코드베이스를 플랫폼 공식 품질 기준(Android Core App Quality + Apple App Review Guidelines·HIG)에 비춰 정적 검토하는 진단 전용 스킬. 스택(Android/iOS 네이티브·RN·Flutter·Tauri·Capacitor)을 자동 감지해 해당 플랫폼 항목만 점검하고, 지적마다 Android 항목 ID / Apple 조항 근거를 인용하며 확정·의심·확인 불가(런타임) 3단계로 강도를 구분. Android↔Apple 1:1 품질 매핑 표와 스택 감지·점검 단서를 references 자산화. 사내 모바일 앱 실검증으로 모노레포 비대화형 폴백·SEC-22(공개 클라이언트 시크릿)·`allowBackup`·iOS 릴리스 엔타이틀먼트·하이브리드 터치영역/대비 런타임 분류 5개 개선 반영 ([`fec2ef2`])
 
 ---
 
