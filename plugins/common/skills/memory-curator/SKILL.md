@@ -31,8 +31,8 @@ argument-hint: (선택) review 입력 시 전체 메모리 정리 모드. 생략
 
 ```bash
 # 현재 작업 디렉토리로 프로젝트 슬러그 계산
-# 예: /Users/gagip/workspace/voltera/vibe-voltera-wearable-issue18
-# → -Users-gagip-workspace-voltera-vibe-voltera-wearable-issue18
+# 예: /Users/gagip/workspace/myproject/my-wear-app-issue18
+# → -Users-gagip-workspace-myproject-my-wear-app-issue18
 cwd=$(pwd)
 slug=$(echo "$cwd" | sed 's|/|-|g' | sed 's|^-||')
 project_dir="$HOME/.claude/projects/$slug"

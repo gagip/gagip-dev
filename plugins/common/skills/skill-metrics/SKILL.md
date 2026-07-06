@@ -40,7 +40,7 @@ python3 "$SKILL_DIR/scripts/measure.py" --days 14
 python3 "$SKILL_DIR/scripts/measure.py" --since 2026-06-05 --until 2026-06-19
 
 # 프로젝트 필터 + 파일 저장
-python3 "$SKILL_DIR/scripts/measure.py" --days 14 --project voltera --out /tmp/skill-metrics.md
+python3 "$SKILL_DIR/scripts/measure.py" --days 14 --project myproject --out /tmp/skill-metrics.md
 ```
 
 주요 옵션:
@@ -50,7 +50,7 @@ python3 "$SKILL_DIR/scripts/measure.py" --days 14 --project voltera --out /tmp/s
 | `--days N` | 오늘 기준 최근 N일 | 14 |
 | `--since YYYY-MM-DD` | 시작일 (지정 시 `--days` 무시) | — |
 | `--until YYYY-MM-DD` | 종료일 | 오늘 |
-| `--project <부분문자열>` | 프로젝트 경로 필터 (예: `voltera`) | 전체 |
+| `--project <부분문자열>` | 프로젝트 경로 필터 (예: `myproject`) | 전체 |
 | `--top N` | 랭킹 표 상위 N개 | 15 |
 | `--out <경로>` | 마크다운 저장 (미지정 시 stdout) | — |
 
@@ -64,7 +64,7 @@ python3 "$SKILL_DIR/scripts/measure.py" --days 14 --project voltera --out /tmp/s
 ### Step 3 (선택): 회고에 연결
 
 주간 회고(`retrospective`) 맥락이면, 이 지표를 자동화 우선순위의 정량 근거로 인용한다.
-결과를 보존하려면 회사 볼트 `synergyai-obsidian/<프로젝트>/reports/` 또는
+결과를 보존하려면 회사 볼트의 `<프로젝트>/reports/` 또는
 `retrospective/`에 저장을 제안한다 (사용자 확인 후).
 
 ---

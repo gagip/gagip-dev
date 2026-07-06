@@ -43,7 +43,7 @@ def parse_args():
     p.add_argument("--days", type=int, default=14, help="오늘 기준 최근 N일 (기본 14)")
     p.add_argument("--since", help="시작일 YYYY-MM-DD (지정 시 --days 무시)")
     p.add_argument("--until", help="종료일 YYYY-MM-DD (기본: 오늘)")
-    p.add_argument("--project", help="프로젝트 경로 부분문자열 필터 (예: voltera)")
+    p.add_argument("--project", help="프로젝트 경로 부분문자열 필터 (예: myproject)")
     p.add_argument("--top", type=int, default=15, help="랭킹 표 상위 N개 (기본 15)")
     p.add_argument("--out", help="마크다운 저장 경로 (미지정 시 stdout)")
     p.add_argument("--today", help="기준일 주입 YYYY-MM-DD (테스트/재현용; 기본 시스템 날짜)")
