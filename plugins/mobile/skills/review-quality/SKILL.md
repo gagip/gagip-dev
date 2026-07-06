@@ -6,9 +6,10 @@ description: >
   리포트한다. 사용자가 "앱 품질 검토", "출시 전 점검", "스토어 심사 전 확인",
   "Play/App Store 리젝 위험 봐줘", "플랫폼 가이드라인 위반 확인", "Core App Quality",
   "App Review Guidelines", "권한/네트워크 보안 점검", "접근성/다크모드 점검",
-  "이 앱 심사 통과될까" 같은 요청을 하면 반드시 사용한다. 특정 코드 로직 버그를 찾는
+  "이 앱 심사 통과될까", "Wear OS 품질", "워치 앱 출시 점검", "Wear App Quality" 같은 요청을 하면 반드시 사용한다. 특정 코드 로직 버그를 찾는
   일반 코드 리뷰가 아니라, "플랫폼이 요구하는 출시 품질 기준" 관점의 점검이다.
-  Android·iOS 네이티브와 React Native·Flutter·Tauri·Capacitor 하이브리드를 모두 다룬다.
+  Android·iOS 네이티브와 React Native·Flutter·Tauri·Capacitor 하이브리드, 그리고
+  Wear OS(워치) 앱을 모두 다룬다.
 argument-hint: "[검토할 앱 경로 (선택, 비우면 현재 위치)]"
 allowed-tools: Bash, Read, Glob, Grep
 ---
@@ -22,8 +23,9 @@ $ARGUMENTS
 ## 이 스킬이 하는 일
 
 일반 코드 리뷰(로직 버그·가독성)가 아니라 **"플랫폼이 출시에 요구하는 품질 기준"** 관점의 검토다.
-판단 근거는 두 플랫폼의 공식 문서다 — Android Core App Quality, Apple App Review
-Guidelines(ARG)/Human Interface Guidelines(HIG). 두 기준을 1:1로 이어둔 매핑 표가 자산으로 있어,
+판단 근거는 플랫폼 공식 문서다 — Android Core App Quality, Apple App Review
+Guidelines(ARG)/Human Interface Guidelines(HIG), 그리고 워치 앱은 Wear OS App Quality.
+Android↔Apple을 1:1로 이어둔 매핑 표와 Wear OS 전용 항목(WO-*)이 자산으로 있어,
 지적할 때마다 **어느 기준에 걸리는지 근거를 인용**한다. 그래야 "왜 고쳐야 하는지"가 명확해지고,
 스토어 리젝 리스크인지 권고사항인지 구분된다.
 
@@ -41,7 +43,11 @@ Guidelines(ARG)/Human Interface Guidelines(HIG). 두 기준을 1:1로 이어둔 
 하이브리드(RN/Flutter/Tauri/Capacitor)는 네이티브 폴더가 함께 있어 **여러 플랫폼이 동시에 잡힐 수
 있다** — 잡힌 플랫폼 전부를 대상으로 한다. 어느 신호도 없으면 사용자에게 대상 플랫폼을 확인한다.
 
-감지 결과를 한 줄로 먼저 보고한다. 예: "감지: React Native (android/ + ios/ 동반) → Android·Apple 양쪽 점검".
+Android 신호에 워치 신호(`android.hardware.type.watch`, `androidx.wear.*` 등)가 함께 잡히면
+**Wear OS 앱**이다 — Android 항목에 더해 Wear OS 항목(WO-*)을 적용한다.
+
+감지 결과를 한 줄로 먼저 보고한다. 예: "감지: React Native (android/ + ios/ 동반) → Android·Apple 양쪽 점검",
+"감지: Wear OS 앱 (Jetpack Compose for Wear OS) → Android + Wear OS(WO-*) 점검".
 
 ## Step 3 — 해당 플랫폼 항목 점검
 
@@ -59,6 +65,11 @@ Guidelines(ARG)/Human Interface Guidelines(HIG). 두 기준을 1:1로 이어둔 
 4. **생체신호(ECG·심박·수면 등) 헬스 데이터를 다루는 앱이면** `quality-map.md` §6과 HEALTH-* 항목을
    추가로 본다. 사용자 노출 문구가 "정확/진단/위험도"처럼 의료기기 라인을 넘을 소지가 보이면, 품질
    검토 범위를 넘는 **규제 리스크로 에스컬레이션**한다(여기서 단정하지 않는다).
+5. **Wear OS(워치) 앱이면** `quality-map.md` §7과 WO-* 항목을 §1~5 Android 항목에 **더해** 본다
+   (`detection-hints.md` §2-1의 Wear 점검 단서 사용). WO-* 는 적용 대상이 3분류다 —
+   **[모든 Wear 앱]**은 확정/의심으로 판정하고, **[Watch Face 전용]**은 Watch Face 신호
+   (`watch_face_shapes.xml`·Watch Face Format XML·`WatchFaceService`)가 **없으면 "해당 없음"으로
+   분류**해 지적하지 않는다(노이즈 방지), **[스토어/런타임]**은 "확인 불가"로 분류한다.
 
 ## 출력 형식
 

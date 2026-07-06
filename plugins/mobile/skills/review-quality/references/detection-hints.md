@@ -17,6 +17,8 @@
 | 플랫폼/프레임워크 | 감지 신호 |
 |---|---|
 | Android 네이티브 | `**/build.gradle`, `**/build.gradle.kts`, `**/AndroidManifest.xml`, `*.kt` / `*.java` |
+| Wear OS (Android 워치) | 위 Android 신호 **+** `AndroidManifest.xml`에 `<uses-feature android:name="android.hardware.type.watch">`, 또는 `androidx.wear:*`·`androidx.wear.compose:*`·`com.google.android.gms:play-services-wearable`·`com.google.android.support:wearable` 의존성, `WearableActivity`/`SwipeDismissableNavHost` 사용 |
+| Wear OS Watch Face | 위 Wear 신호 **+** `res/xml*/watch_face_shapes.xml`, Watch Face Format XML(`<WatchFace>` 루트), `WatchFaceService` 구현 |
 | iOS 네이티브 | `*.xcodeproj`, `*.xcworkspace`, `**/Info.plist`, `*.swift`, `Podfile` |
 | React Native | `package.json`에 `react-native` 의존성 + `android/` & `ios/` 폴더 동시 존재 |
 | Flutter | `pubspec.yaml`, `lib/**/*.dart`, `android/` & `ios/` 동반 |
@@ -28,6 +30,7 @@
 - Android 신호만 → Android 항목(UX/FN/PS/SEC/STORE)만 적용
 - iOS 신호만 → Apple 대응 항목만 적용
 - 둘 다(하이브리드) → **양쪽 모두** 적용하되, 하이브리드는 네이티브 설정이 자동 생성(gen/, ios/, android/)되는 경우가 많으니 "생성물 vs 직접 작성"을 구분해 본다
+- **Wear OS 신호가 있으면** → Android 항목에 **더해** `quality-map.md §7`의 WO-* 를 적용(아래 §2-1). **Watch Face 신호가 없으면** Watch Face 전용 WO-* 는 "해당 없음(Watch Face 아님)"으로 분류하고 지적하지 않는다
 - 어느 신호도 없으면 → 사용자에게 대상 플랫폼을 확인
 
 ---
@@ -56,6 +59,42 @@
 | UX-18 Content_Description | `ImageButton`/`ImageView` 등에 `contentDescription` 누락 |
 | FN-9 Sharesheet | 커스텀 공유 UI 대신 `Intent.createChooser` 사용 여부 |
 | PS-4 ANR | UI 스레드(메인)에서 네트워크/DB/파일 동기 호출 |
+
+## 2-1. Wear OS 추가 점검 단서 (워치 폼팩터)
+
+Wear OS로 감지되면 §2 Android 단서에 **더해** 아래를 본다. 근거 ID는 `quality-map.md §7`.
+대상 파일: `AndroidManifest.xml`, `build.gradle(.kts)`, Wear Compose `*.kt`, `res/`.
+
+**[모든 Wear 앱] — 코드/설정으로 확인 가능**
+
+| 항목 | 점검 단서 (grep/확인 포인트) |
+|---|---|
+| WO-P1 Target_SDK | `build.gradle(.kts)`의 `targetSdk` ≥ 34 (Wear OS 5 기준, 2025-08-31부터 필수) |
+| WO-P6 Wear_Auth | 워치 앱 UI에 비밀번호 입력 필드(`PasswordVisualTransformation`, `EditText inputType=…password`) — **워치에서 직접 로그인 요구 = 확정 위반**. 폰 인증→Data Layer 토큰(`Wearable.getDataClient`/`MessageClient`) 위임인지 확인 |
+| WO-V13 Black_Background | Wear Compose 테마 배경이 검은색인지(`Colors(background = Color.Black)`), XML `windowBackground`/테마. 밝은 배경 상시 사용은 위반 |
+| WO-V3 Swipe_To_Dismiss | `SwipeToDismissBox` / `SwipeDismissableNavHost`(Wear Navigation) 사용 여부. 스와이프 뒤로가기를 커스텀으로 막았는지 |
+| WO-V5 State_Preservation | `rememberSaveable` / `onSaveInstanceState` / `SavedStateHandle`로 포그라운드 이탈 후 상태 복원 처리 |
+| WO-V2 Touch_Target | 클릭 가능한 Composable `Modifier.size` < 48dp, Wear Material `minimumInteractiveComponentSize` 우회 여부 |
+| WO-V14 Font_Size | 하드코딩 `sp`가 필수 텍스트 < 12sp / 비필수 < 10sp |
+| WO-V16 Watch_Shape | 원형/사각 대응(`BoxInsetLayout`, 가장자리 `Modifier.padding`), `<uses-feature ... type.watch>` required 여부, 가장자리 잘림 |
+| WO-V15 Splash_Screen | `androidx.core:core-splashscreen`(SplashScreen API) 설정, 스플래시 아이콘이 런처 아이콘과 일치 |
+| WO-V4 Ongoing_Activity | 진행 중 측정(ECG 등) 포그라운드 서비스가 `OngoingActivity`(`androidx.wear.ongoing`)로 표시되는지 |
+| WO-P5 Companion/standalone | `AndroidManifest.xml` `<meta-data android:name="com.google.android.wearable.standalone" android:value="…">` — `false`면 동반 앱 연결 필요 |
+| WO-G7 Packaging | 동반 폰 앱과 동일 `applicationId` + 동일 서명 키(`signingConfigs`) 사용 여부 |
+| WO-V6 Launcher | `android:label`·`android:icon` 설정(런처 표시명/아이콘) |
+| WO-S2 Arch_64bit | 네이티브 `.so`/NDK 있을 때 `ndk { abiFilters }`에 `arm64-v8a`·`x86_64` 포함(2026-09-15부터 필수). 순수 JVM/Kotlin이면 해당 없음 |
+
+**[Watch Face 전용] — Watch Face 신호가 있을 때만**
+
+| 항목 | 점검 단서 |
+|---|---|
+| WO-G10 Shape_Count | `res/xml*/watch_face_shapes.xml`의 `<WatchFace>` 요소 ≤ 10개 |
+| WO-G11 Source_Size | Watch Face Format XML 소스 파일 총 크기 ≤ 10MB |
+| WO-P10 Complication_Count | Watch Face 정의의 컴플리케이션(정보 표시) 슬롯 ≤ 8개 |
+| WO-S1 Format_Required | 워치 페이스가 Watch Face Format(선언적 XML) 기반인지(2026-01부터 필수) |
+
+> Watch Face 신호가 없으면 이 블록·§7의 Watch Face 전용 WO-* 는 **전부 "해당 없음"**으로 분류한다.
+> ECG 측정 같은 일반 Wear 앱에 Watch Face 항목을 지적하는 것은 노이즈다.
 
 ## 3. iOS / Apple 점검 단서
 
@@ -97,3 +136,5 @@
 - PS-1 실제 시작 시간(2초) / PS-2 실제 60fps / PS-11 실제 배터리 영향 → Xcode Organizer·MetricKit·Android vitals·Macrobenchmark
 - UX-2~4 실제 생명주기 일시중지/재개 동작 → 기기 테스트
 - STORE-* 스토어 등재물(스크린샷·등급) → 스토어 콘솔에서 확인
+- **Wear OS** WO-P7 AOD 밝은 픽셀 15% / WO-P8 Watch Face 메모리 / WO-V12 시간 명확성 / WO-P2·P3 실제 안정성 → Wear OS 에뮬레이터(192dp 원형·227dp 원형)·Pixel Watch·Firebase Test Lab 실측
+- **Wear OS** WO-G* 스토어 등재물(스크린샷 1:1·아이콘·설명·카테고리 태그·테스트 계정) → Play Console에서 확인

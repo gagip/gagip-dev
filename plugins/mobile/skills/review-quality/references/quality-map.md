@@ -8,6 +8,7 @@
 - Android Core App Quality — https://developer.android.com/docs/quality-guidelines/core-app-quality
 - Apple App Review Guidelines (ARG) — https://developer.apple.com/app-store/review/guidelines/
 - Apple Human Interface Guidelines (HIG) — https://developer.apple.com/design/human-interface-guidelines/
+- Wear OS App Quality — https://developer.android.com/docs/quality-guidelines/wear-app-quality
 
 ## 범례
 
@@ -27,7 +28,8 @@
 3. PS — 성능·안정성 (PS-1 ~ PS-11)
 4. SEC — 개인정보·보안 (SEC-1 ~ SEC-20)
 5. STORE — 스토어 등재 (STORE-1 ~ STORE-6)
-6. 헬스 데이터 추가 규제 (Voltera 등 생체신호 앱)
+6. 헬스 데이터 추가 규제 (ECG 등 생체신호 앱)
+7. WO — Wear OS 품질 (워치 폼팩터, WO-*)
 
 ---
 
@@ -136,7 +138,7 @@
 ## 6. 헬스 데이터 추가 규제 (생체신호 앱)
 
 일반 품질 기준 위에 한 겹 더 있는 규제. Android Core App Quality에는 거의 없지만 Apple엔 명시 조항이 있다.
-ECG·심박·수면 등 생체신호를 해석해 보여주는 앱(예: Voltera)이면 반드시 본다.
+ECG·심박·수면 등 생체신호를 해석해 보여주는 앱(예: ECG 웨어러블 앱)이면 반드시 본다.
 
 | ID | 기준 | Apple 근거 | 비고 |
 |---|---|---|---|
@@ -147,3 +149,85 @@ ECG·심박·수면 등 생체신호를 해석해 보여주는 앱(예: Voltera)
 
 > 문구가 "의료기기 라인"을 넘는지(예: "정확", "진단", "위험도")는 별도 규제 판별 영역이다.
 > 코드 출력 문구·i18n에서 이런 표현이 보이면 품질 검토 범위를 넘는 규제 리스크로 **에스컬레이션**한다.
+
+## 7. WO — Wear OS 품질 (워치 폼팩터)
+
+Wear OS는 **Android 전용 폼팩터**다 — 폰 Android 품질(§1~5) 위에 워치 고유 요구가 한 겹 더 있다.
+그래서 이 섹션은 Apple 대응 열을 두지 않는다(watchOS는 이 스킬 범위 밖). Wear OS **앱**으로 감지되면
+(`detection-hints.md §1`의 워치 신호) §1~5의 Android 항목에 **더해** 아래 WO-* 를 본다.
+
+### 적용 대상 3분류 — 노이즈를 막는 핵심
+
+Wear OS 가이드는 성격이 셋으로 갈린다. 지적을 낼 때 **어느 분류인지**를 함께 밝힌다.
+
+- **[모든 Wear 앱]** — 일반 Wear OS 앱이면 전부 적용. 대부분 코드/설정으로 확정·의심 판정 가능.
+- **[Watch Face 전용]** — **시계 화면(Watch Face Format) 앱에만** 해당. ECG 측정 앱 같은 일반 Wear 앱이면
+  **"해당 없음(Watch Face 아님)"으로 분류**하고 지적하지 않는다 — 억지 적용은 노이즈다.
+- **[스토어/런타임]** — 스토어 콘솔 등재물·실측 항목. 코드로 확인 불가 → **"확인 불가"로 분류**(§SKILL 출력의 ⚪).
+
+> ID는 이 문서의 자체 부여 코드다(Wear OS 공식 문서에도 항목 ID가 없다). 접두사로 카테고리를 나눈다:
+> **WO-V**(시각 환경) · **WO-P**(성능·기능) · **WO-G**(Google Play) · **WO-S**(예정 요구사항).
+
+### 7.1 WO-V — 시각적 환경
+
+| ID | Wear OS 품질 기준 | 적용 대상 | 점검성 |
+|---|---|---|---|
+| WO-V1 | Font_Scaling — 사용자 설정 글꼴 크기를 따라 텍스트/컨트롤이 겹치거나 잘리지 않음 | 모든 Wear 앱 | 코드·설정 / 런타임 |
+| WO-V2 | Touch_Target — 최소 48×48dp 터치 영역 | 모든 Wear 앱 | 코드·설정 |
+| WO-V3 | Swipe_To_Dismiss — 거의 모든 화면에서 스와이프로 뒤로가기(예외: 진행 중 운동·지도 등은 명확한 클릭 유도) | 모든 Wear 앱 | 코드·설정 |
+| WO-V4 | Ongoing_Activity — 진행 중 활동을 시계 화면·최근 앱·타일에 표시 | 진행 중 활동 있는 앱 | 코드·설정 |
+| WO-V5 | State_Preservation — 포그라운드 이탈 후 상태 복원(의도치 않은 데이터 손실 방지) | 모든 Wear 앱 | 코드·설정 / 런타임 |
+| WO-V6 | Launcher_Representation — 앱 런처에 아이콘·이름이 올바르게 표시 | 모든 Wear 앱 | 코드·설정 |
+| WO-V8 | Scrollbar — 스크롤 가능한 뷰에서 스크롤바 표시 | 모든 Wear 앱 | 코드·설정 |
+| WO-V9 | Logged_Out_Tile — 로그아웃 상태에서 타일 열면 로그인 안내 표시 | 타일 제공 앱 | 코드·설정 |
+| WO-V10 | Tile_Preview — 타일 관리자에 표시될 미리보기 애셋 제공 | 타일 제공 앱 | 코드·설정 |
+| WO-V12 | WatchFace_Time_Clarity — 시간이 항상 명확히 읽힘 | Watch Face 전용 | 런타임 |
+| WO-V13 | Black_Background — 배터리 효율 위해 검은색 배경 사용 | 모든 Wear 앱 | 코드·설정 |
+| WO-V14 | Font_Size — 필수 텍스트 ≥12sp, 비필수 ≥10sp | 모든 Wear 앱 | 코드·설정 |
+| WO-V15 | Splash_Screen — 검은 배경 + 48×48dp 아이콘(런처 아이콘과 일치) | 모든 Wear 앱 | 코드·설정 |
+| WO-V16 | Watch_Shape — 원형/사각 등 다양한 시계 모양 대응(가장자리 잘림 없음, ≥192dp 원 영역) | 모든 Wear 앱 | 코드·설정 |
+
+### 7.2 WO-P — 성능 및 기능
+
+| ID | Wear OS 품질 기준 | 적용 대상 | 점검성 |
+|---|---|---|---|
+| WO-P1 | Target_SDK — Android 14(API 34)+ 타겟(2025-08-31부터 필수, Wear OS 5 기준) | 모든 Wear 앱 | 코드·설정 |
+| WO-P2 | Stability_App — 크래시/ANR 없이 설치·실행·작업 완료 | 모든 Wear 앱 | 런타임 |
+| WO-P3 | Stability_WatchFace — 설치·설정·맞춤설정 중 비정상 종료 없음 | Watch Face 전용 | 런타임 |
+| WO-P5 | Companion_Compatibility — 비독립형 앱은 호환(동반) 앱과 정상 연결 | 비독립형 앱 | 코드·설정 |
+| WO-P6 | Wear_Auth — 워치에서 직접 아이디/비밀번호 입력 요구 금지(폰 인증 후 토큰 사용) | 모든 Wear 앱 | 코드·설정 |
+| WO-P7 | Always_On_Pixels — AOD 지원, 밝은 픽셀 비율 평균 15% 이하 | Watch Face 전용 | 런타임 |
+| WO-P8 | WatchFace_Memory — 대기 ≤10MB / 대화형 ≤100MB (애셋 전체) | Watch Face 전용 | 스토어/런타임 |
+| WO-P10 | Complication_Count — 정보 표시(컴플리케이션) 자리 최대 8개 | Watch Face 전용 | 코드·설정 |
+
+### 7.3 WO-G — Google Play 요구사항
+
+| ID | Wear OS 품질 기준 | 적용 대상 | 점검성 |
+|---|---|---|---|
+| WO-G1 | Play_Policy — Play 개발자 정책 센터 전면 준수 | 모든 Wear 앱 | 스토어/런타임 |
+| WO-G2 | Listing_Description — 주요 기능 명시, 타일/컴플리케이션 포함 시 언급, 현지화 | 모든 Wear 앱 | 스토어/런타임 |
+| WO-G3 | Listing_Icon_App — Google Play 아이콘 디자인 사양 준수 | 모든 Wear 앱 | 스토어/런타임 |
+| WO-G4 | Listing_Icon_WatchFace — 단일 시계 화면 앱 아이콘 사양(2026-07-15부터) | Watch Face 전용 | 스토어/런타임 |
+| WO-G5 | Listing_Screenshot_App — Wear 현재 버전 스크린샷 ≥1개, 1:1 비율, 프레임/텍스트 없음 | 모든 Wear 앱 | 스토어/런타임 |
+| WO-G6 | Listing_Screenshot_WatchFace — 시계 화면 스크린샷 ≥1개(맞춤설정 시 순열 2개+), 1:1 | Watch Face 전용 | 스토어/런타임 |
+| WO-G7 | Packaging — Wear·폰 동반 앱은 동일 패키지 이름 + 동일 서명 키 | 동반 앱 있는 앱 | 코드·설정 |
+| WO-G8 | Review_Credentials — 유료/로그인 기능은 Play Console에 테스트 계정 제공 | 로그인/유료 앱 | 스토어/런타임 |
+| WO-G9 | Category_Tag — 시계 화면을 Play Console에서 적절한 카테고리로 자체 태그 | Watch Face 전용 | 스토어/런타임 |
+| WO-G10 | Shape_Count — `watch_face_shapes.xml`의 `<WatchFace>` 최대 10개 | Watch Face 전용 | 코드·설정 |
+| WO-G11 | Source_Size — 시계 화면 정의 XML 소스 총 크기 ≤10MB | Watch Face 전용 | 코드·설정 |
+| WO-G12 | WatchFace_Tooling — 최신 Wear OS 기능 지원하는 최신 워치 페이스 도구 사용 | Watch Face 전용 | 코드·설정 |
+
+### 7.4 WO-S — 예정된 요구사항 (날짜 경과 시 강제)
+
+| ID | Wear OS 품질 기준 | 적용 대상 | 점검성 |
+|---|---|---|---|
+| WO-S1 | WatchFace_Format_Required — 2026-01부터 워치 페이스 설치 시 Watch Face Format 필수 | Watch Face 전용 | 코드·설정 |
+| WO-S2 | Arch_64bit — 2026-09-15부터 모든 Wear 앱 64비트 기기 지원 의무 | 네이티브 코드 있는 앱 | 코드·설정 |
+
+> 메모: WO-V13(검은 배경)·WO-P7(AOD 밝은 픽셀)은 **배터리 절약**이라는 워치 고유 제약에서 나온다.
+> 폰 다크모드(UX-10)와 다르다 — 워치는 사용자 선택이 아니라 **품질 요구**로 검은 배경을 요구한다.
+> 메모: WO-P6(워치 직접 로그인 금지)는 폰엔 없는 워치 고유 항목이다. Wear 앱 코드에 아이디/비밀번호
+> 입력 UI가 보이면 **확정 위반** 후보다 — Data Layer 토큰 전달·폰 인증 위임으로 우회해야 한다.
+> 메모: Watch Face 전용 항목(WO-V12, WO-P3/P7/P8/P10, WO-G4/G6/G9~G12, WO-S1)은 **시계 화면 앱이
+> 아니면 지적하지 않는다**. `detection-hints.md`에서 Watch Face 신호(`watch_face_shapes.xml`,
+> Watch Face Format XML, `WatchFaceService`)가 없으면 "해당 없음"으로 분류한다.
