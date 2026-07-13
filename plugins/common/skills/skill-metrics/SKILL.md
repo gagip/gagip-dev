@@ -64,8 +64,8 @@ python3 "$SKILL_DIR/scripts/measure.py" --days 14 --project myproject --out /tmp
 ### Step 3 (선택): 회고에 연결
 
 주간 회고(`retrospective`) 맥락이면, 이 지표를 자동화 우선순위의 정량 근거로 인용한다.
-결과를 보존하려면 회사 볼트의 `<프로젝트>/reports/` 또는
-`retrospective/`에 저장을 제안한다 (사용자 확인 후).
+결과를 보존하려면 회사 문서의 `<프로젝트>/reports/`(예: `~/workspace/<프로젝트>/docs/engineering/reports/`) 또는
+`~/workspace/<회사문서>/retrospective/`에 저장을 제안한다 (사용자 확인 후).
 
 ---
 
