@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [mobile/0.2.2] — 2026-07-14
+
+### ♻️ Refactoring
+- `android-review`의 하드코딩된 참조 경로를 `$SKILL_DIR` 참조로 일반화, `android-test`에 참조 문서가 대상 프로젝트 기준임을 명시하는 주석 추가, mobile README 스킬 목록을 표 형식으로 정리 ([`7523a90`])
+
+---
+
 ## [common/0.15.0] — 2026-07-14
 
 ### ✨ New Features
