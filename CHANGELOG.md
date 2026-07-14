@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [common/0.15.0] — 2026-07-14
+
+### ✨ New Features
+- `light-research` 스킬 추가 — deep-research는 주장별 3-vote 검증 단계 때문에 에이전트가 100개를 넘기도 해 세션 한도에 자주 걸린다. 검증 단계를 없애고 "검색 각도별 조사 → 종합" 2단계로만 구성해 에이전트 4~7개 수준으로 끝내는 축소판 리서치 스킬. 계획서 승인 절차와 재사용 가능한 Workflow 스크립트 템플릿(`references/light-research-template.js`) 포함 ([`966407d`])
+
+### ♻️ Refactoring
+- `allowed-tools`를 실제 사용 도구와 동기화(미사용 도구 제거, `[Bash]` 형식 정규화), `create-ppt`의 하드코딩된 스킬 경로를 `$SKILL_DIR` 참조로 일반화, `commit` 스킬에 `$ARGUMENTS`로 커밋 타입 직접 지정 기능 추가, common README 스킬 목록을 표 형식으로 정리하고 누락 스킬 반영 ([`7523a90`])
+
+---
+
 ## [common/0.14.0] — 2026-07-13
 
 ### ✨ New Features
