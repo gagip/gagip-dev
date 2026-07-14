@@ -13,7 +13,7 @@ $ARGUMENTS
 
 ## 참조 문서
 
-코드 분석 전에 먼저 읽는다:
+코드 분석 전에 먼저 읽는다 (대상 프로젝트 루트 기준 — 이 스킬 자체의 `references/`가 아니다):
 
 - `docs/testing.md` — 테스트 가이드라인 전체
 - `docs/architecture.md` — 테스트 전략 (슬라이스 통합/단위/E2E 계층)

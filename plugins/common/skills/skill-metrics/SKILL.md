@@ -9,7 +9,7 @@ description: >
   "스킬 도달률", "반복 워크플로우 분석".
   주간 회고에서 자동화 후보를 정량 근거로 뽑을 때, 또는 새 스킬이 실제로 채택됐는지
   추적할 때 사용한다.
-allowed-tools: Bash, Read, Write
+allowed-tools: Bash, Write
 argument-hint: (선택) 기간 — "14"(최근 N일) 또는 "2026-06-05"(시작일). 생략 시 최근 14일
 ---
 

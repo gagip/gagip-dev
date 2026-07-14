@@ -9,7 +9,7 @@ description: >
   "기존 스킬 점검해줘", "스킬 업데이트 필요한 거 있어?",
   "원칙이 바뀌었는데 스킬 갱신해야 해", "스킬 정리해줘", "스킬 좀 봐줘"
   등의 표현이 나오면 반드시 이 스킬을 사용할 것.
-allowed-tools: Bash, Read, Write, Glob, Grep
+allowed-tools: Read, Write, Glob, Grep
 argument-hint: (선택) 생성하거나 점검할 스킬 이름 또는 대상 프로젝트 경로. 생략 시 현재 프로젝트 전체 분석
 ---
 

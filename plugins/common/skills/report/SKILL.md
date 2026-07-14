@@ -8,7 +8,7 @@ description: >
   작업을 완료했거나, 분석 결과를 정리했거나,
   사용자에게 선택을 요청해야 할 때도 자동으로 이 스킬을 사용한다.
   (구현 계획서는 이 스킬이 아니라 `draft-plan`이 담당한다.)
-allowed-tools: Bash, Read, Write
+allowed-tools: Bash, Write
 argument-hint: (선택) 보고서 유형 - 완료보고 / 분석 / 의사결정. 생략 시 맥락에서 자동 판단
 ---
 

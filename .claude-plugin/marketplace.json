@@ -7,7 +7,7 @@
     {
       "name": "common",
       "source": "./plugins/common",
-      "description": "언어/플랫폼 무관 공통 개발 도구"
+      "description": "언어/플랫폼 무관 공통 개발 워크플로 도구"
     },
     {
       "name": "mobile",

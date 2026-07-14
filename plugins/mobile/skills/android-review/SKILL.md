@@ -26,7 +26,7 @@ $ARGUMENTS
 - **설정/빌드 파일** (`*.gradle`, `*.json`, `*.yaml` 등): 보안·정확성 위주
 - **일반 소스 파일**: 모든 항목 적용
 
-**가독성** (`references/common/coding-philosophy.md` 기준)
+**가독성** (`${SKILL_DIR}/references/common/coding-philosophy.md` 기준)
 - 코드가 명확하고 읽기 쉬운가
 - 함수·변수명이 역할을 잘 표현하는가 (네이밍 규칙 준수)
 - 중복 코드가 없는가
@@ -46,8 +46,8 @@ $ARGUMENTS
 **아키텍처** _(플랫폼별 references 기준 적용)_
 - 레이어 규칙이 지켜지는가
 - 의존성 방향이 올바른가
-- 플랫폼별 패턴이 프로젝트 규칙과 일치하는가 (`references/android/kotlin-conventions.md`, `references/android/compose-patterns.md` 기준)
-- Service 관련 코드는 `references/android/service-guidelines.md` 기준 적용
+- 플랫폼별 패턴이 프로젝트 규칙과 일치하는가 (`${SKILL_DIR}/references/android/kotlin-conventions.md`, `${SKILL_DIR}/references/android/compose-patterns.md` 기준)
+- Service 관련 코드는 `${SKILL_DIR}/references/android/service-guidelines.md` 기준 적용
 
 **테스트**
 - 핵심 기능의 테스트가 있는가 (핵심 흐름과 경계 조건 중심)

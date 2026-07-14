@@ -215,12 +215,9 @@ AskUserQuestion으로 핵심 정보를 한 번에 물어본다.
 
 ### 3단계: 스크립트 실행
 
-이 SKILL.md 파일의 위치를 기반으로 스크립트 경로를 결정한다.
+환경변수 `$SKILL_DIR`(이 스킬 디렉터리 경로)를 사용해 스크립트를 실행한다.
 
 ```bash
-# 스킬 디렉터리 경로 (이 파일과 같은 위치)
-SKILL_DIR="/Volumes/OneTouch/workspace/gagip-dev/plugins/common/skills/create-ppt"
-
 # 출력 파일명: 프로젝트명_브리핑.html (또는 사용자 지정)
 OUTPUT_FILE="${PROJECT_NAME}_브리핑.html"
 

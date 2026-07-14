@@ -9,7 +9,7 @@ description: >
   - "버그 리포트", "버그 이슈", "버그 올려줘"
   - "기능 요청 이슈", "개선 이슈", "작업 이슈"
   단, "이슈 브랜치 만들어줘"처럼 브랜치 생성이 목적인 경우에는 git-convention 스킬을 사용한다.
-allowed-tools: [Bash]
+allowed-tools: Bash
 argument-hint: (선택) 이슈 내용을 자연어로 전달. 생략 시 내용 질문.
 ---
 

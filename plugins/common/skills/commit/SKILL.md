@@ -22,6 +22,8 @@ bash "$SKILL_DIR/scripts/status.sh"
 
 커밋 메시지 가이드라인: `$SKILL_DIR/commit-guidelines.md` 를 읽고 그 형식을 따를 것
 
+`$ARGUMENTS`로 커밋 타입(`feat`/`fix`/`refactor` 등)이 주어지면 그 타입을 그대로 사용한다. 생략됐으면 변경사항을 분석해 타입을 자동 판단한다.
+
 스테이징 상태에 따라 처리:
 - **이미 스테이징된 파일이 있으면**: 스테이징된 파일 기준으로 메시지 작성, 3단계에서 `git add -A` 생략
 - **스테이징된 파일이 없으면**: 전체 변경사항 기준으로 메시지 작성, 3단계에서 `git add -A` 실행

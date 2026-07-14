@@ -8,7 +8,7 @@ description: >
   "마무리해줘", "정리하고 커밋", "정리하고 올려줘", "finish", "커밋하고 PR",
   "코드 정리하고 PR까지", "리뷰하고 커밋하고 올려줘", "마감".
   단순 커밋만 원하면 이 스킬이 아니라 해당 프로젝트의 커밋 스킬을 직접 쓴다.
-allowed-tools: Skill, Bash, Read, Edit
+allowed-tools: Skill, Bash, Read
 argument-hint: (선택) 스킵 옵션 — "no-pr"(PR 생략) / "no-review"(리뷰 생략) / "no-simplify"(정리 생략)
 ---
 
