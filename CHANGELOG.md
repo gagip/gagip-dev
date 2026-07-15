@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [common/0.16.0] — 2026-07-15
+
+### ✨ New Features
+- `design-md` 스킬 추가 — 프로젝트 루트에 DESIGN.md(AI 코딩 에이전트용 디자인 시스템 SSOT)를 생성한다. 기존 코드베이스를 스캔해 실제 색·타이포·간격·컴포넌트 값을 추출(브라운필드)하고 부족분만 대화로 보완하는(그린필드 폴백) 하이브리드 입력. 필수 6섹션(Overview·Colors·Typography·Spacing/Layout·Components·Do's & Don'ts)을 강제하고 Google design.md 스펙의 2부 구성(YAML frontmatter + 마크다운 근거)을 따른다. DESIGN.md는 자동 로드되지 않으므로 CLAUDE.md/AGENTS.md에 참조 줄 추가를 안내. preview.html·토큰 파일은 조건부 v2 확장 슬롯으로 표시 ([`f11f7b7`])
+
+---
+
 ## [common/0.15.1] — 2026-07-15
 
 ### 🐛 Bug Fixes

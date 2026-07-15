@@ -2,3 +2,5 @@ settings.local.json
 __pycache__/
 .DS_Store
 *.stackdump
+# skill eval 워크스페이스 (스크래치)
+plugins/*/skills/*-workspace/
