@@ -18,8 +18,8 @@ argument-hint: (선택) 보고서 유형 - 완료보고 / 분석 / 의사결정.
 
 ## 저장 규칙
 
-- **위치**: 프로젝트 루트의 `private/` (없으면 생성)
-- **파일명**: `private/<유형>-<slug>-<YYYYMMDD>.md`
+- **위치 (하드코딩하지 말 것)**: 프로젝트에 보고서·산출물 저장 규약이 있으면 그 위치(예: `CLAUDE.md`·문서 구조가 지정한 보고서(reports) 폴더), 없으면 프로젝트 루트의 `private/`를 기본값으로 쓴다(없으면 생성). 이 문서의 다른 `private/` 언급은 모두 이렇게 결정된 위치로 읽는다.
+- **파일명**: `<저장위치>/<유형>-<slug>-<YYYYMMDD>.md`
   - 유형 접두사: `done`(완료보고) · `analysis`(분석) · `decision`(의사결정)
   - `<slug>`: 보고서 제목에서 영문 소문자 + 하이픈, 40자 이하 (한글 제목은 영문 키워드 추출)
   - 같은 날 동일 파일명 충돌 시 `-2`, `-3` 접미사
@@ -38,11 +38,13 @@ argument 또는 대화 맥락에서 유형을 판단한다:
 
 ### 2. 저장 경로 결정
 
-프로젝트 루트를 판별하고 `private/`를 준비한다.
+프로젝트 루트를 판별하고 저장 위치(규약 우선, 없으면 `private/`)를 준비한다.
 
 ```bash
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-mkdir -p "$ROOT/private"
+# REPORTDIR = 프로젝트 규약이 지정한 보고서 폴더가 있으면 그 경로, 없으면 기본 private
+REPORTDIR="$ROOT/private"   # 규약 위치가 있으면 그 절대경로로 바꾼다
+mkdir -p "$REPORTDIR"
 DATE="$(date +%Y%m%d)"
 ```
 
@@ -106,7 +108,7 @@ status: 초안
 
 ### 4. 파일 저장
 
-`Write`로 `private/<유형>-<slug>-<DATE>.md`에 프론트매터 + 본문을 저장한다.
+`Write`로 `<REPORTDIR>/<유형>-<slug>-<DATE>.md`(위에서 결정한 저장 위치)에 프론트매터 + 본문을 저장한다.
 
 ### 5. 완료 메시지 출력
 
