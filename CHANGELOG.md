@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [common/0.15.1] — 2026-07-15
+
+### 🐛 Bug Fixes
+- `apply-review`·`report`·`draft-plan`이 보고서·계획서를 `private/`에 하드코딩 저장하던 것을, 프로젝트에 산출물 저장 규약(문서 구조가 지정한 reports·plans 폴더)이 있으면 그 위치를 우선하고 없으면 `private/`를 기본값으로 쓰도록 일반화. 모노레포·문서 볼트처럼 저장 위치가 `private/`가 아닌 프로젝트에서 산출물이 규약 폴더로 모이도록 수정 ([`d5d37d9`])
+
+---
+
 ## [mobile/0.2.2] — 2026-07-14
 
 ### ♻️ Refactoring
