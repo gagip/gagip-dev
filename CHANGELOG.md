@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [common/0.18.0] — 2026-07-16
+
+### ✨ New Features
+- `worktree-scaffold` 스킬 추가 — 레포의 환경·특이사항을 분석해 그 레포 전용 git worktree 부트스트랩 스크립트(`scripts/worktree-create.sh`)를 일관된 골격으로 생성한다. `git worktree add`가 자동으로 안 딸려오는 것을 복사(A: 추적 제외된 머신·환경 설정)·재생성(B: 의존성·git hooks·네이티브 생성물)·격리(C: dev 서버 포트·임시 디렉터리, 순수 빌드 레포는 생략) 3분류로 나눠 처리하고, 실패 시 worktree를 제거하되 브랜치는 보존하는 롤백 트랩을 포함한다. worktree 경로(레포 안/밖)는 자동 결정하지 않고 사용자에게 트레이드오프를 제시해 고르게 한다. 스택 무관 감지 휴리스틱(`references/detection.md`)과 고정 골격 템플릿(`references/script-skeleton.sh`)을 동봉 ([`400ef24`])
+
+---
+
 ## [common/0.17.0] — 2026-07-16
 
 ### ✨ New Features
