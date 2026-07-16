@@ -1,0 +1,212 @@
+<!doctype html>
+<!--
+  preview.template.html — DESIGN.md의 시각 레퍼런스 보드.
+  이 파일은 "작동하는 채워진 예시"다. 아래 SAMPLE 값을 대상 프로젝트의 DESIGN.md 값으로 교체해
+  <root>/preview.html 로 저장한다. 구조·토글·CSS 스캐폴딩은 그대로 두고 값만 바꾼다.
+  자기완결 — 외부 폰트/CSS/JS/이미지를 절대 참조하지 않는다(오프라인에서 그대로 열려야 함).
+
+  다크 토글 규칙 (스킬의 "현실 기술, 열망 금지"):
+    · DESIGN.md frontmatter에 다크 토큰(예: colors.dark 블록, 또는 *-dark 토큰)이 있으면
+      아래 [A] 블록의 주석을 풀고 그 값으로 채운다 → 토글이 브랜드 렌더까지 다크로 스왑.
+    · 없으면 [A] 블록을 삭제한 채 둔다 → 토글은 페이지 배경(크롬)만 전환해,
+      같은 브랜드 색을 밝은/어두운 주변에서 눈으로 대조하게 한다. 다크 색을 지어내지 않는다.
+    · 어느 경우든 헤더의 data-darknote 문구를 실제 상황에 맞게 남긴다.
+-->
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAMPLE Design System — Preview</title>
+<style>
+  /* ── 미리보기 페이지 자체의 크롬(주변 UI). 브랜드와 무관, 토글 대상. ── */
+  :root {
+    --page-bg:#f4f5f7; --page-fg:#1a1d23; --page-muted:#6b7280;
+    --page-panel:#ffffff; --page-border:#e5e7eb; --page-shadow:0 1px 2px rgba(16,24,40,.06);
+  }
+  html[data-theme="dark"] {
+    --page-bg:#0d1117; --page-fg:#e6edf3; --page-muted:#8b949e;
+    --page-panel:#161b22; --page-border:#30363d; --page-shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+
+  /* ══ 브랜드 토큰 — 대상 DESIGN.md 값으로 교체 ══ */
+  :root {
+    --brand-primary:#2563EB; --brand-primary-active:#1D4ED8;
+    --brand-canvas:#F8FAFC; --brand-surface:#FFFFFF;
+    --brand-ink:#0F172A; --brand-muted:#64748B; --brand-danger:#DC2626;
+    --brand-border:#E2E8F0;
+    --brand-radius-sm:8px; --brand-radius-md:12px;
+    --brand-font-display:'Poppins', system-ui, sans-serif;
+    --brand-font-body:'Inter', system-ui, sans-serif;
+  }
+  /* [A] 다크 팔레트가 DESIGN.md에 정의돼 있으면 주석을 풀고 값 교체. 없으면 이 블록 삭제.
+  html[data-theme="dark"] {
+    --brand-canvas:#0B1220; --brand-surface:#131A2A; --brand-ink:#E7ECF3;
+    --brand-muted:#9AA7B8; --brand-border:#26314A;
+  }
+  */
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--page-bg); color:var(--page-fg);
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:960px; margin:0 auto; padding:32px 24px 80px; }
+
+  header.top {
+    position:sticky; top:0; z-index:10; display:flex; align-items:center; gap:16px;
+    padding:16px 24px; background:var(--page-panel); border-bottom:1px solid var(--page-border);
+  }
+  header.top h1 { font-size:18px; margin:0; font-weight:700; }
+  header.top .sub { font-size:13px; color:var(--page-muted); margin-left:auto; }
+  .toggle {
+    font:inherit; font-size:13px; cursor:pointer; border:1px solid var(--page-border);
+    background:var(--page-bg); color:var(--page-fg); border-radius:999px; padding:6px 14px;
+  }
+  .toggle:hover { border-color:var(--page-muted); }
+
+  section { margin-top:40px; }
+  section > h2 {
+    font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--page-muted);
+    margin:0 0 16px; padding-bottom:8px; border-bottom:1px solid var(--page-border);
+  }
+  .note { font-size:13px; color:var(--page-muted); margin:0 0 16px; }
+
+  /* Colors */
+  .swatches { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+  .swatch { border:1px solid var(--page-border); border-radius:10px; overflow:hidden; background:var(--page-panel); }
+  .swatch .chip { height:64px; }
+  .swatch .meta { padding:10px 12px; }
+  .swatch .name { font-size:13px; font-weight:600; }
+  .swatch .hex { font-size:12px; color:var(--page-muted); font-family:ui-monospace,'SF Mono',Menlo,monospace; }
+  .swatch .role { font-size:12px; color:var(--page-muted); margin-top:4px; }
+
+  /* Typography — 실제 브랜드 서체/크기로 렌더 */
+  .type-row { display:flex; align-items:baseline; gap:16px; padding:12px 0; border-bottom:1px dashed var(--page-border); }
+  .type-row .label { flex:0 0 150px; font-size:12px; color:var(--page-muted); font-family:ui-monospace,Menlo,monospace; }
+  .type-row .specimen { color:var(--page-fg); font-family:var(--brand-font-body); }
+
+  /* Spacing */
+  .space-row { display:flex; align-items:center; gap:12px; padding:6px 0; }
+  .space-row .lbl { flex:0 0 120px; font-size:12px; font-family:ui-monospace,Menlo,monospace; color:var(--page-muted); }
+  .space-row .bar { height:16px; background:var(--brand-primary); border-radius:3px; }
+
+  /* Components — 실제 브랜드 canvas/surface 위에 렌더 */
+  .stage { background:var(--brand-canvas); border:1px solid var(--page-border); border-radius:12px; padding:24px; }
+  .stage-label { font-size:12px; color:var(--page-muted); margin-bottom:12px; }
+  .row { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
+  .btn {
+    font-family:var(--brand-font-body); font-size:14px; font-weight:500; border:none; cursor:pointer;
+    height:40px; padding:0 16px; border-radius:var(--brand-radius-sm);
+    background:var(--brand-primary); color:#fff;
+  }
+  .btn.active { background:var(--brand-primary-active); }
+  .btn.disabled { background:var(--brand-border); color:var(--brand-muted); cursor:not-allowed; }
+  .card {
+    background:var(--brand-surface); border-radius:var(--brand-radius-md); padding:20px;
+    box-shadow:0 1px 2px rgba(15,23,42,.06); max-width:280px;
+  }
+  .card h3 { margin:0 0 6px; font-family:var(--brand-font-display); font-size:18px; color:var(--brand-ink); }
+  .card p { margin:0; font-size:14px; color:var(--brand-muted); }
+  .input {
+    height:44px; padding:0 12px; border-radius:var(--brand-radius-sm);
+    border:1px solid var(--brand-border); font-family:var(--brand-font-body); font-size:14px;
+    color:var(--brand-ink); background:var(--brand-surface); min-width:220px;
+  }
+  .input:focus { outline:none; border-color:var(--brand-primary); }
+
+  footer { margin-top:56px; font-size:12px; color:var(--page-muted); text-align:center; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>SAMPLE Design System</h1>
+  <span class="sub" data-darknote>토글은 페이지 배경만 전환합니다 (다크 팔레트 미정의)</span>
+  <button class="toggle" onclick="toggleTheme()" aria-label="테마 전환">◐ 테마</button>
+</header>
+
+<div class="wrap">
+
+  <!-- ═══ Colors ═══ FILL: DESIGN.md의 컬러 토큰마다 .swatch 하나. chip 배경 = 실제 hex. -->
+  <section>
+    <h2>Colors</h2>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:#2563EB"></div><div class="meta">
+        <div class="name">primary</div><div class="hex">#2563EB</div><div class="role">주요 액션·활성 링크</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#1D4ED8"></div><div class="meta">
+        <div class="name">primary-active</div><div class="hex">#1D4ED8</div><div class="role">눌림 상태</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#F8FAFC;border-bottom:1px solid #e5e7eb"></div><div class="meta">
+        <div class="name">canvas</div><div class="hex">#F8FAFC</div><div class="role">페이지 배경</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#FFFFFF;border-bottom:1px solid #e5e7eb"></div><div class="meta">
+        <div class="name">surface</div><div class="hex">#FFFFFF</div><div class="role">카드·시트 배경</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#0F172A"></div><div class="meta">
+        <div class="name">ink</div><div class="hex">#0F172A</div><div class="role">본문 텍스트</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#64748B"></div><div class="meta">
+        <div class="name">muted</div><div class="hex">#64748B</div><div class="role">보조 텍스트</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#DC2626"></div><div class="meta">
+        <div class="name">danger</div><div class="hex">#DC2626</div><div class="role">오류·파괴적 액션</div></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ Typography ═══ FILL: 각 role을 실제 size/weight/lh로 렌더. specimen 텍스트 자유. -->
+  <section>
+    <h2>Typography</h2>
+    <p class="note">Display: Poppins · Body: Inter</p>
+    <div class="type-row"><span class="label">display-xl · 48/700</span>
+      <span class="specimen" style="font-family:var(--brand-font-display);font-size:48px;font-weight:700;line-height:1.1">Hero heading</span></div>
+    <div class="type-row"><span class="label">h2 · 28/600</span>
+      <span class="specimen" style="font-size:28px;font-weight:600;line-height:1.25">섹션 제목입니다</span></div>
+    <div class="type-row"><span class="label">body-md · 16/400</span>
+      <span class="specimen" style="font-size:16px;font-weight:400">본문 텍스트. 사용자가 읽는 기본 단락 크기입니다.</span></div>
+    <div class="type-row"><span class="label">label · 14/500</span>
+      <span class="specimen" style="font-size:14px;font-weight:500">버튼·폼 라벨</span></div>
+    <div class="type-row"><span class="label">caption · 12/400</span>
+      <span class="specimen" style="font-size:12px;color:var(--page-muted)">보조 설명·메타 정보</span></div>
+  </section>
+
+  <!-- ═══ Spacing ═══ FILL: 각 스텝의 bar width = 실제 px. -->
+  <section>
+    <h2>Spacing &amp; Layout</h2>
+    <p class="note">베이스 4px · 콘텐츠 max-width 1120px</p>
+    <div class="space-row"><span class="lbl">xxs · 4</span><span class="bar" style="width:4px"></span></div>
+    <div class="space-row"><span class="lbl">xs · 8</span><span class="bar" style="width:8px"></span></div>
+    <div class="space-row"><span class="lbl">sm · 12</span><span class="bar" style="width:12px"></span></div>
+    <div class="space-row"><span class="lbl">md · 16</span><span class="bar" style="width:16px"></span></div>
+    <div class="space-row"><span class="lbl">lg · 24</span><span class="bar" style="width:24px"></span></div>
+    <div class="space-row"><span class="lbl">xl · 32</span><span class="bar" style="width:32px"></span></div>
+    <div class="space-row"><span class="lbl">section · 64</span><span class="bar" style="width:64px"></span></div>
+  </section>
+
+  <!-- ═══ Components ═══ FILL: DESIGN.md Components 섹션의 실제 값으로. -->
+  <section>
+    <h2>Components</h2>
+    <div class="stage">
+      <div class="stage-label">브랜드 canvas 위 렌더 (실제 색·radius·그림자)</div>
+      <div class="row" style="margin-bottom:24px">
+        <button class="btn">Primary</button>
+        <button class="btn active">Active/Hover</button>
+        <button class="btn disabled">Disabled</button>
+      </div>
+      <div class="row">
+        <div class="card"><h3>Card 제목</h3><p>surface 위 본문. radius·padding·shadow가 토큰과 일치.</p></div>
+        <input class="input" placeholder="Input placeholder" />
+      </div>
+    </div>
+  </section>
+
+  <footer>이 파일은 DESIGN.md에서 생성된 시각 레퍼런스입니다. 손으로 편집하지 말고 DESIGN.md를 고친 뒤 재생성하세요.</footer>
+</div>
+
+<script>
+  // 페이지 크롬(+다크 팔레트가 있으면 브랜드까지) 라이트/다크 토글. 외부 의존 없음.
+  function toggleTheme() {
+    var el = document.documentElement;
+    el.setAttribute('data-theme', el.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  }
+  // 최초 진입 시 OS 선호 반영
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+</script>
+</body>
+</html>
