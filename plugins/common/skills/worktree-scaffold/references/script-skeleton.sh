@@ -84,19 +84,22 @@ if [[ -e "$WORKTREE_PATH" && -n "$(ls -A "$WORKTREE_PATH" 2>/dev/null)" ]]; then
   exit 1
 fi
 
-# ── 실패 시 롤백 트랩 (필수) ──────────────────────────────────────────────────
-# 중간 실패 시 worktree는 제거하되 브랜치는 보존한다. 반쯤 만들어진 좀비 worktree를 남기지 않는다.
+# ── 실패 시 롤백 (EXIT 트랩 + 성공 플래그, 필수) ──────────────────────────────
+# ERR 트랩은 서브셸 ( ... ) 안에서 난 실패에는 발화하지 않으므로 쓰지 않는다.
+# EXIT 트랩에서 성공 플래그로 판정한다 — 끝까지 도달하지 못한 채(SUCCESS=0) worktree가
+# 만들어졌으면 제거하되 브랜치는 보존한다(반쯤 만들어진 좀비 worktree 방지).
+SUCCESS=0
 WORKTREE_CREATED=0
-cleanup_on_error() {
-  if [[ $WORKTREE_CREATED -eq 1 ]]; then
+cleanup() {
+  if [[ $SUCCESS -eq 0 && $WORKTREE_CREATED -eq 1 ]]; then
     echo ""
-    echo "⚠  오류 발생 — worktree를 제거합니다 (브랜치는 보존)..."
+    echo "⚠  실패 — worktree를 제거합니다 (브랜치는 보존)..."
     git worktree remove --force "$WORKTREE_PATH" 2>/dev/null || true
     git worktree prune 2>/dev/null || true
     echo "   원인 수정 후 다시 시도하세요: bash $0 $BRANCH --base $BASE"
   fi
 }
-trap cleanup_on_error ERR
+trap cleanup EXIT
 
 # ── 1. fetch base ─────────────────────────────────────────────────────────────
 if [[ $NO_FETCH -eq 0 ]]; then
@@ -180,3 +183,4 @@ echo "   경로: $WORKTREE_PATH"
 echo "   브랜치: $BRANCH"
 echo ""
 echo "   새 터미널에서: cd $WORKTREE_PATH"
+SUCCESS=1   # 여기까지 도달해야 EXIT 트랩이 롤백을 건너뛴다

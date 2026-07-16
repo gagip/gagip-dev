@@ -53,10 +53,17 @@
 | 의존성(기타) | `Cargo.lock`·`go.sum`·`Gemfile.lock` 등 | 해당 매니저 설치 명령(대개 빌드가 알아서 함 — 필요할 때만) |
 | 빌드 프리스텝 | `package.json` scripts의 `prepare`/`postinstall`, 또는 README가 "먼저 X를 빌드"라고 지시(예: 로컬 패키지·i18n 번들) | 그 스크립트 실행(예: `npm run build:i18n`). 불명확하면 사용자 확인 |
 | 네이티브 생성물 | Tauri(`src-tauri/tauri.conf.json`)·Capacitor·Expo prebuild 등, `gen/`·`android/`·`ios/`가 gitignore됨 | 예: `npx tauri <android\|ios> init`. 스택별로 다르니 신호를 보고 결정 |
-| git hooks | `scripts/*hook*.sh`·`install-hooks.sh`·`.husky/`·`core.hooksPath` | 있으면 그 설치 스크립트 실행(worktree는 hooks가 공유 `.git`이라 재설치가 필요할 수 있음) |
+| git hooks | `scripts/*hook*.sh`·`install-hooks.sh`·`.husky/`·`core.hooksPath` | **기본은 재설치하지 않는다** — 아래 주의 참고 |
 
-> gradle 같은 순수 빌드 레포는 대개 B에서 재생성할 게 없다(`build/`는 빌드가 알아서 만든다). 그때는 B 섹션을 비우거나
-> hooks 설치만 남긴다.
+> **worktree의 git hooks 주의 (자주 틀리는 지점)**: worktree는 `git rev-parse --git-path hooks`가 **공용 `.git/hooks`로
+> 해석**돼 메인의 hook을 그대로 공유한다. 그래서 메인에서 hook을 1회 설치해 두면 새 worktree에도 자동 적용되고,
+> **per-worktree 재설치는 대개 불필요**하다. 게다가 흔한 설치 스크립트는 `$REPO_ROOT/.git/hooks/<hook>`에 직접 쓰는데,
+> worktree의 `.git`은 디렉터리가 아니라 **파일**(gitdir 포인터)이라 그 경로 쓰기가 `Not a directory`로 깨진다. 따라서
+> B에서 hooks는 **기본으로 건드리지 않는다**. 예외는 레포가 `core.hooksPath`(예: husky의 `.husky/`)로 레포 안 추적
+> 디렉터리를 hook 경로로 쓰는 경우인데, 이건 config 기반이라 worktree에도 자동 적용되므로 역시 설치가 필요 없다.
+> "hooks 설치 스크립트가 있으니 worktree마다 돌린다"는 잘못된 기본값이다.
+
+> gradle 같은 순수 빌드 레포는 대개 B에서 재생성할 게 없다(`build/`는 빌드가 알아서 만든다). 그때는 B 섹션을 비운다.
 
 ---
 
