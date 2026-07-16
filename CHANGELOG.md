@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [common/0.18.1] — 2026-07-16
+
+### 🐛 Bug Fixes
+- `worktree-scaffold`: 생성 스크립트 골격의 롤백 트랩을 `ERR` → `EXIT` + 성공 플래그로 교체했다. `ERR` 트랩은 서브셸 `( ... )` 안에서 난 실패에 발화하지 않아, worktree를 만든 뒤 실패해도 롤백이 안 돌던 결함이 있었다. 함께 B 단계 git hooks 안내를 "기본 재설치 안 함"으로 교정했다 — worktree는 `git rev-parse --git-path hooks`가 공용 `.git/hooks`로 해석돼 hook을 상속하므로 재설치가 불필요하고, worktree의 `.git`은 파일(gitdir 포인터)이라 `.git/hooks/`에 직접 쓰는 설치 스크립트는 `Not a directory`로 깨진다(`core.hooksPath` 예외만 명시). 실제 Wear OS(gradle) 레포로 생성·실행 검증하며 드러난 두 결함을 반영 ([`60d06b7`])
+
+---
+
 ## [common/0.18.0] — 2026-07-16
 
 ### ✨ New Features
