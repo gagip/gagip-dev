@@ -49,10 +49,13 @@ Critical 문제가 발견되면 **즉시 중단**하고 사용자에게 보고�
 
 **CHANGELOG 초안 작성** — 마지막 태그부터 HEAD까지 구현 커밋 이력을 분석해 초안을 메모리에 작성한다.
 
-루트 `CHANGELOG.md`를 Read로 확인해 기존 형식을 그대로 따른다:
-- 헤더: `## [<플러그인명>/<새 버전>] — YYYY-MM-DD`
-- 카테고리(해당하는 것만): `### ✨ New Features` / `### 🐛 Bug Fixes` / `### ♻️ Refactoring`
-- 각 bullet 끝에 구현 커밋 short 해시를 `([`hash`])`로 단다 — 릴리즈 커밋이 아닌 앞선 구현 커밋을 가리킨다 (자기 참조 금지)
+`plugins/<플러그인명>/CHANGELOG.md`를 Read로 확인해 기존 형식을 그대로 따른다:
+- 헤더: `## [<새 버전>] - YYYY-MM-DD` (플러그인명 없이 버전만, 하이픈 `-`)
+- 카테고리(해당하는 것만): `### ✨ Feat` / `### 🐛 Fix` / `### ♻️ Refactor` / `### 📝 Docs` — 커밋 type과 같은 축약형
+- 각 bullet은 `- **<스킬명>**: ...` 로 시작하고, 끝에 구현 커밋 short 해시를 `` (`hash`) `` 로 단다 — 릴리즈 커밋이 아닌 앞선 구현 커밋을 가리킨다 (자기 참조 금지)
+- 항목 사이에 `---` 구분선을 넣지 않는다
+
+> 루트 `CHANGELOG.md`는 `common/0.18.2`까지의 과거 기록이다. **더 이상 갱신하지 않는다** — 0.19.0부터 플러그인별 파일로 옮겼다.
 
 ---
 
@@ -68,10 +71,10 @@ Critical 문제가 발견되면 **즉시 중단**하고 사용자에게 보고�
 - 스킬 검증: ✅ 통과 (또는 ⚠️ 경고 N개)
 
 [CHANGELOG 초안]
-## [<플러그인명>/<새 버전>] — YYYY-MM-DD
+## [<새 버전>] - YYYY-MM-DD
 
-### ✨ New Features
-- ... ([`<구현 커밋 해시>`])
+### ✨ Feat
+- **<스킬명>**: ... (`<구현 커밋 해시>`)
 
 [커밋 메시지]
 chore(<플러그인명>): 버전 <새 버전> 릴리즈
@@ -110,12 +113,12 @@ plugins/<플러그인명>/.claude-plugin/plugin.json
 
 #### 3-2. CHANGELOG 저장
 
-CHANGELOG 초안을 루트 `CHANGELOG.md` **최상단**(기존 최신 항목 위)에 추가한다. 기존 항목과는 `---` 구분선으로 나눈다. `plugins/<플러그인명>/CHANGELOG.md`는 건드리지 않고 루트만 갱신한다.
+CHANGELOG 초안을 `plugins/<플러그인명>/CHANGELOG.md` **최상단**(기존 최신 항목 위)에 추가한다. 구분선 없이 바로 잇는다. 루트 `CHANGELOG.md`는 건드리지 않는다 — 0.18.2까지의 과거 기록이다.
 
 #### 3-3. 커밋 생성
 
 ```bash
-git add plugins/<플러그인명>/.claude-plugin/plugin.json CHANGELOG.md
+git add plugins/<플러그인명>/.claude-plugin/plugin.json plugins/<플러그인명>/CHANGELOG.md
 git commit -m "chore(<플러그인명>): 버전 <새 버전> 릴리즈"
 ```
 
@@ -155,5 +158,5 @@ git push origin "<플러그인명>/v<새 버전>"
 - **중단점은 2단계 한 번뿐**이다. 승인 이후엔 끝까지 자동 진행한다
 - `plugin.json` 수정 전 반드시 Read로 현재 내용을 확인한다
 - 태그는 `<플러그인명>/v<버전>` 형식을 따른다
-- CHANGELOG는 루트 `CHANGELOG.md`의 기존 형식을 그대로 따른다 — 자체 형식을 만들지 않는다
+- CHANGELOG는 `plugins/<플러그인명>/CHANGELOG.md`의 기존 형식을 그대로 따른다 — 자체 형식을 만들지 않는다 (루트 `CHANGELOG.md`는 과거 기록이라 갱신 대상이 아니다)
 - push는 개인 계정 `gagip`로 한다 (다르면 전환 후 복원)
