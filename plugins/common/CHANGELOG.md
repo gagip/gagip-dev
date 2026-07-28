@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.19.3] - 2026-07-28
+
+### 🐛 Fix
+- PreToolUse 훅(`block_sensitive_files.py`, `validate_commit.py`) 제거. python이 설치되지 않은 환경에서 `python: command not found`로 Edit/Write/Bash 도구 호출마다 훅 오류가 발생했다 (`f4dfa32`)
+
 ## [0.19.2] - 2026-07-28
 
 ### 🐛 Fix
