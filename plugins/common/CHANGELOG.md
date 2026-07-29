@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.19.5] - 2026-07-28
+
+### ♻️ Refactor
+- **draft-plan**: 자체 플랜 모드(계획·구현 세션 분리, `private/` 저장)를 내장 Plan Mode(`EnterPlanMode`/`ExitPlanMode`) 애드온으로 전환했다. `ExitPlanMode` 승인 직후 같은 세션에서 바로 구현으로 이어가며, 계획 파일은 하네스 지정 경로(`~/.claude/plans/`)에 작성한다 (`c9dd256`)
+
 ## [0.19.4] - 2026-07-28
 
 ### 🐛 Fix
