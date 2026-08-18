@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.21.1] - 2026-08-18
+
+### 🐛 Fix
+- **create-pr/report-issue**: 개인 private 레포(레포 소유자 = 내 GitHub 계정, visibility PRIVATE)에서는 PR/이슈 초안 확인 후 대기하지 않고 바로 생성까지 진행하도록 수정했다. 전역 CLAUDE.md의 "개인 레포지토리 권한" 규칙과 스킬의 STOP 지시가 충돌해 불필요한 승인 요청이 발생하던 문제를 해결했다 (`1f1d3f3`)
+
 ## [0.21.0] - 2026-08-18
 
 ### ✨ Feat
