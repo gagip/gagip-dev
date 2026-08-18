@@ -20,10 +20,13 @@ argument-hint: (선택) 이슈 내용을 자연어로 전달. 생략 시 내용 
 현재 레포 확인 (이 스킬은 어느 레포에서든 실행되는 범용 스킬이다 — 지금 작업 중인 레포 기준으로 매번 새로 조회한다):
 
 ```bash
-gh repo view --json nameWithOwner
+gh repo view --json nameWithOwner,owner,visibility
 gh label list
 gh api "repos/{owner}/{repo}/milestones?state=open"
+gh api user -q .login
 ```
+
+레포 소유자가 `gh api user`로 확인한 **내 개인 계정**과 같고 visibility가 `PRIVATE`이면 "개인 private 레포"로 판단한다 — 3단계 STOP을 생략한다 (아래 3단계 참고). 그 외에는 기존대로 STOP을 지킨다.
 
 사용자가 제공한 내용에서 다음을 추출:
 - **무엇이 문제인가 / 무엇이 필요한가** (증상 또는 요구사항)
@@ -90,7 +93,9 @@ gh api "repos/{owner}/{repo}/milestones?state=open"
 - 검증 시나리오 전체는 PR checklist에 — 이슈에는 완료 기준만
 - **외부 협업자가 알 필요 없거나 이해할 수 없는 private·내부 전용 정보는 본문에 넣지 않음** — 개인 메모, 로컬 경로·내부 IP, 내부 임시 분석 등. 공유 가능한 형태로 요약하거나 제외
 
-**초안 작성 후 사용자 확인을 기다린다. 라벨·담당자·마일스톤 추정치도 같이 확인받는다. 수정 요청이 오면 반영 후 다시 대기한다.**
+**1단계에서 "개인 private 레포"로 판단된 경우**: 대기하지 않고 바로 4단계로 진행한다.
+
+**그 외의 경우**: 초안 작성 후 사용자 확인을 기다린다. 라벨·담당자·마일스톤 추정치도 같이 확인받는다. 수정 요청이 오면 반영 후 다시 대기한다.
 
 ### 4단계: 이슈 생성 [사용자 명시적 승인 후에만]
 
