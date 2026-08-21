@@ -31,7 +31,7 @@
 | 서명/키 | `*.keystore`, `*.jks`, `key.properties`, `*.p12`, `*.mobileprovision` |
 | 서비스 자격증명 | `google-services.json`, `GoogleService-Info.plist`, `serviceAccount*.json`, `secrets*.{json,yaml}` |
 | 에이전트/로컬 지침 | `CLAUDE.local.md`, `*.local.md`, `.claude/settings.local.json` |
-| 로컬 작업 폴더 | `private/`(디렉터리째 복사) 같은 프로젝트 관례 폴더 |
+| 로컬 작업 폴더 | `.private/`(구버전 관례는 `private/`, 디렉터리째 복사) 같은 프로젝트 관례 폴더 |
 
 > 주의: 이 표는 시작점이지 완결 목록이 아니다. 레포의 `.gitignore`를 실제로 읽어, "사람이 손으로 채우는 설정"으로 보이면
 > 후보에 넣고, 애매하면 사용자에게 "이것도 복사할까요?"로 확인한다.

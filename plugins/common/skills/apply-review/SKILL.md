@@ -51,7 +51,7 @@ argument-hint: (선택) PR 번호. 생략 시 현재 브랜치의 PR을 자동 �
 
 분류 결과를 바탕으로 아래 형식의 마크다운 보고서를 생성하고 저장:
 
-- 저장 위치 (하드코딩하지 말 것): 프로젝트에 보고서 저장 규약이 있으면 그 위치(예: `CLAUDE.md`·문서 구조가 지정한 보고서(reports) 폴더), 없으면 `{git 루트}/private/`를 기본값으로 쓴다(없으면 `mkdir -p`로 생성). 루트는 `git rev-parse --show-toplevel`로 판별. 파일명은 `<저장위치>/analysis-pr{N}-{YYYYMMDD}.md`. 보고서 본문 위에 아래 YAML 프론트매터를 얹는다(report 스킬과 동일 컨벤션):
+- 저장 위치 (하드코딩하지 말 것): 프로젝트에 보고서 저장 규약이 있으면 그 위치(예: `CLAUDE.md`·문서 구조가 지정한 보고서(reports) 폴더), 없으면 `{git 루트}/.private/`를 기본값으로 쓴다(기존 `private/`(점 없음)가 있으면 그 폴더를 계속 쓰고, 둘 다 없으면 `mkdir -p`로 생성). 루트는 `git rev-parse --show-toplevel`로 판별. 파일명은 `<저장위치>/analysis-pr{N}-{YYYYMMDD}.md`. 보고서 본문 위에 아래 YAML 프론트매터를 얹는다(report 스킬과 동일 컨벤션):
   ```yaml
   ---
   type: analysis

@@ -134,7 +134,7 @@ copy_if_exists ".env"
 copy_if_exists "local.properties"
 copy_if_exists "CLAUDE.local.md"
 # 디렉터리 통째 복사가 필요하면:
-# [[ -d "$REPO_ROOT/private" ]] && cp -r "$REPO_ROOT/private" "$WORKTREE_PATH/private" && echo "   복사: private/"
+# [[ -d "$REPO_ROOT/.private" ]] && cp -r "$REPO_ROOT/.private" "$WORKTREE_PATH/.private" && echo "   복사: .private/"
 # ▲▲▲ [여기까지 A] ▲▲▲
 
 # ── 4. [B] 체크아웃마다 재생성할 산출물 ───────────────────────────────────────

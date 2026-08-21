@@ -38,7 +38,8 @@ $ARGUMENTS
 ## Step 2 — 메모 파일 생성
 
 저장 위치는 하드코딩하지 않는다. 프로젝트에 보고서 저장 규약이 있으면 그 위치,
-없으면 `{git 루트}/private/`(없으면 `mkdir -p`). 루트는 `git rev-parse --show-toplevel`로 판별.
+없으면 `{git 루트}/.private/`(기존 `private/`(점 없음)가 있으면 그 폴더를 계속 쓰고, 둘 다
+없으면 `mkdir -p`). 루트는 `git rev-parse --show-toplevel`로 판별.
 파일명은 `<저장위치>/module-review-{YYYYMMDD}.md`.
 
 문서 상단에 다음을 적는다:
