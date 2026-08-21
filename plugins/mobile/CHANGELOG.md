@@ -1,5 +1,10 @@
 # Changelog — mobile
 
+## [0.2.4] - 2026-08-21
+
+### Removed
+- **android-review**: 스킬을 제거했다. 플랫폼 특화 리뷰 지침은 마켓플레이스가 아니라 대상 레포의 CLAUDE.md나 레포 전용 스킬에 있어야 한다고 판단했다. 함께 있던 안드로이드 특화 문서(`kotlin-conventions`·`compose-patterns`·`service-guidelines`)도 같이 제거했으며, 필요하면 이 커밋 이전 이력에서 꺼내 대상 레포로 옮긴다. 언어 무관 철학 문서는 `common:coding-philosophy`로 승격했고 범용 리뷰는 `common:module-review`가 담당한다 (`c436117`)
+
 ## [0.2.3] - 2026-08-18
 
 ### Fixed
