@@ -1,5 +1,10 @@
 # Changelog — mobile
 
+## [0.3.0] - 2026-08-25
+
+### ✨ Feat
+- **android-test/review-quality/tauri-guideline**: Codex 정식 매니페스트를 추가하고, 호출 인자와 스킬 디렉터리를 특정 하네스의 런타임 치환값에 의존하지 않게 바꿔 Claude Code와 Codex에서 같은 지침을 사용하도록 했다 (`69218cf`)
+
 ## [0.2.4] - 2026-08-21
 
 ### Removed
