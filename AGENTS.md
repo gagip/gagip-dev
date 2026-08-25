@@ -23,6 +23,8 @@ Claude Code와 Codex가 함께 쓰는 개인 플러그인 마켓플레이스 레
   `type(scope): 한글 메시지` 컨벤션을 사용한다.
 - 원격에 올릴 때는 `release` 스킬을 거친다. `git push`를 직접 호출하지 않는다.
 - push 권한은 개인 GitHub 계정 `gagip`을 쓴다. 다른 계정이 활성화돼 있으면 전환하고 작업 후 복원한다.
+- 저장소 관리 스킬의 정본은 `.claude/skills/`에 두고, Codex가 읽는 `.agents/skills/`에서는
+  같은 디렉터리를 가리키는 심볼릭 링크로 공유한다.
 
 ## 매니페스트 정합성
 

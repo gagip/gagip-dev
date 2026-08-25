@@ -6,7 +6,6 @@ description: >
   "릴리즈해줘", "배포해줘", "버전 올려줘", "release 해줘", "publish 해줘",
   "버전 업데이트하고 배포해줘" 등의 표현이 나오면 반드시 이 스킬을 사용할 것.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
-argument-hint: "[patch|minor|major|x.y.z] - 버전 유형 (생략 시 커밋 이력으로 자동 판단)"
 ---
 
 ## 작업 순서

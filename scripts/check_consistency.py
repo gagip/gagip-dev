@@ -15,6 +15,7 @@ PLUGINS_ROOT = ROOT / "plugins"
 CLAUDE_MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 CODEX_MARKETPLACE = ROOT / ".agents" / "plugins" / "marketplace.json"
 BANNED_RUNTIME_TOKENS = ("$ARGUMENTS", "SKILL_DIR")
+SHARED_REPOSITORY_SKILLS = ("plugin-commit", "release")
 
 
 def load_json(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -148,12 +149,34 @@ def validate_skills(plugins: list[Path], errors: list[str]) -> None:
                 errors.append(f"{path.relative_to(ROOT)}: 금지 런타임 토큰 `{token}` 잔존")
 
 
+def validate_shared_repository_skills(errors: list[str]) -> None:
+    claude_root = ROOT / ".claude" / "skills"
+    codex_root = ROOT / ".agents" / "skills"
+
+    for skill_name in SHARED_REPOSITORY_SKILLS:
+        claude_skill = claude_root / skill_name
+        codex_skill = codex_root / skill_name
+
+        if not (claude_skill / "SKILL.md").is_file():
+            errors.append(f".claude/skills/{skill_name}: SKILL.md가 없음")
+            continue
+        if not (codex_skill / "SKILL.md").is_file():
+            errors.append(f".agents/skills/{skill_name}: SKILL.md가 없음")
+            continue
+        if not codex_skill.is_symlink():
+            errors.append(f".agents/skills/{skill_name}: Claude 스킬을 가리키는 심볼릭 링크가 아님")
+            continue
+        if codex_skill.resolve() != claude_skill.resolve():
+            errors.append(f".agents/skills/{skill_name}: Claude 스킬과 다른 경로를 가리킴")
+
+
 def main() -> int:
     errors: list[str] = []
     plugins = plugin_dirs()
     validate_manifests(plugins, errors)
     validate_marketplaces(plugins, errors)
     validate_skills(plugins, errors)
+    validate_shared_repository_skills(errors)
 
     if errors:
         print("Consistency check failed:")
@@ -162,7 +185,10 @@ def main() -> int:
         return 1
 
     skill_count = sum(1 for plugin in plugins for _ in (plugin / "skills").glob("*/SKILL.md"))
-    print(f"Consistency check passed: {len(plugins)} plugins, {skill_count} skills")
+    print(
+        f"Consistency check passed: {len(plugins)} plugins, {skill_count} skills, "
+        f"{len(SHARED_REPOSITORY_SKILLS)} shared repository skills"
+    )
     return 0
 
 

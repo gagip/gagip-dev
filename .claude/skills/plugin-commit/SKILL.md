@@ -41,7 +41,7 @@ allowed-tools: Bash, Read
 ### 1. 변경사항 파악
 
 ```bash
-bash .claude/skills/plugin-commit/scripts/status.sh
+bash <현재 plugin-commit 스킬 디렉터리>/scripts/status.sh
 ```
 
 출력 내용: 변경 파일 목록 / 스테이징 여부 / diff 통계 / 최근 커밋 5개
