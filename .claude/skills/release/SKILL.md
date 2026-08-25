@@ -33,7 +33,7 @@ git diff --name-only HEAD~1..HEAD 2>/dev/null || git diff --name-only --cached
 - 여러 플러그인 동시 변경 → 각 플러그인 모두 처리
 - `plugins/` 외부 파일 변경(루트 `.claude/` 등)은 릴리스 대상이 아니므로 무시한다
 
-**버전 유형 판단** — `$ARGUMENTS`에 버전 유형이 없으면 커밋 이력으로 자동 판단:
+**버전 유형 판단** — 호출 인자로 버전 유형을 받지 않았으면 커밋 이력으로 자동 판단:
 
 ```bash
 git log <마지막 태그>..HEAD --oneline 2>/dev/null || git log --oneline
@@ -45,13 +45,20 @@ git log <마지막 태그>..HEAD --oneline 2>/dev/null || git log --oneline
 
 **신규 플러그인 예외** — 해당 플러그인의 기존 태그(`<name>/v*`)가 하나도 없으면 첫 릴리스다. 자동 범프하지 말고 `plugin.json`의 현재 버전을 그대로 첫 릴리스로 쓴다. 릴리스 계획에 "신규 플러그인 첫 릴리스 — 범프 없음"을 명시한다.
 
-**스킬 검증** — 대상 플러그인의 모든 SKILL.md 점검:
+**스킬·매니페스트 검증** — 대상 플러그인의 모든 SKILL.md와 공유 메타데이터를 점검:
 
 ```bash
 find plugins/<플러그인명>/skills -name "SKILL.md" 2>/dev/null
 ```
 
 각 SKILL.md에 대해 frontmatter 필수 필드(`name`, `description`, `allowed-tools`)와 `allowed-tools` 일치 여부를 점검한다.
+
+```bash
+python3 scripts/check_consistency.py
+uv run --with pyyaml python /path/to/plugin-creator/scripts/validate_plugin.py plugins/<플러그인명>
+```
+
+Codex validator의 실제 경로는 현재 환경에 설치된 `plugin-creator` 스킬에서 확인한다. 두 검사가 모두 통과해야 한다.
 
 Critical 문제가 발견되면 **즉시 중단**하고 사용자에게 보고한다.
 
@@ -113,10 +120,11 @@ chore(<플러그인명>): 버전 <새 버전> 릴리즈
 
 #### 3-1. 버전 업데이트
 
-`plugin.json`을 Read로 읽은 뒤 Edit으로 version 필드를 새 버전으로 수정:
+두 `plugin.json`을 Read로 읽은 뒤 Edit으로 version 필드를 같은 새 버전으로 수정:
 
 ```
 plugins/<플러그인명>/.claude-plugin/plugin.json
+plugins/<플러그인명>/.codex-plugin/plugin.json
 ```
 
 #### 3-2. CHANGELOG 저장
@@ -126,7 +134,7 @@ CHANGELOG 초안을 `plugins/<플러그인명>/CHANGELOG.md` **최상단**(기�
 #### 3-3. 커밋 생성
 
 ```bash
-git add plugins/<플러그인명>/.claude-plugin/plugin.json plugins/<플러그인명>/CHANGELOG.md
+git add plugins/<플러그인명>/.claude-plugin/plugin.json plugins/<플러그인명>/.codex-plugin/plugin.json plugins/<플러그인명>/CHANGELOG.md
 git commit -m "chore(<플러그인명>): 버전 <새 버전> 릴리즈"
 ```
 
@@ -164,7 +172,9 @@ git push origin "<플러그인명>/v<새 버전>"
 
 - 스킬 검증에서 Critical 문제가 있으면 즉시 중단하고 사용자에게 보고한다
 - **중단점은 2단계 한 번뿐**이다. 승인 이후엔 끝까지 자동 진행한다
-- `plugin.json` 수정 전 반드시 Read로 현재 내용을 확인한다
+- 두 `plugin.json` 수정 전 반드시 Read로 현재 내용을 확인하고 `name`·`version`·`description`이 일치하는지 검증한다
+- Claude와 Codex manifest의 버전은 항상 동일하게 범프한다
+- 릴리스 직전 Codex plugin validator와 `python3 scripts/check_consistency.py`를 다시 실행한다
 - 태그는 `<플러그인명>/v<버전>` 형식을 따른다
 - CHANGELOG는 `plugins/<플러그인명>/CHANGELOG.md`의 기존 형식을 그대로 따른다 — 자체 형식을 만들지 않는다 (루트 `CHANGELOG.md`는 과거 기록이라 갱신 대상이 아니다)
 - push는 개인 계정 `gagip`로 한다 (다르면 전환 후 복원)

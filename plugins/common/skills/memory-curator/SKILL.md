@@ -4,8 +4,8 @@ description: |
   대화 세션에서 유의미한 정보/패턴을 메모리에 즉시 저장하고, 쌓인 메모리를 주기적으로 정리하는 스킬.
   
   두 가지 모드로 동작한다:
-  - 기본 모드 (`/memory-curator`): 현재 세션 JSONL을 분석해 놓친 메모리를 추출하고 저장
-  - 리뷰 모드 (`/memory-curator review`): 전체 메모리 파일을 정리하고 CLAUDE.md 승격 후보 및 문서화 대상 제안
+  - 기본 모드 (`/memory-curator`): 현재 대화를 분석하고, 읽을 수 있는 세션 로그가 있으면 보강해 놓친 메모리를 추출·저장
+  - 리뷰 모드 (`/memory-curator review`): 전체 메모리 파일을 정리하고 상시 로드 지침 승격 후보 및 문서화 대상 제안
   
   다음 표현이 나오면 반드시 이 스킬을 사용할 것:
   "메모리 정리해줘", "세션 메모리 저장해줘", "memory curator", "메모리 큐레이션",
@@ -25,56 +25,35 @@ argument-hint: (선택) review 입력 시 전체 메모리 정리 모드. 생략
 
 ## 기본 모드: 세션 메모리 추출 및 저장
 
-> **retrospective와의 관계**: 이 기본 모드는 `retrospective` 회고가 넘긴 메모리 후보를 받는 **단일 관문**이기도 하다. retrospective는 "무엇을 어디에 남길지"(볼트·스킬·문서화·CLAUDE.md)를 넓게 분배하고, 그중 **메모리는 여기로 위임**한다. 직접 호출되든 retrospective에서 이어지든 절차는 같다 — 핵심은 아래 4번 **중복 방지 필터**로 메모리가 비대해지지 않게 막는 것이다.
+> **retrospective와의 관계**: 이 기본 모드는 `retrospective` 회고가 넘긴 메모리 후보를 받는 **단일 관문**이기도 하다. retrospective는 "무엇을 어디에 남길지"(볼트·스킬·문서화·상시 로드 지침)를 넓게 분배하고, 그중 **메모리는 여기로 위임**한다. 직접 호출되든 retrospective에서 이어지든 절차는 같다 — 핵심은 아래 4번 **중복 방지 필터**로 메모리가 비대해지지 않게 막는 것이다.
 
-### 1. 현재 세션 JSONL 파일 찾기
+### 1. 현재 대화에서 후보 추출
 
-```bash
-# 현재 작업 디렉토리로 프로젝트 슬러그 계산
-# 예: /Users/gagip/workspace/myproject/my-wear-app-issue18
-# → -Users-gagip-workspace-myproject-my-wear-app-issue18
-cwd=$(pwd)
-slug=$(echo "$cwd" | sed 's|/|-|g' | sed 's|^-||')
-project_dir="$HOME/.claude/projects/$slug"
+먼저 **현재 대화 전체**를 읽어 사용자 교정, 확정한 비자명한 선택, 새 프로젝트 맥락과 재사용 가능한
+참조를 추출한다. 세션 로그 파일을 찾지 못해도 이 단계만으로 기본 모드를 끝까지 수행할 수 있어야 한다.
 
-# 가장 최근 JSONL 파일
-ls -t "$project_dir"/*.jsonl 2>/dev/null | head -1
-```
+### 2. 세션 로그로 보강 (선택)
 
-### 2. 세션 내용 추출
+현재 대화만으로 빠진 앞부분이 있다고 판단되고, 현재 하네스가 세션 로그 위치와 형식을 실제로
+제공할 때만 로그를 보강 입력으로 읽는다.
 
-JSONL에서 `type=user`와 `type=assistant` 메시지를 읽어 대화 흐름을 파악한다.
+- Claude Code의 알려진 위치는 `~/.claude/projects/<인코딩된-경로>/*.jsonl`이다.
+- Codex 계열의 알려진 위치는 `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`이다.
+- 다른 하네스에서는 위치를 추측하지 않는다. 로그를 읽을 수 없으면 Step 1 결과로 계속한다.
+- JSONL 스키마가 다르므로 `type=user` 같은 필드를 공통이라고 가정하지 않는다. 실제 파일의 첫 몇
+  이벤트로 스키마를 확인한 뒤 사용자·assistant 텍스트만 추출하고 tool result는 제외한다.
 
-```bash
-python3 - <<'EOF'
-import json, sys
-path = "<위에서 찾은 JSONL 경로>"
-lines = [json.loads(l) for l in open(path)]
-for l in lines:
-    if l.get('type') in ('user', 'assistant'):
-        role = l['type']
-        content = l.get('message', {}).get('content', '')
-        if isinstance(content, list):
-            text = ' '.join(c.get('text','') for c in content if c.get('type')=='text')
-        else:
-            text = str(content)
-        if text.strip() and not text.startswith('<system-reminder'):
-            print(f"[{role}] {text[:300]}")
-EOF
-```
+로그는 **보강재**다. 현재 대화와 충돌하면 현재 대화에서 사용자가 명시적으로 확정한 내용을 우선한다.
 
 ### 3. 기존 메모리 파일 읽기
 
-```bash
-memory_dir="$HOME/.claude/projects/$slug/memory"
-cat "$memory_dir/MEMORY.md" 2>/dev/null
-# 각 메모리 파일도 필요 시 읽기
-```
+현재 하네스가 사용하는 설정 홈을 식별하고, 그 아래의 `memory/`를 전역 메모리 루트로 삼는다.
+하네스가 이미 프로젝트 메모리 구조를 제공하면 그 구조를 유지한다. 예를 들어 Claude Code의 기존
+프로젝트 메모리는 `~/.claude/projects/<slug>/memory/`다. 별도 프로젝트 구조가 없으면
+`<하네스 홈>/memory/projects/<slug>/`를 프로젝트 메모리 루트로 쓴다.
 
-전역 메모리도 확인:
-```bash
-ls "$HOME/.claude/memory/" 2>/dev/null
-```
+각 루트의 `MEMORY.md`와 관련 메모리 파일을 읽어 중복을 확인한다. 하네스 홈을 확실히 식별하지
+못하면 새 경로를 만들지 말고 사용자에게 저장 위치를 확인한다.
 
 ### 4. 저장할 항목 추출 기준
 
@@ -97,7 +76,7 @@ ls "$HOME/.claude/memory/" 2>/dev/null
 - **git에 있음**: 히스토리, 최근 변경 → git log로 확인 가능
 - **PR/커밋에 있음**: 이번 작업의 구현 세부사항
 - **이미 메모리에 있음**: 기존 메모리 파일과 중복 (3번에서 읽은 MEMORY.md로 대조)
-- **CLAUDE.md(항상 로드)에 있음**: 전역/프로젝트 CLAUDE.md에 이미 있는 규칙은 메모리로 중복 보유하지 않는다
+- **상시 로드 지침에 있음**: 현재 하네스의 전역/프로젝트 지침에 이미 있는 규칙은 메모리로 중복 보유하지 않는다
 
 ### 5. 메모리 파일 저장
 
@@ -119,8 +98,8 @@ metadata:
 ```
 
 저장 위치:
-- 현재 프로젝트 관련: `~/.claude/projects/<slug>/memory/<name>.md`
-- 프로젝트 무관한 user/feedback: `~/.claude/memory/<name>.md`
+- 현재 프로젝트 관련: Step 3에서 결정한 프로젝트 메모리 루트의 `<name>.md`
+- 프로젝트 무관한 user/feedback: Step 3에서 결정한 전역 메모리 루트의 `<name>.md`
 
 MEMORY.md 인덱스에 한 줄 추가:
 ```markdown
@@ -137,13 +116,8 @@ MEMORY.md 인덱스에 한 줄 추가:
 
 ### 1. 모든 메모리 파일 읽기
 
-```bash
-slug=$(pwd | sed 's|/|-|g' | sed 's|^-||')
-ls ~/.claude/projects/$slug/memory/*.md 2>/dev/null
-ls ~/.claude/memory/*.md 2>/dev/null
-```
-
-각 파일의 frontmatter와 본문을 읽어 전체 메모리 목록을 파악한다.
+기본 모드 Step 3과 같은 방식으로 프로젝트·전역 메모리 루트를 결정한다. 각 루트의 모든 메모리
+파일 frontmatter와 본문을 읽어 전체 목록을 파악한다.
 
 ### 2. 정리 항목 식별
 
@@ -156,19 +130,22 @@ ls ~/.claude/memory/*.md 2>/dev/null
 
 정리 대상 목록을 사용자에게 보여주고 **확인을 받은 후** 실행한다.
 
-### 3. CLAUDE.md 승격 후보 제안
+### 3. 상시 로드 지침 승격 후보 제안
 
-여러 feedback 메모리에서 반복되는 패턴이 보이면 CLAUDE.md에 추가할 전역 지침 후보로 제안한다.
+여러 feedback 메모리에서 반복되는 패턴이 보이면 현재 하네스가 실제로 읽는 전역 지침에 추가할
+후보로 제안한다. 프로젝트 한정 규칙이면 현재 경로에 적용되는 프로젝트 지침 파일(`AGENTS.md`,
+`CLAUDE.md` 등)을 우선한다.
 
 형식:
 ```
-## CLAUDE.md 승격 후보
+## 상시 로드 지침 승격 후보
 
 다음 패턴이 여러 세션에서 반복됩니다. 전역 지침으로 추가하시겠습니까?
 
 1. **[규칙 요약]**
    - 근거: [관련 메모리 파일 목록]
-   - 제안 문구: "[CLAUDE.md에 추가할 내용]"
+   - 대상: [현재 하네스의 실제 지침 파일]
+   - 제안 문구: "[추가할 내용]"
 ```
 
 ### 4. 문서화 후보 추출

@@ -1,81 +1,58 @@
 # gagip-dev
 
-Claude Code 플러그인 마켓플레이스. 개발 워크플로우 자동화 스킬 모음.
+Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인 마켓플레이스다. 하나의
+`plugins/<plugin>/skills/` 트리를 두 하네스가 공유하며, 하네스 전용 도구가 없는 경우에는 같은
+목적의 대화·파일·순차 실행 폴백을 사용한다.
 
-## 플러그인 목록
+## 플러그인
 
-### `common` — 공통 개발 도구
-
-언어·플랫폼 무관하게 사용할 수 있는 스킬.
-
-| 스킬           | 트리거 예시                                     |
-| -------------- | ----------------------------------------------- |
-| `apply-review` | "PR 리뷰 반영해줘", "코드리뷰 코멘트 처리해줘" |
-| `commit`       | "커밋해줘", "변경사항 정리해줘"                 |
-| `create-pr`    | "PR 만들어줘", "풀리퀘 올려줘"                  |
-| `setup-skills` | "스킬 세팅해줘", "프로젝트에 맞는 스킬 만들어줘" |
-
-### `android` — Android 개발 전용
-
-Android 프로젝트에 특화된 스킬.
-
-| 스킬          | 트리거 예시                                   |
-| ------------- | --------------------------------------------- |
-| `review-code` | "리뷰해줘", "코드 봐줘", "코드 점검"          |
-| `write-test`  | "테스트 써줘", "단위 테스트 추가"             |
-
-## 스킬 상세
-
-### `apply-review`
-
-GitHub PR 리뷰 코멘트를 가져와 우선순위 순으로 하나씩 검토하고, 승인 후 코드를 수정한다.
-
-**요구사항**: Python, `gh` CLI 인증 완료
-
-### `commit`
-
-변경사항을 분석해 커밋 메시지 초안을 작성하고, 승인 후 커밋한다.
-
-### `create-pr`
-
-현재 브랜치의 변경사항을 분석해 PR 본문 초안을 작성하고, 승인 후 PR을 생성하거나 기존 PR을 업데이트한다.
-
-### `setup-skills`
-
-프로젝트의 기술 원칙을 기반으로 프로젝트를 분석하고, 해당 프로젝트에 특화된 커스텀 스킬을 추천 및 생성한다.
-
-### `review-code`
-
-코드 리뷰를 수행한다. 플랫폼(Android / common)을 자동 감지하고, 가독성·정확성·보안·아키텍처·테스트 항목을 체크한다.
-
-```bash
-# 변경사항 전체 리뷰
-/review-code
-
-# 특정 파일/폴더 리뷰
-/review-code src/feature/login/
-```
-
-### `write-test`
-
-대상 코드를 분석하고 테스트 시나리오를 논의한 뒤 테스트 코드를 생성한다.
-
-```bash
-/write-test src/feature/login/LoginViewModel.kt
-```
+| 플러그인 | 설명 | 상세 |
+|---|---|---|
+| `common` | 언어·플랫폼에 독립적인 계획, 리뷰, 커밋, 보고와 프로젝트 운영 스킬 | [plugins/common/README.md](plugins/common/README.md) |
+| `mobile` | Android·iOS·Tauri 모바일 테스트, 아키텍처와 출시 품질 스킬 | [plugins/mobile/README.md](plugins/mobile/README.md) |
 
 ## 설치
 
-```bash
-# 1. 마켓플레이스 추가
-/plugin marketplace add gagip/gagip-dev
+### Claude Code
 
-# 2. 플러그인 설치
+```text
+/plugin marketplace add gagip/gagip-dev
 /plugin install common@gagip-dev
-/plugin install android@gagip-dev
+/plugin install mobile@gagip-dev
 ```
+
+### Codex CLI
+
+```bash
+codex plugin marketplace add gagip/gagip-dev
+codex plugin add common@gagip-dev
+codex plugin add mobile@gagip-dev
+```
+
+Codex는 저장소의 marketplace를 현재 작업 디렉터리만으로 자동 등록하지 않으므로 최초 한 번
+`marketplace add`가 필요하다. 업데이트 후에는 `codex plugin marketplace upgrade gagip-dev`로
+원격 snapshot을 갱신한 뒤 필요한 플러그인을 다시 설치한다.
+
+## 호환성
+
+- 배포 스킬 22개 중 21개는 Claude Code와 Codex에서 사용할 수 있다.
+- `common:skill-metrics`는 Claude Code 로그가 기록하는 `Skill` 도구 호출을 지표로 쓰므로
+  Codex에서는 지원하지 않는다. 스킬이 이를 감지해 이유를 알리고 종료한다.
+- `allowed-tools`, `argument-hint`, `model` 같은 Claude Code frontmatter는 그대로 유지한다.
+  Codex는 모르는 필드를 무시하고 `name`·`description`을 사용한다.
+
+## 개발 및 검증
+
+매니페스트·marketplace·플러그인 README의 중복 정보는 아래 검사로 맞춘다.
+
+```bash
+python3 scripts/check_consistency.py
+```
+
+Claude Code에서는 커밋 직전 훅이 이 검사를 자동 실행한다. 다른 하네스에서는 커밋 전에 수동으로
+실행한다. Codex 매니페스트 스키마 검증은 내장 `plugin-creator`의 `validate_plugin.py`를 사용한다.
 
 ## 요구사항
 
-- `gh` CLI (GitHub 관련 스킬 사용 시)
-- Python (`apply-review` 스킬 사용 시)
+- `gh` CLI: GitHub 이슈·PR 관련 스킬
+- Python 3: 보고서 생성과 검증 스크립트

@@ -1,7 +1,7 @@
 # 레포 특이사항 감지 휴리스틱 (A / B / C / 관례)
 
 `worktree-create.sh`를 채우기 전에 대상 레포에서 아래를 감지한다. 모두 **스택 무관 휴리스틱**이며, 확신이 안 서는 항목은
-`AskUserQuestion`으로 사용자에게 확인한다.
+구조화 질문 도구가 있으면 사용하고, 없으면 추천안을 첫 번째에 둔 번호 목록으로 사용자에게 확인한다.
 
 ## 목차
 - [A. 복사 대상 — 추적 제외된 머신·환경 설정](#a-복사-대상)
@@ -30,7 +30,7 @@
 | 빌드 로컬 설정 | `local.properties`, `*.local.properties`, `gradle.local.properties` |
 | 서명/키 | `*.keystore`, `*.jks`, `key.properties`, `*.p12`, `*.mobileprovision` |
 | 서비스 자격증명 | `google-services.json`, `GoogleService-Info.plist`, `serviceAccount*.json`, `secrets*.{json,yaml}` |
-| 에이전트/로컬 지침 | `CLAUDE.local.md`, `*.local.md`, `.claude/settings.local.json` |
+| 에이전트/로컬 지침 | 현재 하네스가 공식 지원하는 개인 비공유 지침·로컬 설정 파일 (`CLAUDE.local.md`, `*.local.md` 등 실제 존재하는 파일만) |
 | 로컬 작업 폴더 | `.private/`(구버전 관례는 `private/`, 디렉터리째 복사) 같은 프로젝트 관례 폴더 |
 
 > 주의: 이 표는 시작점이지 완결 목록이 아니다. 레포의 `.gitignore`를 실제로 읽어, "사람이 손으로 채우는 설정"으로 보이면
@@ -93,11 +93,11 @@
 
 - **base 브랜치**: `git symbolic-ref refs/remotes/origin/HEAD`로 기본 브랜치를 얻거나, `develop`가 있으면 그 관례를 따른다.
   불명확하면 사용자에게 "base를 main으로 할까요, develop으로 할까요?" 확인. 스크립트는 `--base`로 오버라이드 가능하게 둔다.
-- **worktree 경로 (자동 결정 금지 — 사용자에게 맡긴다)**: 경로는 스킬이 임의로 기본을 굳히지 말고 `AskUserQuestion`으로
+- **worktree 경로 (자동 결정 금지 — 사용자에게 맡긴다)**: 경로는 스킬이 임의로 기본을 굳히지 말고 위 질문 폴백으로
   사용자가 고르게 한다. 두 선택지와 트레이드오프를 제시한다:
   - **레포 밖 (형제 `../<repo>-worktrees/<slug>`)**: `find`·`ripgrep`·IDE 인덱서 같은 비-git 도구가 worktree 사본까지 중복
     스캔하는 걸 피한다. 대신 정리는 수동(`git worktree remove`).
-  - **레포 안 (`.claude/worktrees/<slug>` 등)**: 하네스/도구가 경로를 자동 관리하기 좋다. 대신 비-git 도구가 중복 스캔한다.
+  - **레포 안 (현재 하네스의 worktree 관리 디렉터리 등)**: 하네스/도구가 경로를 자동 관리하기 좋다. 대신 비-git 도구가 중복 스캔한다.
 
   사용자가 고른 값을 생성 스크립트의 **기본 경로**로 채우고, `--path` 오버라이드는 항상 남긴다. 레포에 이미 굳은 관례가
   보이면(예: 기존 worktree들이 한 위치에 몰려 있음) 그걸 기본 후보로 함께 제시한다.

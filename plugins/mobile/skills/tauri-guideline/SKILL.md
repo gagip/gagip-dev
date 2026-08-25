@@ -18,15 +18,16 @@ allowed-tools: Read, Glob, Grep
 
 | 주제 | 언제 참조 | 파일 |
 |------|-----------|------|
-| 레이어 아키텍처·SSOT | Rust/React 역할 구분, 데이터 흐름, 플랫폼 분기 | `$SKILL_DIR/references/architecture.md` |
-| 디버깅·로그 | 브리지 추적, tauri-plugin-log 설정, breakpoint 한계 | `$SKILL_DIR/references/debugging.md` |
-| 테스트 전략 | mock 빌드, feature flag, e2e, CI | `$SKILL_DIR/references/testing.md` |
-| 계약 프로그래밍 | 레이어 경계 검증, 타입 vs 런타임, SSOT | `$SKILL_DIR/references/contracts.md` |
-| 플러그인 선택 | 자제작 vs 공식, 카테고리별 우선순위 | `$SKILL_DIR/references/plugins-catalog.md` |
+| 레이어 아키텍처·SSOT | Rust/React 역할 구분, 데이터 흐름, 플랫폼 분기 | `references/architecture.md` |
+| 디버깅·로그 | 브리지 추적, tauri-plugin-log 설정, breakpoint 한계 | `references/debugging.md` |
+| 테스트 전략 | mock 빌드, feature flag, e2e, CI | `references/testing.md` |
+| 계약 프로그래밍 | 레이어 경계 검증, 타입 vs 런타임, SSOT | `references/contracts.md` |
+| 플러그인 선택 | 자제작 vs 공식, 카테고리별 우선순위 | `references/plugins-catalog.md` |
 
 ## 작업 순서
 
-1. 질문을 분류하여 위 표에서 관련 references 파일 1~2개를 선택한다.
+1. 질문을 분류하여 위 표에서 관련 references 파일 1~2개를 선택한다. 경로는 현재 `SKILL.md`가
+   들어 있는 디렉터리를 기준으로 해석한다.
 2. 해당 파일을 로드하고 관련 원칙을 인용한다.
 3. 원칙을 사용자의 구체적인 컨텍스트에 적용하여 답한다. 원칙과 사용자 의도가 충돌하면 충돌 사실을 명시한다.
 

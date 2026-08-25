@@ -1,0 +1,32 @@
+{
+  "name": "gagip-dev",
+  "interface": {
+    "displayName": "gagip-dev"
+  },
+  "plugins": [
+    {
+      "name": "common",
+      "source": {
+        "source": "local",
+        "path": "./plugins/common"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "mobile",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mobile"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

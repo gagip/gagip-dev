@@ -2,7 +2,7 @@
 name: plugin-commit
 description: >
   변경사항을 분석해 이 프로젝트의 커밋 컨벤션에 맞는 메시지를 작성하고 커밋을 수행하는 스킬.
-  scope는 변경된 파일 경로로 자동 감지한다 (plugins/common → common, plugins/android → android).
+  scope는 변경된 파일 경로로 자동 감지한다 (plugins/common → common, plugins/mobile → mobile).
   "커밋해줘", "변경사항 정리해줘", "커밋 메시지 만들어줘", "git commit", "스테이징하고 커밋" 등의
   표현이 나오면 반드시 이 스킬을 사용할 것.
 allowed-tools: Bash, Read
@@ -41,7 +41,7 @@ allowed-tools: Bash, Read
 ### 1. 변경사항 파악
 
 ```bash
-bash "$SKILL_DIR/scripts/status.sh"
+bash .claude/skills/plugin-commit/scripts/status.sh
 ```
 
 출력 내용: 변경 파일 목록 / 스테이징 여부 / diff 통계 / 최근 커밋 5개
@@ -55,6 +55,8 @@ bash "$SKILL_DIR/scripts/status.sh"
 - **스테이징된 파일이 없으면**: 전체 변경사항 기준으로 메시지 작성, 3단계에서 scope에 해당하는 파일만 `git add`
 
 ### 3. 사용자 확인 [STOP]
+
+확인 질문 기능이 있으면 구조화된 확인을 사용하고, 없으면 대화에서 같은 내용을 확인한다.
 
 작성한 커밋 메시지와 스테이징 대상 파일 목록을 사용자에게 보여주고 **반드시 여기서 멈출 것**:
 
@@ -70,6 +72,14 @@ bash "$SKILL_DIR/scripts/status.sh"
 수정 요청이 오면 반영한 뒤 다시 대기한다.
 
 ### 4. 커밋 실행
+
+먼저 두 marketplace와 plugin manifest, README 스킬 목록의 정합성을 검사한다.
+
+```bash
+python3 scripts/check_consistency.py
+```
+
+검사에 실패하면 커밋하지 않고 원인을 보고한다.
 
 스테이징되지 않은 변경사항이 있는 경우, scope에 해당하는 파일만 스테이징:
 ```bash
@@ -100,5 +110,6 @@ EOF
 
 - scope는 변경 파일 경로에서 자동으로 감지한다 — 사용자가 명시하지 않아도 된다
 - 두 플러그인이 동시에 변경된 경우 별도 커밋을 제안한다 — 릴리즈 스킬이 플러그인별 커밋 이력으로 버전을 판단하기 때문이다
+- 공유 파일과 플러그인 파일이 함께 바뀌었다면 릴리스 대상을 추적할 수 있도록 구현 커밋의 범위를 명확히 설명한다
 - 커밋 전 반드시 사용자 확인을 받는다
 - push는 사용자가 명시적으로 요청할 때만 수행한다

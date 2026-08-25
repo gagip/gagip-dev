@@ -8,7 +8,8 @@ description: >
   "skill-metrics", "자동화 우선순위", "자동화할 거 찾아줘", "워크플로우 지표",
   "스킬 도달률", "반복 워크플로우 분석".
   주간 회고에서 자동화 후보를 정량 근거로 뽑을 때, 또는 새 스킬이 실제로 채택됐는지
-  추적할 때 사용한다.
+  추적할 때 사용한다. 스킬 호출을 `Skill` 도구 사용으로 기록하지 않는 하네스에서는
+  관측량이 없어 미지원임을 알리고 종료한다.
 allowed-tools: Bash, Write
 argument-hint: (선택) 기간 — "14"(최근 N일) 또는 "2026-06-05"(시작일). 생략 시 최근 14일
 ---
@@ -24,23 +25,36 @@ Claude Code가 남긴 세션 JSONL(`~/.claude/projects/**/*.jsonl`)을 집계해
 > 측정은 전부 번들된 `scripts/measure.py`가 수행한다. Claude가 JSONL을 직접
 > 읽어 토큰을 태우지 않는다 — 스크립트를 호출하고 결과 마크다운만 해석한다.
 
+## 지원 범위 확인 — 먼저 실행
+
+이 스킬의 지표는 **Claude Code 세션 로그가 스킬 호출을 `Skill` 도구 사용으로 기록한다는 사실**에
+의존한다. 현재 하네스가 이 관측량을 제공하는지 먼저 확인한다.
+
+- Claude Code의 `~/.claude/projects/**/*.jsonl`처럼 `Skill` 도구 호출이 구조화되어 있으면 아래 절차를 계속한다.
+- 스킬이 프롬프트로 로드될 뿐 별도 도구 호출로 기록되지 않으면 호출 횟수·도달률·전환을 계산할 수 없다.
+  이 경우 다른 세션 로그를 억지로 비슷하게 파싱하지 말고, "현재 하네스는 스킬 호출을 독립 이벤트로
+  기록하지 않아 skill-metrics를 지원할 수 없습니다"라고 알린 뒤 종료한다.
+
+파일 위치 차이가 아니라 **지표 정의에 필요한 사건이 없다는 문제**이므로, 추정값을 만들지 않는다.
+
 ---
 
 ## 실행 절차
 
 ### Step 1: 측정 스크립트 실행
 
-스킬 디렉토리의 `scripts/measure.py`를 실행한다. 인자(`$ARGUMENTS`)로 기간을 받는다.
+현재 `SKILL.md`가 들어 있는 디렉터리의 `scripts/measure.py`를 실행한다. 호출과 함께 전달된
+자연어 인자로 기간을 받는다.
 
 ```bash
 # 기본: 최근 14일, stdout 출력
-python3 "$SKILL_DIR/scripts/measure.py" --days 14
+python3 "<스킬 디렉터리>/scripts/measure.py" --days 14
 
 # 특정 시작일부터
-python3 "$SKILL_DIR/scripts/measure.py" --since 2026-06-05 --until 2026-06-19
+python3 "<스킬 디렉터리>/scripts/measure.py" --since 2026-06-05 --until 2026-06-19
 
 # 프로젝트 필터 + 파일 저장
-python3 "$SKILL_DIR/scripts/measure.py" --days 14 --project myproject --out /tmp/skill-metrics.md
+python3 "<스킬 디렉터리>/scripts/measure.py" --days 14 --project myproject --out /tmp/skill-metrics.md
 ```
 
 주요 옵션:
@@ -54,7 +68,7 @@ python3 "$SKILL_DIR/scripts/measure.py" --days 14 --project myproject --out /tmp
 | `--top N` | 랭킹 표 상위 N개 | 15 |
 | `--out <경로>` | 마크다운 저장 (미지정 시 stdout) | — |
 
-`$ARGUMENTS`가 숫자면 `--days`로, `YYYY-MM-DD` 형식이면 `--since`로 넘긴다.
+전달된 인자가 숫자면 `--days`로, `YYYY-MM-DD` 형식이면 `--since`로 넘긴다.
 
 ### Step 2: 결과 해석
 
@@ -87,7 +101,7 @@ AutoScore = 주간호출수 × (평균후속체인길이 + 1) × (1 + 마찰율)
 
 **①-b 묶음 후보 (transition)**: `A → B`는 A 호출 직후 윈도우 안에 처음 등장한
 다른 스킬 B의 쌍별 빈도. 같은 쌍이 반복되면 **단일 체인 커맨드**로 묶을 1순위 신호다.
-(예: `syai-commit → create-pr`가 잦으면 커밋+PR을 한 커맨드로.)
+(예: 프로젝트 커밋 스킬 → PR 스킬 연결이 잦으면 둘을 한 워크플로로 묶는다.)
 
 ### ③ 상시 지표 (Reach)
 

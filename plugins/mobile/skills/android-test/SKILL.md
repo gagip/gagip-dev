@@ -5,12 +5,6 @@ argument-hint: "<파일경로 또는 클래스명>"
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash
 ---
 
-## 입력
-
-```
-$ARGUMENTS
-```
-
 ## 참조 문서
 
 코드 분석 전에 먼저 읽는다 (대상 프로젝트 루트 기준 — 이 스킬 자체의 `references/`가 아니다):
@@ -22,7 +16,7 @@ $ARGUMENTS
 
 Android 프로젝트(`.kt` 파일, `build.gradle`, `AndroidManifest.xml` 등이 존재)라면 추가로 읽는다:
 
-- `${SKILL_DIR}/references/android-test-guidelines.md` — Android 테스트 규칙 (BehaviorSpec, Fake/Mock 전략, StateFlow 검증 방법 등)
+- 현재 `SKILL.md` 디렉터리의 `references/android-test-guidelines.md` — Android 테스트 규칙 (BehaviorSpec, Fake/Mock 전략, StateFlow 검증 방법 등)
 
 ---
 
@@ -30,7 +24,7 @@ Android 프로젝트(`.kt` 파일, `build.gradle`, `AndroidManifest.xml` 등이 
 
 ### 1. 대상 코드 분석
 
-`$ARGUMENTS`로 받은 파일 또는 클래스를 Read/Glob으로 읽는다.
+호출과 함께 전달된 파일 또는 클래스를 Read/Glob으로 읽는다.
 
 파악할 것:
 - 클래스의 책임과 공개 인터페이스
@@ -137,7 +131,7 @@ Android 프로젝트(`.kt` 파일, `build.gradle`, `AndroidManifest.xml` 등이 
 
 ## 행동 원칙
 
-- `$ARGUMENTS` 없으면 먼저 "어떤 코드에 대한 테스트를 작성할까요?" 질문
+- 대상 인자가 없으면 먼저 "어떤 코드에 대한 테스트를 작성할까요?"라고 질문
 - 파일 수정 전 반드시 해당 파일 Read
 - 코드 언급 시 항상 `파일경로:라인번호` 형식으로 위치 명시
 - **커밋은 사용자가 명시적으로 요청할 때만 진행**

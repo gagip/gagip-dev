@@ -13,7 +13,7 @@ argument-hint: (선택) 집중할 범위 — "docs"(문서만), "code"(코드만
 
 ## 이 스킬이 하는 일
 
-코드와 그것을 설명하는 문서(README, CLAUDE.md, docs 등) 사이의 간극을 찾아 닫는다.
+코드와 그것을 설명하는 문서(README, 프로젝트 지침 파일, docs 등) 사이의 간극을 찾아 닫는다.
 큰 변경 이후 문서가 뒤처지거나, 코드에 방치된 찌꺼기가 쌓였을 때 가장 유용하다.
 
 인자로 범위를 받으면 그 범위에 집중하고, 없으면 전체를 훑는다.
@@ -24,7 +24,7 @@ argument-hint: (선택) 집중할 범위 — "docs"(문서만), "code"(코드만
 
 ### `docs` (또는 "문서만")
 문서와 코드의 불일치에만 집중한다. 코드는 건드리지 않는다.
-- README, CLAUDE.md, docs/*.md에 언급된 파일·명령·모듈·구조가 실제로 존재하는가
+- README, `AGENTS.md`·`CLAUDE.md` 같은 프로젝트 지침, docs/*.md에 언급된 파일·명령·모듈·구조가 실제로 존재하는가
 - 삭제·이름 변경된 것이 문서에 남아 있지 않은가
 - 최근 추가된 기능이나 구조 변경이 반영됐는가
 
@@ -68,7 +68,7 @@ docs + code 모두. 파악 후 사용자가 어느 쪽을 먼저 처리할지 �
 
 ### 문서 불일치
 - [ ] README: `app` 모듈 언급 → 실제 삭제됨 (5/27 커밋에서 제거)
-- [ ] CLAUDE.md: 빌드 명령 `./gradlew assembleDebug` → 현재는 `./gradlew :composeApp:assembleDebug`
+- [ ] 프로젝트 지침: 빌드 명령 `./gradlew assembleDebug` → 현재는 `./gradlew :composeApp:assembleDebug`
 
 ### 코드 정리
 - [ ] src/legacy/ — 마지막 수정 3개월 전, 참조 없음
