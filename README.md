@@ -9,7 +9,7 @@ Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인
 | 플러그인 | 설명 | 상세 |
 |---|---|---|
 | `common` | 계획·리뷰·회고 등 프로젝트 운영 스킬 | [plugins/common/README.md](plugins/common/README.md) |
-| `git-workflow` | 커밋·PR·이슈 등 git/GitHub 작업 흐름 스킬 | [plugins/git-workflow/README.md](plugins/git-workflow/README.md) |
+| `development` | 커밋·PR·이슈 등 git/GitHub 작업 흐름과 코드 품질·모듈 구조 리뷰 스킬 | [plugins/development/README.md](plugins/development/README.md) |
 | `design` | 디자인 시스템 결정을 문서화하는 스킬 | [plugins/design/README.md](plugins/design/README.md) |
 
 ## 설치
@@ -19,7 +19,7 @@ Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인
 ```text
 /plugin marketplace add gagip/gagip-dev
 /plugin install common@gagip-dev
-/plugin install git-workflow@gagip-dev
+/plugin install development@gagip-dev
 /plugin install design@gagip-dev
 ```
 
@@ -28,7 +28,7 @@ Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인
 ```bash
 codex plugin marketplace add gagip/gagip-dev
 codex plugin add common@gagip-dev
-codex plugin add git-workflow@gagip-dev
+codex plugin add development@gagip-dev
 codex plugin add design@gagip-dev
 ```
 

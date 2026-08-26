@@ -3,7 +3,7 @@ name: coding-philosophy
 description: >
   코드 품질 판정의 공통 기준이 되는 개인 코딩 철학. "코딩 철학", "리뷰 기준", "품질 기준"을
   묻거나, 코드 리뷰·설계 검토·인터페이스 점검에서 무엇을 결함으로 볼지 판단해야 할 때 사용한다.
-  다른 스킬(`common:module-review` 등)이 판정 기준으로 이 스킬을 로드한다.
+  다른 스킬(`development:module-review` 등)이 판정 기준으로 이 스킬을 로드한다.
 allowed-tools: Read
 ---
 

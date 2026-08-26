@@ -121,7 +121,7 @@ AutoScore = 주간호출수 × (평균후속체인길이 + 1) × (1 + 마찰율)
   (주 변별은 빈도·체인).
 - **마찰 표현 사전은 휴리스틱**이다. 한국어/영어 교정·재시도 표현 위주로 보수적으로
   잡으며, 놓치거나 오탐할 수 있다. (`scripts/measure.py`의 `FRICTION_PATTERNS`에서 조정)
-- 버전이 다른 동명 스킬(`create-pr` vs `git-workflow:create-pr`)은 별개로 집계된다 —
+- 버전이 다른 동명 스킬(`create-pr` vs `development:create-pr`)은 별개로 집계된다 —
   합산 해석이 필요하면 사람이 묶어 읽는다.
 - 20줄 이하의 즉시 종료 세션은 제외한다(빈 세션 노이즈).
 
