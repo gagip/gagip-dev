@@ -1,0 +1,8 @@
+{
+  "name": "git-workflow",
+  "description": "커밋·PR·이슈 등 git/GitHub 작업 흐름 스킬",
+  "version": "0.1.0",
+  "author": {
+    "name": "gagip"
+  }
+}

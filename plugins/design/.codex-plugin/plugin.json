@@ -1,0 +1,32 @@
+{
+  "name": "design",
+  "description": "코드에서 디자인 시스템 결정을 추출해 문서화하는 스킬",
+  "version": "0.1.0",
+  "author": {
+    "name": "gagip",
+    "url": "https://github.com/gagip"
+  },
+  "homepage": "https://github.com/gagip/gagip-dev",
+  "repository": "https://github.com/gagip/gagip-dev",
+  "keywords": [
+    "design",
+    "design-system",
+    "documentation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Design",
+    "shortDescription": "디자인 시스템 문서화 스킬",
+    "longDescription": "코드베이스를 스캔해 컬러·타이포·스페이싱·컴포넌트 같은 디자인 결정을 추출하고 DESIGN.md로 문서화하는 스킬 모음입니다.",
+    "developerName": "gagip",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "디자인 시스템 문서 만들어줘"
+    ]
+  }
+}

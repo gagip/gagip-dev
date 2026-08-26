@@ -2,7 +2,7 @@
 name: plugin-commit
 description: >
   변경사항을 분석해 이 프로젝트의 커밋 컨벤션에 맞는 메시지를 작성하고 커밋을 수행하는 스킬.
-  scope는 변경된 파일 경로로 자동 감지한다 (plugins/common → common, plugins/mobile → mobile).
+  scope는 변경된 파일 경로로 자동 감지한다 (plugins/common → common, plugins/git-workflow → git-workflow).
   "커밋해줘", "변경사항 정리해줘", "커밋 메시지 만들어줘", "git commit", "스테이징하고 커밋" 등의
   표현이 나오면 반드시 이 스킬을 사용할 것.
 allowed-tools: Bash, Read
@@ -32,7 +32,7 @@ allowed-tools: Bash, Read
 
 | 변경 파일 경로          | scope      |
 |------------------------|------------|
-| `plugins/<name>/` 하위  | `<name>` (common·android·tauri·mobile 등 — **디렉터리명이 곧 scope**, 하드코딩하지 않는다) |
+| `plugins/<name>/` 하위  | `<name>` (common·git-workflow·design 등 — **디렉터리명이 곧 scope**, 하드코딩하지 않는다) |
 | 그 외 (루트, `.claude/` 등) | scope 없음 |
 | 여러 플러그인 동시 변경 | 각각 별도 커밋 제안 |
 

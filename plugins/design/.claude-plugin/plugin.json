@@ -1,0 +1,8 @@
+{
+  "name": "design",
+  "description": "코드에서 디자인 시스템 결정을 추출해 문서화하는 스킬",
+  "version": "0.1.0",
+  "author": {
+    "name": "gagip"
+  }
+}
