@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.2.0] - 2026-08-26
+
+### ✨ Feat
+- **coding-philosophy/module-review**: `common`에서 편입해 코드 품질 판정 기준·모듈 구조 리뷰 스킬을 추가했다. 이름도 `git-workflow`에서 `development`로 개명했다 (`040b905`)
+
 ## [0.1.0] - 2026-08-26
 
 ### ✨ Feat
