@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.2.1] - 2026-08-26
+
+### ♻️ Refactor
+- **worktree-scaffold**: 90일 세션 로그 집계 결과 호출 이력이 0건으로 확인돼 제거했다. development README 스킬 목록과 루트 README 스킬 카운트도 함께 갱신했다 (`8d44fcc`, `242e6f9`)
+
 ## [0.2.0] - 2026-08-26
 
 ### ✨ Feat
