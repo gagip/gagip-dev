@@ -16,8 +16,8 @@ allowed-tools: Bash, Read, Glob, Grep, Write, Edit, Agent
 - **수정하지 않는다**: 리뷰 중 코드를 고치면 판단이 흐려지고 되돌리기 어려워진다.
   발견은 전부 메모에 쌓고, 실제 수정은 리뷰가 끝난 뒤 별도 작업(`development:apply-review` 등)으로 한다.
 
-판정 기준은 **`development:coding-philosophy` 스킬을 로드해 적용한다** (특히 8~11장).
-이 스킬은 "무엇을 보는가"의 순서만 정하고, "무엇이 결함인가"는 철학 문서가 정한다.
+판정 기준은 **현재 `SKILL.md` 디렉터리의 `references/coding-philosophy.md`를 로드해 적용한다**
+(특히 8~11장). 이 스킬은 "무엇을 보는가"의 순서만 정하고, "무엇이 결함인가"는 철학 문서가 정한다.
 
 ---
 
@@ -114,6 +114,6 @@ allowed-tools: Bash, Read, Glob, Grep, Write, Edit, Agent
 - 리뷰 중에는 코드를 수정하지 않는다. 발견은 전부 메모 파일로 간다
 - 지적마다 `파일경로:라인`과 실패 시나리오를 쓴다. 못 쓰면 뺀다
 - "잘 되어 있다"는 확인 항목은 메모에 넣지 않는다
-- 판정 기준은 `development:coding-philosophy`를 로드해 적용한다 — 이 스킬이 기준을 새로 만들지 않는다
+- 판정 기준은 `references/coding-philosophy.md`를 로드해 적용한다 — 이 스킬이 기준을 새로 만들지 않는다
 - 검증 수단·테스트 관례는 대상 레포의 것을 따른다 — 특정 언어·프레임워크를 전제하지 않는다
 - Step 5에서 triage까지만 하고 멈춘다 — 수정은 별도 작업이다
