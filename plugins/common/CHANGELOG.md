@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.24.1] - 2026-08-26
+
+### ♻️ Refactor
+- **codebase-sync/create-ppt/finish/report/setup-skills**: 90일 세션 로그 집계 결과 호출 이력이 0건으로 확인돼 5개 스킬을 제거했다. common README 스킬 목록과 루트 README 스킬 카운트도 함께 갱신했다 (`e5e8ac3`)
+
 ## [0.24.0] - 2026-08-25
 
 ### ✨ Feat
