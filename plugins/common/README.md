@@ -7,22 +7,17 @@
 | 스킬 | 설명 | 트리거 예시 |
 |---|---|---|
 | `apply-review` | PR 리뷰 코멘트를 분류·보고한 뒤 승인된 항목을 반영 | "PR 리뷰 반영해줘" |
-| `codebase-sync` | 코드와 README·지침·docs의 불일치를 찾아 동기화 | "README 최신화해줘" |
 | `coding-philosophy` | 코드 품질 판정에 공통으로 쓰는 코딩 철학 | "리뷰 기준 알려줘" |
 | `commit` | 변경사항을 분석해 범용 커밋 메시지를 작성하고 커밋 | "커밋해줘" |
-| `create-ppt` | 개발 현황 브리핑용 HTML 프레젠테이션 생성 | "발표자료 만들어줘" |
 | `create-pr` | 현재 브랜치 변경사항으로 GitHub PR 생성·갱신 | "PR 만들어줘" |
 | `design-md` | 코드에서 디자인 결정을 추출해 `DESIGN.md` 생성 | "디자인 시스템 문서 만들어줘" |
 | `draft-plan` | 이슈·주제를 조사하고 완결된 구현 계획서 작성 | "구현 계획서 작성해줘" |
-| `finish` | 정리 → 리뷰 → 문서 점검 → 커밋 → push → PR 체인 | "작업 마무리해줘" |
 | `light-research` | 2~5개 각도로 빠르게 조사하고 한 번 종합 | "가볍게 조사해줘" |
 | `memory-curator` | 현재 대화의 메모리 후보 저장과 누적 메모리 정리 | "메모리 정리해줘" |
 | `module-review` | 모듈 공개 계약과 구조를 순차 점검해 메모로 축적 | "모듈 리뷰해줘" |
 | `notion-write` | 구조화된 문서를 Notion에 작성 | "노션에 정리해줘" |
 | `report-issue` | 자연어 설명으로 GitHub 이슈 초안 작성·생성 | "이슈 올려줘" |
-| `report` | 작업 내용을 프로젝트 비공개 산출물 폴더에 보고 | "작업 보고서 작성해줘" |
 | `retrospective` | 현재 대화 또는 기간을 회고해 지식·지침 개선안 도출 | "이번 작업 회고해줘" |
-| `setup-skills` | 프로젝트 원칙과 구조에 맞는 repo 스킬 추천·생성 | "스킬 세팅해줘" |
 | `skill-metrics` | Claude Code의 스킬 호출 로그로 사용 지표 산출 | "스킬 사용 지표 보여줘" |
 | `worktree-scaffold` | repo 전용 worktree 부트스트랩 스크립트 생성 | "worktree 셋업 스크립트 만들어줘" |
 

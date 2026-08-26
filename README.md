@@ -32,7 +32,7 @@ Codex는 저장소의 marketplace를 현재 작업 디렉터리만으로 자동 
 
 ## 호환성
 
-- 배포 스킬 19개 중 18개는 Claude Code와 Codex에서 사용할 수 있다.
+- 배포 스킬 14개 중 13개는 Claude Code와 Codex에서 사용할 수 있다.
 - `common:skill-metrics`는 Claude Code 로그가 기록하는 `Skill` 도구 호출을 지표로 쓰므로
   Codex에서는 지원하지 않는다. 스킬이 이를 감지해 이유를 알리고 종료한다.
 - `allowed-tools`, `argument-hint`, `model` 같은 Claude Code frontmatter는 그대로 유지한다.
