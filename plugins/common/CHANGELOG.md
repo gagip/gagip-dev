@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.24.2] - 2026-08-26
+
+### ♻️ Refactor
+- **apply-review/commit/create-pr/report-issue/worktree-scaffold/design-md**: git-workflow·design 플러그인으로 분리했다. draft-plan/module-review/skill-metrics의 관련 참조도 새 스코프로 갱신했다 (`f9f4967`)
+
 ## [0.24.1] - 2026-08-26
 
 ### ♻️ Refactor
