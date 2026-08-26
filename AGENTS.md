@@ -1,6 +1,6 @@
 # AGENTS.md — gagip-dev
 
-Claude Code와 Codex가 함께 쓰는 개인 플러그인 마켓플레이스 레포다. `common`·`mobile` 플러그인의
+Claude Code와 Codex가 함께 쓰는 개인 플러그인 마켓플레이스 레포다. `common` 플러그인의
 스킬을 관리한다. 배포 스킬은 `plugins/<plugin>/skills/<skill>/SKILL.md`에 있고, 두 하네스가 같은
 스킬 트리를 읽는다. 하네스 간 표현 규칙은 `docs/harness-vocabulary.md`를 정본으로 삼는다.
 

@@ -9,7 +9,6 @@ Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인
 | 플러그인 | 설명 | 상세 |
 |---|---|---|
 | `common` | 언어·플랫폼에 독립적인 계획, 리뷰, 커밋, 보고와 프로젝트 운영 스킬 | [plugins/common/README.md](plugins/common/README.md) |
-| `mobile` | Android·iOS·Tauri 모바일 테스트, 아키텍처와 출시 품질 스킬 | [plugins/mobile/README.md](plugins/mobile/README.md) |
 
 ## 설치
 
@@ -18,7 +17,6 @@ Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인
 ```text
 /plugin marketplace add gagip/gagip-dev
 /plugin install common@gagip-dev
-/plugin install mobile@gagip-dev
 ```
 
 ### Codex CLI
@@ -26,7 +24,6 @@ Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인
 ```bash
 codex plugin marketplace add gagip/gagip-dev
 codex plugin add common@gagip-dev
-codex plugin add mobile@gagip-dev
 ```
 
 Codex는 저장소의 marketplace를 현재 작업 디렉터리만으로 자동 등록하지 않으므로 최초 한 번
@@ -35,7 +32,7 @@ Codex는 저장소의 marketplace를 현재 작업 디렉터리만으로 자동 
 
 ## 호환성
 
-- 배포 스킬 22개 중 21개는 Claude Code와 Codex에서 사용할 수 있다.
+- 배포 스킬 19개 중 18개는 Claude Code와 Codex에서 사용할 수 있다.
 - `common:skill-metrics`는 Claude Code 로그가 기록하는 `Skill` 도구 호출을 지표로 쓰므로
   Codex에서는 지원하지 않는다. 스킬이 이를 감지해 이유를 알리고 종료한다.
 - `allowed-tools`, `argument-hint`, `model` 같은 Claude Code frontmatter는 그대로 유지한다.
