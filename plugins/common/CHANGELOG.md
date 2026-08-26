@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.24.3] - 2026-08-26
+
+### ♻️ Refactor
+- **coding-philosophy/module-review**: `development` 플러그인(구 `git-workflow`)으로 편입해 제거했다. `draft-plan`/`skill-metrics`의 관련 참조도 새 스코프로 갱신했다 (`040b905`)
+
 ## [0.24.2] - 2026-08-26
 
 ### ♻️ Refactor
