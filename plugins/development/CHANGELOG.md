@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.3.0] - 2026-08-27
+
+### ✨ Feat
+- **commit/create-pr**: `claude plugin eval` 케이스(commit-basic, create-pr-stop-gate)를 추가해 커밋 메시지 포맷·PR 생성 STOP 게이트 준수 여부를 검증할 수 있게 했다 (`6b887e2`)
+
+### ♻️ Refactor
+- **coding-philosophy/module-review**: `apply-review`를 제거하고 `coding-philosophy`를 `module-review`의 참조 문서로 강등했다 (`7a2428d`)
+
 ## [0.2.1] - 2026-08-26
 
 ### ♻️ Refactor
