@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.25.0] - 2026-08-27
+
+### ✨ Feat
+- **draft-plan**: `claude plugin eval` 케이스(draft-plan-structure)를 추가해 Plan Mode 진입과 PRD 5절 구조(비목표·리스크 절 포함) 준수 여부를 검증할 수 있게 했다 (`f9a27ee`)
+
+### ♻️ Refactor
+- **draft-plan**: 계획서 포맷을 PRD 5절 구조로 개편했다 (`023bc2d`)
+
 ## [0.24.4] - 2026-08-26
 
 ### ♻️ Refactor
