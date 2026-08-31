@@ -9,7 +9,7 @@
 | `draft-plan` | 이슈·주제를 조사하고 완결된 구현 계획서 작성 | "구현 계획서 작성해줘" |
 | `grill` | 새로 만드는 요청에서 인터뷰로 요구사항·설계 방향을 캐냄 | "grill me", "인터뷰해줘" |
 | `notion-write` | 구조화된 문서를 Notion에 작성 | "노션에 정리해줘" |
-| `retrospective` | 현재 대화 또는 기간을 회고해 지식·지침 개선안 도출 | "이번 작업 회고해줘" |
+| `retrospective` | 현재 대화 또는 기간을 회고해 스킬·지침 개선안 도출 | "이번 작업 회고해줘" |
 | `skill-metrics` | Claude Code의 스킬 호출 로그로 사용 지표 산출 | "스킬 사용 지표 보여줘" |
 
 `skill-metrics`는 스킬 호출을 별도 `Skill` 도구 이벤트로 남기는 Claude Code 전용이다. 나머지
