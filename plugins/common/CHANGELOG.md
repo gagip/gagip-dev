@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.26.0] - 2026-09-01
+
+### ✨ Feat
+- **build-skill**: 새 스킬을 만들고 반복 개선하는 메타 스킬을 추가했다. `skill-creator`의 iterate 루프를 이 레포 관례로 포팅 — 의도 포착 → 초안 → 결정론적 Python 테스트 케이스(`evals/*.py`, `PROMPT` 상수 + `check(ctx)` 함수) → `run_skill_test.py` 러너(`claude -p --setting-sources project --plugin-dir`로 워킹트리 스킬 격리 로드, baseline 대조) → 일반화 재작성. SKILL.md·eval 템플릿 번들, Codex 호환(`name`·`description`이 두 하네스 공통 계약) 명시 (`e4d6b40`)
+
+### ♻️ Refactor
+- **retrospective**: 회고 대상을 스킬 문서와 상시 로드 지침으로만 좁혔다. 사용자가 암묵적 지침보다 명시적 지침 문서를 선호해, 메모리 카테고리(적격성 검증 게이트 + `memory-curator` 자동 전달), 볼트 회고 로그, 문서화 공백 추천을 제거했다. 남은 3개 카테고리(스킬 개선 / 신규 스킬 추천 / 상시 로드 지침 계층)는 전부 사용자 확인 후 반영으로 통일했다. 다중 세션·주간 회고 워크플로우는 유지 (`4f501d7`)
+
 ## [0.25.1] - 2026-09-01
 
 ### ✨ Feat
