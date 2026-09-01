@@ -59,6 +59,8 @@ uv run --with pyyaml python /path/to/plugin-creator/scripts/validate_plugin.py p
 
 Codex validator의 실제 경로는 현재 환경에 설치된 `plugin-creator` 스킬에서 확인한다. 두 검사가 모두 통과해야 한다.
 
+**validator를 실행할 수 없는 경우** — `plugin-creator`가 현재 환경에 없어 스크립트 경로를 찾지 못하면, 검사 실패로 취급해 중단하지 않는다. 2단계 릴리즈 계획에 `Codex validator: ⚠️ 미실행 (plugin-creator 없음)`을 명시하고 사용자 승인을 받아 진행한다. **돌려서 실패한 것과 아예 못 돌린 것은 다르다** — 전자는 즉시 중단이지만, 후자는 `check_consistency.py`가 두 매니페스트의 `name`·`version`·`description` 일치를 이미 확인하므로 매니페스트 구조를 건드리지 않은 변경이면 위험이 낮다.
+
 Critical 문제가 발견되면 **즉시 중단**하고 사용자에게 보고한다.
 
 **CHANGELOG 초안 작성** — 마지막 태그부터 HEAD까지 구현 커밋 이력을 분석해 초안을 메모리에 작성한다.
