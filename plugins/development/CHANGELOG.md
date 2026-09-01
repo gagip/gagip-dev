@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.3.1] - 2026-09-01
+
+### ✨ Feat
+- **commit**: `common:build-skill` 러너용 결정론적 테스트 케이스(`evals/commit-basic.py`)를 추가했다. `PROMPT` 상수 + `check(ctx)` 함수 형식으로, commit 스킬 발동·커밋 수·메시지 포맷·working tree clean·`git add`→`git commit` 순서·`git push` 미실행을 Python `assert`로 검증한다 (`ca4e44c`)
+
 ## [0.3.0] - 2026-08-27
 
 ### ✨ Feat
