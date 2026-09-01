@@ -1,0 +1,40 @@
+name: skill-tests
+
+# common:build-skill의 결정론적 러너로 레포 전체 스킬 eval을 돌린다.
+# PR 게이트가 아니라(이 레포는 main-only) 모델 변화로 인한 drift를 잡는 주간 점검이다.
+# 매 run이 실제 `claude -p` 호출이므로 자동 push 트리거는 두지 않는다.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 6'  # 매주 토요일 12:00 KST (03:00 UTC)
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install -g @anthropic-ai/claude-code
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: run skill tests
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          python3 plugins/common/skills/build-skill/scripts/run_skill_test.py \
+            --all --threshold 1.0 --json skill-test-results.json
+
+      - name: upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-test-results
+          path: skill-test-results.json
