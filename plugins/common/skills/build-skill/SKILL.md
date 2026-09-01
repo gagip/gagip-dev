@@ -164,10 +164,12 @@ def check(ctx):
 
 ```bash
 python3 <이 스킬>/scripts/run_skill_test.py <대상 스킬 디렉토리> [옵션]
+python3 <이 스킬>/scripts/run_skill_test.py --all           # 레포 전체 스킬 (CI 주간 실행)
 ```
 
 | 옵션 | 의미 |
 |---|---|
+| `--all` | 루트 아래 `SKILL.md` + `evals/*.py`를 가진 스킬을 모두 실행. `--json`은 `{"all_ok", "skills": [...]}` |
 | `--case <이름>` | 특정 케이스만 |
 | `--baseline` | 스킬 없이 동일 프롬프트도 1회 → "스킬이 차이를 만드나" 대조. 신규 스킬 평가에 권장 |
 | `--runs N` | RUNS 덮어씀 (개발 중 `--runs 1`) |
@@ -213,6 +215,8 @@ python3 <이 스킬>/scripts/run_skill_test.py <대상 스킬 디렉토리> [옵
 - `python3 scripts/check_consistency.py` 통과 확인.
 - **`release` 스킬**로 버전 범프(Claude+Codex plugin.json 동시) · CHANGELOG · 태그 · push.
   구현 커밋과 릴리스 커밋을 분리한다.
+- 케이스를 추가했으면 그걸로 끝이다 — `.github/workflows/skill-tests.yml`가 매주 토요일
+  `--all`로 레포 전체를 돌린다. 별도 CI 등록은 불필요하다.
 
 ---
 

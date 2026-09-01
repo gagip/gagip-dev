@@ -82,6 +82,21 @@ def discover_cases(skill_dir: Path) -> list[Path]:
     return sorted(p for p in evals.glob("*.py") if not p.name.startswith("_"))
 
 
+def discover_skills(root: Path) -> list[Path]:
+    """root 아래에서 SKILL.md와 실행 가능한 evals/*.py를 함께 가진 스킬 디렉터리 목록.
+
+    .git 등 숨김 디렉터리는 건너뛴다.
+    """
+    out: list[Path] = []
+    for skill_md in root.rglob("SKILL.md"):
+        if any(part.startswith(".") for part in skill_md.relative_to(root).parts):
+            continue
+        skill_dir = skill_md.parent
+        if discover_cases(skill_dir):
+            out.append(skill_dir)
+    return sorted(out)
+
+
 # --------------------------------------------------------------------------
 # 스킬 로드 전략
 # --------------------------------------------------------------------------
