@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.27.0] - 2026-09-02
+
+### ✨ Feat
+- **build-skill**: 러너에 `--all` 모드를 추가했다. `run_skill_test.py --all`이 루트 아래 SKILL.md + `evals/*.py`를 가진 스킬을 모두 찾아 순회하고, `--json`은 `{"all_ok", "skills": [...]}`로 확장된다. 매주 토요일 도는 `.github/workflows/skill-tests.yml`가 이 모드를 쓴다 (`59b201f`)
+
 ## [0.26.0] - 2026-09-01
 
 ### ✨ Feat
