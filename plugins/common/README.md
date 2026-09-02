@@ -12,6 +12,7 @@
 | `html-brief` | 근거 기반 의사결정·보고 문서를 단일 HTML로 작성 | "대표 전달용 HTML 만들어줘", "조사 결과를 HTML 보고서로 정리해줘" |
 | `notion-write` | 구조화된 문서를 Notion에 작성 | "노션에 정리해줘" |
 | `retrospective` | 현재 대화 또는 기간을 회고해 스킬·지침 개선안 도출 | "이번 작업 회고해줘" |
+| `search-sessions` | 여러 하네스의 세션 로그를 한 번에 뒤져 과거 대화 찾기 | "예전에 이거 얘기했었나" |
 | `skill-metrics` | Claude Code의 스킬 호출 로그로 사용 지표 산출 | "스킬 사용 지표 보여줘" |
 
 `skill-metrics`는 스킬 호출을 별도 `Skill` 도구 이벤트로 남기는 Claude Code 전용이다. 나머지
