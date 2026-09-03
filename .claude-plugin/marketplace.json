@@ -18,6 +18,11 @@
       "name": "design",
       "source": "./plugins/design",
       "description": "코드에서 디자인 시스템 결정을 추출해 문서화하는 스킬"
+    },
+    {
+      "name": "marketing",
+      "source": "./plugins/marketing",
+      "description": "제품 지식베이스를 근거로 브랜드 포지셔닝·문구·네이밍을 여러 관점에서 검토하는 도구 묶음"
     }
   ]
 }
