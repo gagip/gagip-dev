@@ -1,7 +1,7 @@
 {
   "name": "development",
   "description": "커밋·PR·이슈 등 git/GitHub 작업 흐름과 코드 품질·모듈 구조 리뷰 스킬",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "author": {
     "name": "gagip"
   }
