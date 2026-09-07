@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.3.4] - 2026-09-07
+
+### 🐛 Fix
+- **module-review**: 배포되지 않는 스킬 참조를 제거했다. 리뷰 후속 작업 안내가 삭제된 apply-review 스킬을 가리키고 있어 문구에서 뺐고, 판정 기준 참조는 스킬명 대신 `references/coding-philosophy.md` 경로로 교정했다 (`b4786f7`)
+
 ## [0.3.3] - 2026-09-05
 
 ### 🐛 Fix
