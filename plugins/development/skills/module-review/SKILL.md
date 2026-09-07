@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Glob, Grep, Write, Edit, Agent
 - **대상**: 변경분이 아니라 모듈이 밖으로 내놓는 **공개 계약**. 오래 방치된 설계 부채를 찾는 용도다.
 - **속도보다 순서**: 한 번에 전부 훑지 않는다. 모듈 하나씩, 사용자 확인을 받으며 나아간다.
 - **수정하지 않는다**: 리뷰 중 코드를 고치면 판단이 흐려지고 되돌리기 어려워진다.
-  발견은 전부 메모에 쌓고, 실제 수정은 리뷰가 끝난 뒤 별도 작업(`development:apply-review` 등)으로 한다.
+  발견은 전부 메모에 쌓고, 실제 수정은 리뷰가 끝난 뒤 별도 작업으로 한다.
 
 판정 기준은 **현재 `SKILL.md` 디렉터리의 `references/coding-philosophy.md`를 로드해 적용한다**
 (특히 8~11장). 이 스킬은 "무엇을 보는가"의 순서만 정하고, "무엇이 결함인가"는 철학 문서가 정한다.
@@ -38,7 +38,7 @@ allowed-tools: Bash, Read, Glob, Grep, Write, Edit, Agent
 
 문서 상단에 다음을 적는다:
 - 리뷰 대상과 합의된 순서
-- 적용할 공통 원칙 요약 (`development:coding-philosophy` 8~11장)
+- 적용할 공통 원칙 요약 (`references/coding-philosophy.md` 8~11장)
 - **"리뷰 중에는 수정하지 않는다. 전체 리뷰가 끝나면 여기 모인 항목을 실제 작업으로 진행한다."**
 
 ## Step 3 — 모듈 하나씩 점검 (반복)
