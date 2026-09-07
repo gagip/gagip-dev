@@ -110,6 +110,14 @@ def documented_skills(readme: Path) -> set[str]:
     return result
 
 
+def known_skill_ids(plugins: list[Path]) -> set[str]:
+    return {
+        f"{plugin.name}:{path.parent.name}"
+        for plugin in plugins
+        for path in (plugin / "skills").glob("*/SKILL.md")
+    }
+
+
 def validate_skills(plugins: list[Path], errors: list[str]) -> None:
     for plugin in plugins:
         skill_root = plugin / "skills"
@@ -142,11 +150,24 @@ def validate_skills(plugins: list[Path], errors: list[str]) -> None:
             if not re.search(r"(?m)^description:\s*(?:.+|[>|])$", frontmatter):
                 errors.append(f"{relative}: frontmatter `description`이 없음")
 
+    known = known_skill_ids(plugins)
+    names = "|".join(re.escape(plugin.name) for plugin in plugins)
+    reference_pattern = re.compile(rf"\b({names}):([a-z0-9][a-z0-9-]*)")
+
     for path in sorted(PLUGINS_ROOT.rglob("*.md")):
         text = path.read_text(encoding="utf-8")
         for token in BANNED_RUNTIME_TOKENS:
             if token in text:
                 errors.append(f"{path.relative_to(ROOT)}: 금지 런타임 토큰 `{token}` 잔존")
+        # CHANGELOG는 릴리스 시점의 상태를 적은 과거 기록이라 그때의 스킬 이름이 남는다.
+        # 현재 스킬 목록과 대조하면 정상 기록이 오류로 잡힌다.
+        if path.name == "CHANGELOG.md":
+            continue
+        for reference in sorted({match.group(0) for match in reference_pattern.finditer(text)}):
+            if reference not in known:
+                errors.append(
+                    f"{path.relative_to(ROOT)}: 존재하지 않는 스킬 참조 `{reference}`"
+                )
 
 
 def validate_shared_repository_skills(errors: list[str]) -> None:
