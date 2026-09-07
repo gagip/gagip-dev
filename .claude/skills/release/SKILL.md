@@ -5,6 +5,7 @@ description: >
   스킬 검증 → 버전 업데이트 → CHANGELOG 작성 → 커밋 → 태그 → push 순으로 진행.
   "릴리즈해줘", "배포해줘", "버전 올려줘", "release 해줘", "publish 해줘",
   "버전 업데이트하고 배포해줘" 등의 표현이 나오면 반드시 이 스킬을 사용할 것.
+  중간 확인 없이 push까지 한 번에 끝낸다 — 이 스킬을 부르는 것이 곧 push 승인이다.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 ---
 
@@ -42,7 +43,16 @@ git log <마지막 태그>..HEAD --oneline 2>/dev/null || git log --oneline
 - `feat:` 포함 → `minor`
 - 그 외 (`fix:`, `chore:`, `docs:` 등) → `patch`
 
-**신규 플러그인 예외** — 해당 플러그인의 기존 태그(`<name>/v*`)가 하나도 없으면 첫 릴리스다. 자동 범프하지 말고 `plugin.json`의 현재 버전을 그대로 첫 릴리스로 쓴다. 릴리스 계획에 "신규 플러그인 첫 릴리스 — 범프 없음"을 명시한다.
+| 유형 | 변경 | 예시 |
+|------|------|------|
+| `major` | x+1.0.0 | 0.2.1 → 1.0.0 |
+| `minor` | x.y+1.0 | 0.2.1 → 0.3.0 |
+| `patch` | x.y.z+1 | 0.2.1 → 0.2.2 |
+| `x.y.z` | 그대로 사용 | — |
+
+호출 인자로 `patch`·`minor`·`major`·`x.y.z`를 받았으면 자동 판단을 무시하고 그것을 쓴다.
+
+**신규 플러그인 예외** — 해당 플러그인의 기존 태그(`<name>/v*`)가 하나도 없으면 첫 릴리스다. 자동 범프하지 말고 `plugin.json`의 현재 버전을 그대로 첫 릴리스로 쓴다. 완료 보고에 "신규 플러그인 첫 릴리스 — 범프 없음"을 명시한다.
 
 **스킬·매니페스트 검증** — 대상 플러그인의 모든 SKILL.md와 공유 메타데이터를 점검:
 
@@ -59,7 +69,7 @@ uv run --with pyyaml python /path/to/plugin-creator/scripts/validate_plugin.py p
 
 Codex validator의 실제 경로는 현재 환경에 설치된 `plugin-creator` 스킬에서 확인한다. 두 검사가 모두 통과해야 한다.
 
-**validator를 실행할 수 없는 경우** — `plugin-creator`가 현재 환경에 없어 스크립트 경로를 찾지 못하면, 검사 실패로 취급해 중단하지 않는다. 2단계 릴리즈 계획에 `Codex validator: ⚠️ 미실행 (plugin-creator 없음)`을 명시하고 사용자 승인을 받아 진행한다. **돌려서 실패한 것과 아예 못 돌린 것은 다르다** — 전자는 즉시 중단이지만, 후자는 `check_consistency.py`가 두 매니페스트의 `name`·`version`·`description` 일치를 이미 확인하므로 매니페스트 구조를 건드리지 않은 변경이면 위험이 낮다.
+**validator를 실행할 수 없는 경우** — `plugin-creator`가 현재 환경에 없어 스크립트 경로를 찾지 못하면, 검사 실패로 취급해 중단하지 않는다. 그대로 진행하되 완료 보고에 `Codex validator: ⚠️ 미실행 (plugin-creator 없음)`을 명시한다. **돌려서 실패한 것과 아예 못 돌린 것은 다르다** — 전자는 즉시 중단이지만, 후자는 `check_consistency.py`가 두 매니페스트의 `name`·`version`·`description` 일치를 이미 확인하므로 매니페스트 구조를 건드리지 않은 변경이면 위험이 낮다.
 
 Critical 문제가 발견되면 **즉시 중단**하고 사용자에게 보고한다.
 
@@ -75,51 +85,11 @@ Critical 문제가 발견되면 **즉시 중단**하고 사용자에게 보고�
 
 ---
 
-### 2. 릴리즈 계획 확인 [STOP — 유일한 중단점]
+### 2. 실행 (중단 없이 연속 진행)
 
-수집한 모든 정보를 한 번에 출력하고 **반드시 여기서 멈출 것**:
+수집이 끝나면 확인을 구하지 않고 아래 단계를 순서대로 실행한다.
 
-```
-릴리즈 계획
-- 플러그인: <플러그인명>
-- 현재 버전: <현재 버전>
-- 새 버전: <새 버전> (<버전 유형>)
-- 스킬 검증: ✅ 통과 (또는 ⚠️ 경고 N개)
-
-[CHANGELOG 초안]
-## [<새 버전>] - YYYY-MM-DD
-
-### ✨ Feat
-- **<스킬명>**: ... (`<구현 커밋 해시>`)
-
-[커밋 메시지]
-chore(<플러그인명>): 버전 <새 버전> 릴리즈
-
-[Push 대상]
-- 브랜치: <현재 브랜치>
-- 태그: <플러그인명>/v<새 버전>
-
-버전 유형을 바꾸려면 patch/minor/major 중 하나를 입력하세요.
-승인하면 버전 업데이트 → CHANGELOG 저장 → 커밋 → 태그 → push까지 자동 진행합니다.
-```
-
-| 유형 | 변경 | 예시 |
-|------|------|------|
-| `major` | x+1.0.0 | 0.2.1 → 1.0.0 |
-| `minor` | x.y+1.0 | 0.2.1 → 0.3.0 |
-| `patch` | x.y.z+1 | 0.2.1 → 0.2.2 |
-| `x.y.z` | 그대로 사용 | — |
-
-수정 요청이 오면 반영한 뒤 다시 대기한다.
-사용자가 명시적으로 진행("ok", "확인", "계속" 등)을 지시하기 전까지 3단계를 실행하지 말 것.
-
----
-
-### 3. 실행 (승인 후 연속 진행)
-
-사용자가 승인하면 아래 단계를 **중단 없이 순서대로** 자동 실행한다.
-
-#### 3-1. 버전 업데이트
+#### 2-1. 버전 업데이트
 
 두 `plugin.json`을 Read로 읽은 뒤 Edit으로 version 필드를 같은 새 버전으로 수정:
 
@@ -128,24 +98,24 @@ plugins/<플러그인명>/.claude-plugin/plugin.json
 plugins/<플러그인명>/.codex-plugin/plugin.json
 ```
 
-#### 3-2. CHANGELOG 저장
+#### 2-2. CHANGELOG 저장
 
 CHANGELOG 초안을 `plugins/<플러그인명>/CHANGELOG.md` **최상단**(기존 최신 항목 위)에 추가한다. 구분선 없이 바로 잇는다. 루트 `CHANGELOG.md`는 건드리지 않는다 — 0.18.2까지의 과거 기록이다.
 
-#### 3-3. 커밋 생성
+#### 2-3. 커밋 생성
 
 ```bash
 git add plugins/<플러그인명>/.claude-plugin/plugin.json plugins/<플러그인명>/.codex-plugin/plugin.json plugins/<플러그인명>/CHANGELOG.md
 git commit -m "chore(<플러그인명>): 버전 <새 버전> 릴리즈"
 ```
 
-#### 3-4. 태그 생성
+#### 2-4. 태그 생성
 
 ```bash
 git tag -a "<플러그인명>/v<새 버전>" -m "Release <플러그인명> v<새 버전>"
 ```
 
-#### 3-5. Push
+#### 2-5. Push
 
 push는 **개인 계정 `gagip`**로 한다. gh 활성 계정이 `gagip`가 아니면 `gh auth switch --user gagip`로 전환 후 push하고, 끝나면 원래 계정으로 복원한다.
 
@@ -156,7 +126,9 @@ git push origin "<플러그인명>/v<새 버전>"
 
 ---
 
-### 4. 완료 알림
+### 3. 완료 보고
+
+중단점이 없으므로 사용자는 이 보고로 무엇이 나갔는지 처음 확인한다. **무엇을 검증했는지까지 적는다.**
 
 ```
 ✅ 릴리즈 완료!
@@ -165,14 +137,17 @@ git push origin "<플러그인명>/v<새 버전>"
 - 버전: <이전 버전> → <새 버전>
 - 태그: <플러그인명>/v<새 버전>
 - 커밋: <short hash>
+- 검증: check_consistency.py ✅ / Codex validator <✅ 또는 ⚠️ 미실행 (plugin-creator 없음)>
 ```
+
+되돌리려면 `git reset --hard <이전 커밋>`과 태그 삭제가 필요하고, push 이후면 force-push가 필요하다는 점을 함께 알린다.
 
 ---
 
 ## 행동 원칙
 
 - 스킬 검증에서 Critical 문제가 있으면 즉시 중단하고 사용자에게 보고한다
-- **중단점은 2단계 한 번뿐**이다. 승인 이후엔 끝까지 자동 진행한다
+- 중단점을 두지 않는다. 1단계 수집이 끝나면 3단계 보고까지 이어서 진행한다 (검증 실패는 예외)
 - 두 `plugin.json` 수정 전 반드시 Read로 현재 내용을 확인하고 `name`·`version`·`description`이 일치하는지 검증한다
 - Claude와 Codex manifest의 버전은 항상 동일하게 범프한다
 - 릴리스 직전 Codex plugin validator와 `python3 scripts/check_consistency.py`를 다시 실행한다
