@@ -1,7 +1,7 @@
 {
   "name": "firebase",
   "description": "Firebase CLI가 내장한 MCP 서버를 Crashlytics 조회 도구로만 좁혀 붙이는 플러그인",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "gagip",
     "url": "https://github.com/gagip"
