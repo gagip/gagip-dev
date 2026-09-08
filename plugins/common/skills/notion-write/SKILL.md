@@ -17,6 +17,8 @@ argument-hint: (선택) 문서 유형 — 회의록/가이드/위키/보고서. 
 
 > **문법 스펙은 MCP가 직접 제공한다.** 페이지를 쓰기 전 MCP 리소스 `notion://docs/enhanced-markdown-spec`을 (resource-reading 인터페이스로) 읽어 정확한 Notion-flavored Markdown 문법을 확인한다. 이 스킬은 그 위에 얹는 **판단 규칙**이다.
 
+> **도구 이름 표기.** 이 문서는 `notion-create-pages`처럼 접두사 없이 도구명을 쓴다 — Notion MCP는 이 레포가 배포하지 않는 사용자 개인 커넥터라 서버 별칭이 환경마다 다르다. 현재 세션에 MCP 서버가 여러 개 붙어 있어 도구 이름이 겹치면, 실제 연결된 별칭을 확인해 `<별칭>:notion-create-pages`처럼 접두사를 붙여 호출한다.
+
 ---
 
 ## 언제 적용하나
