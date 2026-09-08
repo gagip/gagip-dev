@@ -152,7 +152,7 @@ def validate_skills(plugins: list[Path], errors: list[str]) -> None:
 
     known = known_skill_ids(plugins)
     names = "|".join(re.escape(plugin.name) for plugin in plugins)
-    reference_pattern = re.compile(rf"\b({names}):([a-z0-9][a-z0-9-]*)")
+    reference_pattern = re.compile(rf"\b({names}):([a-z0-9][a-z0-9_-]*)")
 
     for path in sorted(PLUGINS_ROOT.rglob("*.md")):
         text = path.read_text(encoding="utf-8")
@@ -163,7 +163,16 @@ def validate_skills(plugins: list[Path], errors: list[str]) -> None:
         # 현재 스킬 목록과 대조하면 정상 기록이 오류로 잡힌다.
         if path.name == "CHANGELOG.md":
             continue
-        for reference in sorted({match.group(0) for match in reference_pattern.finditer(text)}):
+        references = set()
+        for match in reference_pattern.finditer(text):
+            plugin_part, skill_part = match.group(1), match.group(2)
+            if "_" in skill_part:
+                # snake_case는 스킬 디렉터리명(kebab-case) 규칙과 다르다 — 플러그인 이름과
+                # 우연히 겹치는 MCP 서버 접두사(예: `firebase:crashlytics_get_report`)이지
+                # plugin:skill 크로스 참조가 아니다.
+                continue
+            references.add(f"{plugin_part}:{skill_part}")
+        for reference in sorted(references):
             if reference not in known:
                 errors.append(
                     f"{path.relative_to(ROOT)}: 존재하지 않는 스킬 참조 `{reference}`"

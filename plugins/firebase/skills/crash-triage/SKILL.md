@@ -49,7 +49,7 @@ find . -name 'google-services.json' -o -name 'GoogleService-Info.plist' | grep -
 
 ### 2. 상위 이슈를 집계한다
 
-`crashlytics_get_report`를 `report: "topIssues"`로 부른다. 기본은 최근 30일·상위 5건이고,
+`firebase:crashlytics_get_report`를 `report: "topIssues"`로 부른다. 기본은 최근 30일·상위 5건이고,
 사용자가 기간이나 건수를 말했으면 그쪽을 쓴다. 조회 가능 범위는 최근 90일이며, 그보다 앞선
 구간을 넣으면 거부된다.
 
@@ -58,7 +58,7 @@ find . -name 'google-services.json' -o -name 'GoogleService-Info.plist' | grep -
 
 ### 3. 이슈마다 실제 이벤트를 본다
 
-`crashlytics_list_events`에 `filter.issueId`를 걸어 표본을 가져온다. 집계에는 없고 여기에만
+`firebase:crashlytics_list_events`에 `filter.issueId`를 걸어 표본을 가져온다. 집계에는 없고 여기에만
 있는 것들이 원인 규명의 핵심이다:
 
 - **스택 트레이스** — 어디서 터졌나
