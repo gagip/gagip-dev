@@ -1,6 +1,14 @@
 name: skill-tests
 
-# common:build-skill의 결정론적 러너로 레포 전체 스킬 eval을 돌린다.
+# 이 레포는 두 eval 메커니즘을 병행 운영한다:
+# 1) test job — common:build-skill의 결정론적 Python 러너. 레포의 유일한 신뢰 기준.
+# 2) plugin-eval job — 네이티브 `claude plugin eval`(prompt.md + graders/*.md) 포맷.
+#    아직 공식 문서화 안 된 early-access 성격 스펙이라 continue-on-error로 격리한
+#    정보성 job이다 — 이 job이 실패해도 test job(1)에는 영향 없다.
+# 각 플러그인의 `evals/` 아래 있는 suite만 자동 실행 대상이다. `evals-manual/`
+# 아래(예: development/evals-manual/release-happy-path — 실제 push가 나가는
+# 고위험 happy-path)는 의도적으로 CI 대상에서 제외했다. 수동으로만 실행한다.
+#
 # PR 게이트가 아니라(이 레포는 main-only) 모델 변화로 인한 drift를 잡는 주간 점검이다.
 # 매 run이 실제 `claude -p` 호출이므로 자동 push 트리거는 두지 않는다.
 
@@ -38,3 +46,52 @@ jobs:
         with:
           name: skill-test-results
           path: skill-test-results.json
+
+  plugin-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true  # early-access 스펙 — 실패해도 test job(위)에 영향 없음
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install -g @anthropic-ai/claude-code
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: claude plugin eval — development
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          claude plugin eval plugins/development \
+            --scaffold --allow-tools Bash,Write,Edit \
+            --threshold 1.0 --no-publish --json plugin-eval-development.json
+
+      - name: claude plugin eval — common
+        if: always()
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          claude plugin eval plugins/common \
+            --scaffold --allow-tools Bash,Write,WebFetch \
+            --threshold 1.0 --no-publish --json plugin-eval-common.json
+
+      - name: claude plugin eval — design
+        if: always()
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          claude plugin eval plugins/design \
+            --scaffold --allow-tools Bash,Write,Edit \
+            --threshold 1.0 --no-publish --json plugin-eval-design.json
+
+      - name: upload plugin-eval results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-eval-results
+          path: plugin-eval-*.json
