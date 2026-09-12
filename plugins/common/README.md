@@ -6,6 +6,7 @@
 
 | 스킬 | 설명 | 트리거 예시 |
 |---|---|---|
+| `agent-env-designer` | 특정 문제를 잘 푸는 에이전트를 위한 환경을 E={Tasks, Harness, Verifier, State, Configuration} 프레임워크로 설계 | "에이전트 환경 설계해줘", "이 문제 풀 에이전트 어떻게 구축하지" |
 | `build-mcp-server` | 외부 서비스를 범용 API 통로 없이 목적별 도구만 노출하는 작은 MCP 서버로 감쌈 | "MCP 서버 만들어줘", "이 API를 MCP로 감싸줘" |
 | `build-skill` | 새 스킬을 만들거나 기존 스킬을 반복 개선. 결정론적 Python 러너로 테스트 | "스킬 만들어줘" |
 | `draft-plan` | 이슈·주제를 조사하고 완결된 구현 계획서 작성 | "구현 계획서 작성해줘" |
