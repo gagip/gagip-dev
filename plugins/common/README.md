@@ -9,6 +9,7 @@
 | `agent-env-designer` | 특정 문제를 잘 푸는 에이전트를 위한 환경을 E={Tasks, Harness, Verifier, State, Configuration} 프레임워크로 설계 | "에이전트 환경 설계해줘", "이 문제 풀 에이전트 어떻게 구축하지" |
 | `build-mcp-server` | 외부 서비스를 범용 API 통로 없이 목적별 도구만 노출하는 작은 MCP 서버로 감쌈 | "MCP 서버 만들어줘", "이 API를 MCP로 감싸줘" |
 | `build-skill` | 새 스킬을 만들거나 기존 스킬을 반복 개선. 결정론적 Python 러너로 테스트 | "스킬 만들어줘" |
+| `critique-research` | 조사·분석 문서를 맥락 없는 별도 컨텍스트 여럿에 넘겨 독립 검증 | "이 문서 검증해줘", "독립 검증 세워줘" |
 | `draft-plan` | 이슈·주제를 조사하고 완결된 구현 계획서 작성 | "구현 계획서 작성해줘" |
 | `grill` | 새로 만드는 요청에서 인터뷰로 요구사항·설계 방향을 캐냄 | "grill me", "인터뷰해줘" |
 | `html-brief` | 근거 기반 의사결정·보고 문서를 단일 HTML로 작성 | "대표 전달용 HTML 만들어줘", "조사 결과를 HTML 보고서로 정리해줘" |
