@@ -263,6 +263,8 @@ def transcript_metrics(path):
     span = to_dt(max(stamps)) - to_dt(min(stamps))
     return {
         "duration_ms": int(span.total_seconds() * 1000),
+        "start": min(stamps),
+        "end": max(stamps),
         "output_tokens": out_tokens,
         "tool_count": tools,
         "tool_stats": counts,
@@ -272,6 +274,104 @@ def transcript_metrics(path):
 
 def to_dt(stamp):
     return datetime.strptime(stamp[:19], "%Y-%m-%dT%H:%M:%S")
+
+
+# ── 워크플로우가 띄운 에이전트 ────────────────────────────────────────────────
+
+def session_base(session_path):
+    return session_path[:-len(".jsonl")] if session_path.endswith(".jsonl") else session_path
+
+
+def first_prompt(path):
+    """트랜스크립트의 첫 발화 = 그 에이전트가 받은 위임 프롬프트.
+
+    is_human 을 쓰지 않는다 — 그 판정은 사이드체인을 걸러내는데, 워크플로우 트랜스크립트는
+    통째로 사이드체인이라 프롬프트까지 함께 걸러져 전부 빈 문자열이 된다.
+    """
+    if not os.path.isfile(path):
+        return ""
+    entries, _ = read_entries(path)
+    for e in entries:
+        if e.get("type") != "user":
+            continue
+        content = (e.get("message") or {}).get("content")
+        if isinstance(content, list) and any(
+                isinstance(b, dict) and b.get("type") == "tool_result" for b in content):
+            continue
+        text = clean(block_text(content))
+        if text:
+            return text
+    return ""
+
+
+def workflow_records(session_path):
+    """워크플로우가 띄운 에이전트를 회차 폴더에서 직접 읽는다.
+
+    이들은 부모 로그에 Agent 호출로 남지 않는다 — 부모가 부른 것은 Workflow 하나뿐이고
+    실제 에이전트는 스크립트가 띄운다. 그래서 세션만 훑으면 작업 전체를 워크플로우로 돌린
+    회고에서 위임 내역이 통째로 "에이전트 실행 없음"으로 나온다.
+    """
+    root = os.path.join(session_base(session_path), "subagents", "workflows")
+    if not os.path.isdir(root):
+        return []
+
+    records = []
+    for run in sorted(os.listdir(root)):
+        run_dir = os.path.join(root, run)
+        if not os.path.isdir(run_dir):
+            continue
+
+        reports = {}
+        journal = os.path.join(run_dir, "journal.jsonl")
+        if os.path.isfile(journal):
+            with open(journal, encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        row = json.loads(line)
+                    except ValueError:
+                        continue
+                    if row.get("type") == "result" and row.get("agentId"):
+                        r = row.get("result")
+                        reports[row["agentId"]] = r if isinstance(r, str) else json.dumps(r, ensure_ascii=False)
+
+        for name in sorted(os.listdir(run_dir)):
+            if not name.startswith("agent-") or not name.endswith(".meta.json"):
+                continue
+            agent_id = name[len("agent-"):-len(".meta.json")]
+            try:
+                with open(os.path.join(run_dir, name), encoding="utf-8") as f:
+                    meta = json.load(f)
+            except (OSError, ValueError):
+                meta = {}
+            transcript = os.path.join(run_dir, f"agent-{agent_id}.jsonl")
+            tm = transcript_metrics(transcript)
+            phase = meta.get("workflowPhase") or ""
+            label = meta.get("description") or agent_id
+            records.append({
+                "turn": 0,
+                "tool_use_id": None,
+                "agent_type": meta.get("agentType") or "workflow-subagent",
+                "description": f"[{run}] {phase} · {label}" if phase else f"[{run}] {label}",
+                "prompt": first_prompt(transcript),
+                "is_async": False,
+                "start": (tm or {}).get("start"),
+                "end": (tm or {}).get("end"),
+                "agent_id": agent_id,
+                "model": (tm or {}).get("model"),
+                "status": "completed" if agent_id in reports else None,
+                "report": reports.get(agent_id, ""),
+                "duration_ms": (tm or {}).get("duration_ms"),
+                "total_tokens": None,
+                "output_tokens": (tm or {}).get("output_tokens"),
+                "tool_count": (tm or {}).get("tool_count"),
+                "tool_stats": (tm or {}).get("tool_stats") or {},
+                # 값을 못 구했으면 0 이 아니라 미측정이다 — 호출부가 "계산 불가"로 적는다.
+                "metrics_source": "트랜스크립트 계산" if tm else None,
+                # 사용자는 워크플로우 전체를 기다렸지 배치 하나하나에 반응하지 않았다.
+                # 짝지으면 같은 발화가 모든 배치의 "반응"으로 복제돼 읽는 사람을 오도한다.
+                "from_workflow": True,
+            })
+    return records
 
 
 # ── 조립 ──────────────────────────────────────────────────────────────────────
@@ -339,6 +439,8 @@ def build_records(session_path, entries):
                     rec["metrics_source"] = None      # 계산 불가 — 0 으로 적지 않는다
             records.append(rec)
 
+    records.extend(workflow_records(session_path))
+
     # 완료 시각을 못 구했으면 시작 + 소요로 메운다. 둘 다 없으면 비워 둔다.
     for rec in records:
         if not rec["end"] and rec["start"] and rec["duration_ms"]:
@@ -350,7 +452,7 @@ def build_records(session_path, entries):
     for rec in records:
         end = rec["end"]
         rec["reaction"] = None
-        if not end:
+        if not end or rec.get("from_workflow"):
             continue
         for stamp, text in human_stamps:
             if stamp and stamp > end and text and not SYNTHETIC_RE.match(text):
@@ -464,6 +566,8 @@ def render(session_path, records, skipped, full):
             w(f"**직후 사용자 발화** ({stamp[11:19]})")
             w("")
             w(quote(text, (600, 200)))
+        elif r.get("from_workflow"):
+            w("**직후 사용자 발화** — 짝짓지 않음 (워크플로우 단계: 사용자는 회차 전체를 기다렸다)")
         elif not r["end"]:
             w("**직후 사용자 발화** — 완료 시각을 몰라 짝지을 수 없음")
         else:
