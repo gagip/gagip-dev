@@ -1,7 +1,6 @@
 ---
 name: plan-reviewer
 description: "구현 계획서·설계 문서를 실행 전에 한 관점(기획·코드·디자인)에서 회의적으로 검토하는 읽기 전용 에이전트. 호출할 때 프롬프트에 관점, 계획 파일 절대경로, 작업 기준 코드베이스 절대경로와 HEAD, 참조 자료 경로, 도구 호출 상한을 준다. draft-plan이 승인 요청 전에 관점별로 병렬 호출한다. 계획서·코드를 고치지 않고 판정과 Blocker/Major/Minor만 보고한다."
-model: opus
 color: yellow
 tools: Read, Glob, Grep, Bash
 ---
