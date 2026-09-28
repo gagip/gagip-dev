@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.38.1] - 2026-09-28
+
+### ♻️ Refactor
+- **스킬 설명 전반**: 300자를 넘던 설명 12개와 ai-tone-auditor 설명을 대표 트리거·자동 실행 조건·이웃 스킬 경계만 남기고 줄였다. 설명이 길어 하네스의 스킬 목록 예산에서 잘리고 있었다 (`287190d`)
+- **grill·screen-brief·draft-plan·mockup-review·retrospective·build-skill·skill-metrics**: 같은 요청에 둘 이상 걸리던 스킬 사이에 담당 경계를 한 구절씩 넣었다 (`287190d`)
+- **notion-write**: 사용자가 노션을 지정하지 않은 줄글은 로컬 문서 폴더를 권하는 경계를 넣었다 (`287190d`)
+- **critique-research·draft-plan·notion-write**: 본문의 경위·이유 문단을 규칙 한 줄로 줄였다 (`287190d`)
+
 ## [0.38.0] - 2026-09-28
 
 ### ✨ Feat
