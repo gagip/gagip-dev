@@ -7,7 +7,7 @@
 쓰기 도구는 없다. 이 서버로는 아무것도 바꿀 수 없다.
 
 환경변수:
-    <PREFIX>_CREDENTIALS  자격 증명 파일 경로 (기본 ~/.config/<서비스>/credentials.json)
+    <PREFIX>_CREDENTIALS  자격 증명 파일 경로 (기본 이 서버 폴더의 credentials.json)
     <PREFIX>_ALLOWED      허용 항목, 쉼표 구분 (기본 아래 DEFAULT_ALLOWED)
 """
 
@@ -21,7 +21,8 @@ import urllib.request
 
 DEFAULT_ALLOWED = []  # 예: ["알림-채널", "배포-로그"]
 CRED_PATH = os.environ.get(
-    "<PREFIX>_CREDENTIALS", os.path.expanduser("~/.config/<서비스>/credentials.json")
+    "<PREFIX>_CREDENTIALS",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "credentials.json"),
 )
 API = "https://api.example.com/v1"
 

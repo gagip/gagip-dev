@@ -1,4 +1,4 @@
-"""keeps_credentials_out_of_code — 자격 증명이 코드 폴더 밖에, 대화 밖에서 만들어진다.
+"""keeps_credentials_out_of_commits — 자격 증명이 커밋 밖에, 대화 밖에서 만들어진다.
 
 언어·프레임워크를 가정하지 않는다. 스킬 없이 만들어도 좁은 도구·입력 검증은 꽤 잘 나오지만,
 자격 증명을 코드 폴더의 `.env` 와 환경변수로 처리하는 쪽으로 기우는 경향이 있다. 환경변수에
@@ -25,10 +25,11 @@ def check(ctx):
     tree = ctx.sh("find statusmcp -type f -not -path '*/node_modules/*'").stdout
     assert tree.strip(), "statusmcp 폴더에 파일이 없음"
 
-    # 자격 증명은 코드 폴더가 아니라 사용자 설정 폴더에 둔다. 폴더째 공유·업로드해도
-    # 따라가지 않게 하려는 것이다.
-    in_config = ctx.sh(f"grep -rIl {SKIP} '[.]config/' statusmcp || true").stdout
-    assert in_config.strip(), "자격 증명을 ~/.config 아래 두지 않음 (코드 폴더·환경변수에 의존)"
+    # 자격 증명은 서버 폴더 안 credentials.json 에 두고 .gitignore 로 커밋에서 뺀다.
+    ignored = ctx.sh("grep -s credentials statusmcp/.gitignore || true").stdout
+    assert ignored.strip(), ".gitignore 가 credentials.json 을 제외하지 않음"
+    cred_file = ctx.sh(f"grep -rIl {SKIP} 'credentials[.]json' statusmcp || true").stdout
+    assert cred_file.strip(), "credentials.json 파일로 자격 증명을 읽지 않음 (환경변수에 의존)"
 
     # 소유자만 읽도록 권한을 조인다.
     tightened = ctx.sh(

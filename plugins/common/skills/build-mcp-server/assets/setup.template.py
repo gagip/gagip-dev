@@ -15,7 +15,7 @@ import sys
 import urllib.error
 import urllib.request
 
-DEFAULT_PATH = os.path.expanduser("~/.config/<서비스>/credentials.json")
+DEFAULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "credentials.json")
 VERIFY_URL = "https://api.example.com/v1/whoami"
 
 
@@ -48,7 +48,7 @@ def main():
     os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
 
     print(f"저장했습니다: {path} (권한 600)")
-    print("서버 코드 폴더 밖이라 폴더를 통째로 공유해도 따라가지 않습니다.")
+    print(".gitignore 로 커밋에서 제외됩니다.")
 
 
 if __name__ == "__main__":
