@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.38.2] - 2026-09-28
+
+### 🐛 Fix
+- **build-mcp-server**: 자격 증명 기본 위치를 코드 폴더 밖 `~/.config/<서비스>/`에서 서버 폴더 안 `credentials.json`(권한 600, `.gitignore` 제외)으로 바꿨다. 서버 하나가 폴더 하나로 독립되게 하려는 의도와 달리, 기존 서버들과 다른 위치에 자격 증명을 두게 만들었다. 템플릿 2종 기본 경로와 eval(`keeps_credentials_out_of_commits`로 개명, `.gitignore` 제외 여부 검사)도 함께 바꿨다 (`77ce8b9`)
+
 ## [0.38.1] - 2026-09-28
 
 ### ♻️ Refactor
