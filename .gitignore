@@ -4,3 +4,4 @@ __pycache__/
 *.stackdump
 # 스킬 평가 실행 결과 (러너 JSON·산출물·채점표, 회차별)
 plugins/*/skills/*-eval-runs/
+.private/

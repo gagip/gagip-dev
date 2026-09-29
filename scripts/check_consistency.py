@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ CLAUDE_MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 CODEX_MARKETPLACE = ROOT / ".agents" / "plugins" / "marketplace.json"
 BANNED_RUNTIME_TOKENS = ("$ARGUMENTS", "SKILL_DIR")
 SHARED_REPOSITORY_SKILLS = ("plugin-commit", "release")
+PRIVATE_TERMS = ROOT / ".private" / "banned-terms.txt"
 
 
 def load_json(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -191,6 +193,39 @@ def validate_shared_repository_skills(errors: list[str]) -> None:
             errors.append(f".agents/skills/{skill_name}: Claude 스킬과 다른 경로를 가리킴")
 
 
+def validate_private_terms(errors: list[str]) -> None:
+    """추적 제외 목록 파일의 고유명사가 공개될 파일에 들어가지 않았는지 본다.
+
+    목록 자체가 공개하면 안 되는 이름이라 저장소에 두지 않는다. 파일이 없는 기기에서는 건너뛴다.
+    """
+    if not PRIVATE_TERMS.is_file():
+        return
+    terms = [
+        line.strip().lower()
+        for line in PRIVATE_TERMS.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    listed = subprocess.run(
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.splitlines()
+    for rel in listed:
+        path = ROOT / rel
+        if not path.is_file():
+            continue
+        try:
+            lines = path.read_text(encoding="utf-8").lower().splitlines()
+        except (OSError, UnicodeDecodeError):
+            continue
+        for number, line in enumerate(lines, start=1):
+            for term in terms:
+                if term in line:
+                    errors.append(f"{rel}:{number}: 비공개 목록의 고유명사 포함")
+
+
 def main() -> int:
     errors: list[str] = []
     plugins = plugin_dirs()
@@ -198,6 +233,7 @@ def main() -> int:
     validate_marketplaces(plugins, errors)
     validate_skills(plugins, errors)
     validate_shared_repository_skills(errors)
+    validate_private_terms(errors)
 
     if errors:
         print("Consistency check failed:")
