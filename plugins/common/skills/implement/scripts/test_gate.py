@@ -161,11 +161,7 @@ def make_cycle(dest: Path, repo: Path | str, *,
                meta: dict[str, str] | None = None,
                stages: tuple[str, ...] = tuple(ARTIFACTS),
                drop: tuple[str, ...] = ()) -> Path:
-    """dest에 단계 산출물과 handoff.md를 깐다. overrides로 결함을 주입한다.
-
-    회귀 채점기(evals/regression/*/check.py)도 이 함수로 픽스처를 만든다 —
-    핸드오프 계약이 바뀌었을 때 고칠 자리를 하나로 둔다.
-    """
+    """dest에 단계 산출물과 handoff.md를 깐다. overrides로 결함을 주입한다."""
     rows = {k: ("완료", ARTIFACTS[k][0]) for k in stages}
     fixtures.write_cycle(dest, {
         "cycle_id": "2026-08-27_테스트",
@@ -207,19 +203,35 @@ CASES: list[tuple[str, str, str, dict]] = [
     ("intake: 생략 판정 항목 중복", "intake", "실패",
      {"overrides": {"intake": INTAKE_GOOD.replace("| 한 번 되돌리기로 안 됨 | 아니오 |",
                                                   "| 해석·선택지 둘 이상 | 아니오 |")}}),
+    ("intake: 같은 항목을 예 뒤에 아니오로 덮으면 실패", "intake", "실패",
+     {"overrides": {"intake": INTAKE_GOOD.replace("| 기능·문구·데이터 삭제 | 아니오 |",
+                                                  "| 기능·문구·데이터 삭제 | 예 |\n| 기능·문구·데이터 삭제 | 아니오 |")}}),
+    ("intake: 목록에 없는 판정 항목이 끼면 실패", "intake", "실패",
+     {"overrides": {"intake": INTAKE_GOOD.replace("| 한 번 되돌리기로 안 됨 | 아니오 |",
+                                                  "| 한 번 되돌리기로 안 됨 | 아니오 |\n| 오타 항목 | 아니오 |")}}),
+    ("intake: plan이 ~로 시작해도 통과", "intake", "통과", {"meta": {"plan": "~/계획서.md"}}),
+    ("intake: 규칙 도입일 당일 폴더는 새 규칙", "intake", "실패",
+     {"folder": "2026-09-29_today", "drop": ("plan",)}),
+    ("intake: 날짜 없는 폴더는 새 규칙", "intake", "실패", {"folder": "no-date", "drop": ("plan",)}),
+    ("intake: 잘못된 날짜 폴더는 새 규칙", "intake", "실패",
+     {"folder": "2026-13-40_bad", "drop": ("plan",)}),
     ("intake: 출처가 비었음", "intake", "실패",
      {"overrides": {"intake": INTAKE_GOOD.replace("이슈 #12 — 로그인 화면 에러 문구 누락", "")}}),
     ("intake: 출처가 이슈 없는 요청 한 줄", "intake", "통과",
      {"overrides": {"intake": INTAKE_GOOD.replace("이슈 #12 — 로그인 화면 에러 문구 누락",
                                                   "요청 — 설정 화면 문구 수정")}}),
     ("intake: 옛 형식(plan 키 없음·규칙 전 날짜)은 판정 없이 통과", "intake", "통과",
-     {"drop": ("plan",), "overrides": {"intake": INTAKE_GOOD.split("## 계획서 생략 판정")[0]}}),
+     {"folder": "2026-08-27_old", "drop": ("plan",), "overrides": {"intake": INTAKE_GOOD.split("## 계획서 생략 판정")[0]}}),
     ("intake: 규칙 뒤 날짜에서 plan 키를 지우면 실패", "intake", "실패",
-     {"drop": ("plan",), "meta": {"cycle_id": "2026-10-01_우회"}}),
+     {"folder": "2026-10-01_new", "drop": ("plan",)}),
+    ("intake: 머리말 cycle_id만 옛 날짜로 고쳐도 폴더 날짜로 판정", "intake", "실패",
+     {"folder": "2026-10-01_new", "drop": ("plan",), "meta": {"cycle_id": "2026-08-27_old"}}),
     ("close: 합의와 달라진 점 절 없음", "close", "실패",
      {"overrides": {"close": CLOSE_GOOD.split("## 합의와 달라진 점")[0]}}),
+    ("close: 합의와 달라진 점 절이 비었음", "close", "실패",
+     {"overrides": {"close": CLOSE_GOOD.split("## 합의와 달라진 점")[0] + "## 합의와 달라진 점\n\n"}}),
     ("close: 옛 형식은 합의와 달라진 점 없이 통과", "close", "통과",
-     {"drop": ("plan",), "overrides": {"close": CLOSE_GOOD.split("## 합의와 달라진 점")[0]}}),
+     {"folder": "2026-08-27_old", "drop": ("plan",), "overrides": {"close": CLOSE_GOOD.split("## 합의와 달라진 점")[0]}}),
     ("intake: 정상", "intake", "통과", {}),
     ("intake: 검증 조건 절 삭제", "intake", "실패",
      {"overrides": {"intake": INTAKE_GOOD.replace("## 검증 조건", "## 확인")}}),
@@ -257,6 +269,8 @@ CASES: list[tuple[str, str, str, dict]] = [
      {"repo": {"author": "someone@example.com"}}),
     ("ship: github.com 밖 호스트의 PR 주소도 통과", "ship", "통과",
      {"overrides": {"ship": SHIP_GOOD.replace("https://github.com/", "https://git.example.com/")}}),
+    ("ship: /pull/ 이 아닌 주소는 실패", "ship", "실패",
+     {"overrides": {"ship": SHIP_GOOD.replace("/pull/123", "/issues/123")}}),
     ("close: 커밋 제목 형식은 보지 않는다(프로젝트 지침 몫)", "close", "통과",
      {"repo": {"subject": "테스트 변경 추가"}}),
     ("close: 작업트리가 더러움", "close", "실패", {"repo": {"dirty": True}}),
@@ -278,7 +292,7 @@ def run_case(name: str, stage: str, expect: str, spec: dict) -> bool:
         root = Path(tmp)
         repo: Path | str = (make_repo(root, **spec.get("repo", {}))
                             if stage in GIT_STAGES else "(저장소 없음)")
-        cycle = root / "cycle"
+        cycle = root / spec.get("folder", "cycle")
         overrides = dict(spec.get("overrides") or {})
 
         make_cycle(cycle, repo, overrides=overrides, meta=spec.get("meta"),

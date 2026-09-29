@@ -50,7 +50,7 @@ SKIP_ITEMS = (
 )
 SKIP_VALUES = ("예", "아니오")
 DIVERGENCE_SECTION = "합의와 달라진 점"
-PR_URL_RE = re.compile(r"https://[^\s/]+/[^\s]+/pull/\d+")  # GitHub 계열 호스트
+PR_URL_RE = re.compile(r"https://[^\s/]+/[^\s]+/pull/\d+")  # 호스트 무관, `/pull/<번호>` 형식만 본다
 
 # 리뷰 판정에서 고쳐야만 넘어갈 수 있는 등급. 스타일(🟡)은 커밋을 막지 않는다.
 BLOCKING_MARK = "🔴"
@@ -287,10 +287,13 @@ def _check_ship(h: Handoff, row: StageRow, at_transition: bool = False) -> list[
 
 
 def plan_rules_apply(h: Handoff) -> bool:
-    """계획서 선행·무정지 검사를 받는 사이클인가. 옛 형식만 면제한다."""
+    """계획서 선행·무정지 검사를 받는 사이클인가. 옛 형식만 면제한다.
+
+    날짜는 머리말이 아니라 실제 폴더 이름에서 읽는다 — 머리말 한 줄만 고쳐 면제받지 못하게 한다.
+    """
     if "plan" in h.meta:
         return True
-    match = CYCLE_DATE_RE.match(h.meta.get("cycle_id", ""))
+    match = CYCLE_DATE_RE.match(Path(h.cycle_dir).name)
     if not match:
         return True
     try:

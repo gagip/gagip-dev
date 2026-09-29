@@ -254,7 +254,9 @@ def parse(text: str, path: Path) -> Handoff:
 
 def set_meta(text: str, key: str, value: str) -> str:
     """템플릿 텍스트의 머리말 `key:` 줄 값을 바꾼다. 키가 없으면 템플릿과 코드가 어긋난 것이다."""
-    updated, n = re.subn(rf"^{re.escape(key)}:.*$", f"{key}: {value}".rstrip(), text,
+    line = f"{key}: {value}".rstrip()
+    # 값은 글자 그대로 넣는다(치환 문자열로 넘기면 역슬래시가 정규식 규칙으로 해석된다).
+    updated, n = re.subn(rf"^{re.escape(key)}:.*$", lambda _m: line, text,
                          count=1, flags=re.MULTILINE)
     if n != 1:
         raise HandoffError(f"머리말에 '{key}' 칸이 없다")

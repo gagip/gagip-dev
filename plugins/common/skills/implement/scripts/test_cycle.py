@@ -418,12 +418,29 @@ class InitTests(unittest.TestCase):
         h = cycle.init(self.root / "2026-10-01_small", "작은 작업")
         self.assertEqual("", h.meta["plan"])
 
+    def test_backslashes_in_title_and_plan_are_kept_literally(self):
+        plan_dir = self.root / "p\\new"
+        plan_dir.mkdir()
+        plan = plan_dir / "plan.md"
+        plan.write_text("# 계획\n", encoding="utf-8")
+        title = r"fix \n parse \d \1"
+        h = cycle.init(self.root / "2026-10-01_esc", title, str(plan))
+        self.assertEqual(title, h.meta["title"])
+        self.assertEqual(str(plan.resolve()), h.meta["plan"])
+
+    def test_rejects_folder_dated_before_rule(self):
+        with self.assertRaisesRegex(cycle.TransitionError, "이후여야"):
+            cycle.init(self.root / "2020-01-01_old", "옛 날짜")
+        self.assertFalse((self.root / "2020-01-01_old").exists())
+
     def test_rejects_existing_folder_missing_plan_and_bad_name(self):
         (self.root / "2026-10-01_dup").mkdir()
         for args, message in (
             ((self.root / "2026-10-01_dup", "중복"), "이미 있는"),
             ((self.root / "2026-10-01_x", "계획 없음", str(self.root / "없음.md")), "계획서 파일이 없다"),
             ((self.root / "login", "이름 형식"), "YYYY-MM-DD"),
+            ((self.root / "2026-10-01_blank", "  "), "한 줄"),
+            ((self.root / "2026-10-01_lines", "첫 줄\n둘째 줄"), "한 줄"),
         ):
             with self.subTest(message=message):
                 with self.assertRaisesRegex(cycle.TransitionError, message):

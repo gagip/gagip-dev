@@ -35,6 +35,9 @@ def init(cycle_dir: Path, title: str, plan: str | None = None) -> handoff.Handof
     target = Path(cycle_dir).expanduser().resolve()
     if not CYCLE_ID_RE.match(target.name):
         raise TransitionError(f"사이클 폴더 이름은 YYYY-MM-DD_주제 형식이어야 한다: {target.name}")
+    if date.fromisoformat(target.name[:10]) < gate.PLAN_RULE_START:
+        raise TransitionError(
+            f"새 사이클 폴더 날짜는 {gate.PLAN_RULE_START} 이후여야 한다(이전 날짜는 옛 형식 면제 대상이다): {target.name}")
     if target.exists():
         raise TransitionError(f"이미 있는 사이클 폴더다: {target}")
     if not title.strip() or "\n" in title:
@@ -50,6 +53,7 @@ def init(cycle_dir: Path, title: str, plan: str | None = None) -> handoff.Handof
                        ("opened", date.today().isoformat()), ("plan", plan_value)):
         text = handoff.set_meta(text, key, value)
     text = text.replace("# 사이클: (제목)", f"# 사이클: {title.strip()}", 1)
+    handoff.parse(text, target / handoff.HANDOFF_FILENAME)  # 폴더를 만들기 전에 형식을 확인한다
     target.mkdir(parents=True)
     (target / handoff.HANDOFF_FILENAME).write_text(text, encoding="utf-8")
     return handoff.load(target)

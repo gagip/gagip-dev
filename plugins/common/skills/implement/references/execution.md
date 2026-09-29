@@ -151,7 +151,7 @@ repo_root=$(git rev-parse --show-toplevel)
 **push** — `git push -u origin <브랜치명>`(신규) 또는 `git push`(추적 중). 결합 명령이나 강제
 옵션을 섞지 않는다 — 섞으면 리스가 있어도 확인을 받는다(의도된 동작).
 
-**PR 생성** — 프로젝트의 PR 스킬을 호출하고, 만들어진 PR URL을 `07_ship.md`에 적는다.
+**PR 생성** — 프로젝트·전역 지침이 정한 PR 스킬(없으면 `development:create-pr`)을 호출하고, 만들어진 PR URL을 `07_ship.md`에 적는다.
 
 > **PR 스킬이 중단하면 즉시 리스를 해제한다.** PR 스킬은 워킹트리 dirty·base 모호·blocker
 > 존재 시 의도적으로 멈추도록 설계돼 있다. 그 순간 리스가 살아있으면 이후 수동 재시도가
