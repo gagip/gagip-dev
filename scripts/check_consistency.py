@@ -205,25 +205,22 @@ def validate_private_terms(errors: list[str]) -> None:
         for line in PRIVATE_TERMS.read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.lstrip().startswith("#")
     ]
-    listed = subprocess.run(
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+    if not terms:
+        return
+    # 추적 파일과 추적 제외가 아닌 새 파일을 한 번에 훑는다(-I: 바이너리 건너뜀).
+    found = subprocess.run(
+        ["git", "grep", "--untracked", "-n", "-I", "-i", "-F",
+         *[arg for term in terms for arg in ("-e", term)]],
         cwd=ROOT,
         capture_output=True,
         text=True,
-        check=True,
-    ).stdout.splitlines()
-    for rel in listed:
-        path = ROOT / rel
-        if not path.is_file():
-            continue
-        try:
-            lines = path.read_text(encoding="utf-8").lower().splitlines()
-        except (OSError, UnicodeDecodeError):
-            continue
-        for number, line in enumerate(lines, start=1):
-            for term in terms:
-                if term in line:
-                    errors.append(f"{rel}:{number}: 비공개 목록의 고유명사 포함")
+    )
+    if found.returncode > 1:
+        errors.append(f"비공개 목록 검사 실패: {found.stderr.strip()}")
+        return
+    for line in found.stdout.splitlines():
+        rel, number, _ = line.split(":", 2)
+        errors.append(f"{rel}:{number}: 비공개 목록의 고유명사 포함")
 
 
 def main() -> int:
