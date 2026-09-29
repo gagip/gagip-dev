@@ -1,9 +1,6 @@
 """핸드오프 파일 파싱 — 사이클의 상태 객체.
 
-한 사이클의 진행 상태는 `cycles/<id>/handoff.md` 한 파일에만 있다.
-디자인 부서와 같은 형식·같은 2값을 쓴다 — 부서마다 상태 어휘가 갈리면
-조직 규약이 이름만 남는다. (두 부서가 실제로 같은 파서를 공유하는 것은
-engineering 첫 사이클 뒤 core/ 추출 시점의 일이다.)
+한 사이클의 진행 상태는 `<사이클 폴더>/handoff.md` 한 파일에만 있다.
 사람이 열어 직접 고칠 수 있어야 하므로 마크다운을 정본으로 두고,
 이 모듈이 그 마크다운을 기계가 읽는 형태로 옮긴다.
 
@@ -32,7 +29,7 @@ class HandoffError(Exception):
 
 
 # ── 파이프라인 정의 ─────────────────────────────────────────────
-# 이 목록이 곧 부서의 작업 그래프다. 순서가 실행 순서이고,
+# 이 목록이 곧 작업 그래프다. 순서가 실행 순서이고,
 # 핸드오프 표의 행 순서와 일치해야 한다.
 
 @dataclass(frozen=True)
@@ -193,7 +190,7 @@ def _parse_stage_table(text: str, path: Path) -> list[StageRow]:
         if key == "commit":
             raise HandoffError(
                 f"{path}: 이전 commit 단계가 남아 있다 — 산출물 참조를 결정 로그에 보존한 뒤 "
-                "진행 표의 commit 행만 제거한다 (부서 README의 0.4 이전 안내 참고)"
+                "진행 표의 commit 행만 제거한다"
             )
         if key not in STAGE_KEYS:
             continue
