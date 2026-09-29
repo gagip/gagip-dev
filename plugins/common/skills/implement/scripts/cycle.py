@@ -48,10 +48,7 @@ def init(cycle_dir: Path, title: str, plan: str | None = None) -> handoff.Handof
     text = paths.TEMPLATE_HANDOFF.read_text(encoding="utf-8")
     for key, value in (("cycle_id", target.name), ("title", title.strip()),
                        ("opened", date.today().isoformat()), ("plan", plan_value)):
-        text, n = re.subn(rf"^{key}:.*$", f"{key}: {value}".rstrip(), text,
-                          count=1, flags=re.MULTILINE)
-        if n != 1:
-            raise TransitionError(f"템플릿 머리말에 {key} 칸이 없다")
+        text = handoff.set_meta(text, key, value)
     text = text.replace("# 사이클: (제목)", f"# 사이클: {title.strip()}", 1)
     target.mkdir(parents=True)
     (target / handoff.HANDOFF_FILENAME).write_text(text, encoding="utf-8")

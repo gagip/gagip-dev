@@ -20,7 +20,9 @@ import handoff
 import test_gate
 
 
-class CycleTests(unittest.TestCase):
+class CycleFixture:
+    """임시 레포 위에 사이클을 깔고 전이를 돕는다. 테스트 클래스가 함께 상속한다."""
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -59,6 +61,9 @@ class CycleTests(unittest.TestCase):
             callback()
         self.assertEqual(before, self.path.read_bytes())
 
+
+
+class CycleTests(CycleFixture, unittest.TestCase):
     def corrupt_row(self, key, state):
         self.path.write_text(self.path.read_text().replace(
             f"| {key} | 미완 |  |", f"| {key} | {state} | {test_gate.ARTIFACTS[key][0]} |"))
@@ -347,13 +352,8 @@ class CycleTests(unittest.TestCase):
         self.assertIn("다음 할 단계: branch", result.stdout)
 
 
-class PlanTransitionTests(unittest.TestCase):
+class PlanTransitionTests(CycleFixture, unittest.TestCase):
     """계획서 파일 존재는 접수 완료 전이 때만 본다."""
-
-    setUp = CycleTests.setUp
-    act = CycleTests.act
-    complete = CycleTests.complete
-    reject = CycleTests.reject
 
     def set_plan(self, value: str) -> None:
         text = self.path.read_text(encoding="utf-8")
@@ -380,8 +380,7 @@ class MainBranchRepoTests(unittest.TestCase):
             root = Path(tmp)
             repo = test_gate.make_repo(root, empty=True)
             test_gate._run(repo, "switch", "main")
-            start = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True,
-                                   text=True, check=True).stdout.strip()
+            start = gate._git(repo, "rev-parse", "HEAD").strip()
             (repo / "a.txt").write_text("base\n변경\n", encoding="utf-8")
             test_gate._run(repo, "commit", "-am", "작은 변경")
             meta = {"branch": "main", "allow_main": "true"}

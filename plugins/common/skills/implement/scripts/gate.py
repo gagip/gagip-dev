@@ -129,7 +129,7 @@ def _require_evidence(h: Handoff, row: StageRow, title: str, empty_hint: str) ->
     return fails
 
 
-def _check_intake(h: Handoff, row: StageRow) -> list[str]:
+def _check_intake(h: Handoff, row: StageRow, at_transition: bool = False) -> list[str]:
     """작업 명세 정규화. 이슈든 인계 파일이든 여기서 같은 형식이 된다.
 
     이 단계가 무르면 뒤가 전부 무르다 — 무엇을 고치는지·무엇으로 끝났다고 할지가
@@ -157,10 +157,11 @@ def _check_intake(h: Handoff, row: StageRow) -> list[str]:
                 f"검증 조건 {len(vague)}건이 실행 가능한 명령(백틱)도 '사람 확인' 표시도 "
                 f"아니다 — 첫 건: {vague[0][:40]}"
             )
+    fails += _check_plan(h, row, at_transition)
     return fails
 
 
-def _check_branch(h: Handoff, row: StageRow) -> list[str]:
+def _check_branch(h: Handoff, row: StageRow, at_transition: bool = False) -> list[str]:
     """브랜치·작업 위치. 메인 워크트리는 사용자 자리라 기본적으로 막는다."""
     _, fails = _artifact(h.cycle_dir, row)
     if fails:
@@ -185,7 +186,7 @@ def _check_branch(h: Handoff, row: StageRow) -> list[str]:
     return fails
 
 
-def _check_implement(h: Handoff, row: StageRow) -> list[str]:
+def _check_implement(h: Handoff, row: StageRow, at_transition: bool = False) -> list[str]:
     """구현. 실제로 무언가 바뀌었는지는 저장소에 묻는다."""
     _, fails = _artifact(h.cycle_dir, row)
     if fails:
@@ -200,12 +201,12 @@ def _check_implement(h: Handoff, row: StageRow) -> list[str]:
     return fails
 
 
-def _check_simplify(h: Handoff, row: StageRow) -> list[str]:
+def _check_simplify(h: Handoff, row: StageRow, at_transition: bool = False) -> list[str]:
     """정리. 무엇을 정리했는지(없으면 없다고) 남아야 다음 사람이 중복해서 안 훑는다."""
     return _require_evidence(h, row, "정리 결과", "정리한 것의 목록도 '없음'도 없다")
 
 
-def _check_review(h: Handoff, row: StageRow) -> list[str]:
+def _check_review(h: Handoff, row: StageRow, at_transition: bool = False) -> list[str]:
     """코드 리뷰. 🔴은 전부 반영돼야 넘어간다. 🟡은 막지 않는다.
 
     표의 마지막 칸을 반영 여부로 읽는다 — 열 이름을 강제하는 대신 위치로 읽으면
@@ -236,7 +237,7 @@ def _check_review(h: Handoff, row: StageRow) -> list[str]:
     return fails
 
 
-def _check_docs(h: Handoff, row: StageRow) -> list[str]:
+def _check_docs(h: Handoff, row: StageRow, at_transition: bool = False) -> list[str]:
     """문서 영향 점검. 볼 게 없었다는 것과 안 봤다는 것을 구분한다."""
     return _require_evidence(h, row, "문서 영향", "고친 문서 목록도 '문서 영향 없음'도 없다")
 
@@ -274,7 +275,7 @@ def check_commits(h: Handoff) -> tuple[bool, list[str]]:
     return (not fails), fails
 
 
-def _check_ship(h: Handoff, row: StageRow) -> list[str]:
+def _check_ship(h: Handoff, row: StageRow, at_transition: bool = False) -> list[str]:
     """push·PR. 초안 모드에서는 이 단계를 '생략'으로 두므로 여기 오지 않는다."""
     path, fails = _artifact(h.cycle_dir, row)
     if fails:
@@ -362,7 +363,7 @@ def _check_divergence(h: Handoff, row: StageRow) -> list[str]:
     return []
 
 
-def _check_close(h: Handoff, row: StageRow) -> list[str]:
+def _check_close(h: Handoff, row: StageRow, at_transition: bool = False) -> list[str]:
     """사이클 종료. 리뷰에 🔴이 남아 있으면 닫지 못한다."""
     path, fails = _artifact(h.cycle_dir, row)
     if fails:
@@ -384,6 +385,7 @@ def _check_close(h: Handoff, row: StageRow) -> list[str]:
         if left:
             fails.append(f"리뷰 지적이 아직 남아 있다 ({len(left)}건) — 반영 전엔 종료할 수 없다")
     fails.extend(_commit_failures(h))
+    fails.extend(_check_divergence(h, row))
     return fails
 
 
@@ -409,11 +411,7 @@ def check_stage(h: Handoff, key: str, *, at_transition: bool = False) -> tuple[b
     if row.state == STATE_SKIPPED:
         return True, []
     try:
-        fails = CHECKS[key](h, row)
-        if key == "intake":
-            fails += _check_plan(h, row, at_transition)
-        elif key == "close":
-            fails += _check_divergence(h, row)
+        fails = CHECKS[key](h, row, at_transition=at_transition)
     except GateError as exc:
         fails = [str(exc)]
     return (not fails), fails

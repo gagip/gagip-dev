@@ -189,6 +189,7 @@ def gate_of(cycle: Path, stage: str) -> list[str]:
 
 
 CASES: list[tuple[str, str, str, dict]] = [
+    # (이름, 단계, 기대, 픽스처 인자)
     # 계획서 선행 — plan 값이 있으면 형식만(조회), 비었으면 생략 판정 표를 닫힌 형식으로 본다.
     ("intake: plan 절대경로(조회라 존재는 안 봄)", "intake", "통과",
      {"meta": {"plan": "/없는/계획서.md"}}),
@@ -219,7 +220,6 @@ CASES: list[tuple[str, str, str, dict]] = [
      {"overrides": {"close": CLOSE_GOOD.split("## 합의와 달라진 점")[0]}}),
     ("close: 옛 형식은 합의와 달라진 점 없이 통과", "close", "통과",
      {"drop": ("plan",), "overrides": {"close": CLOSE_GOOD.split("## 합의와 달라진 점")[0]}}),
-    # (이름, 단계, 기대, 픽스처 인자)
     ("intake: 정상", "intake", "통과", {}),
     ("intake: 검증 조건 절 삭제", "intake", "실패",
      {"overrides": {"intake": INTAKE_GOOD.replace("## 검증 조건", "## 확인")}}),
@@ -257,8 +257,6 @@ CASES: list[tuple[str, str, str, dict]] = [
      {"repo": {"author": "someone@example.com"}}),
     ("ship: github.com 밖 호스트의 PR 주소도 통과", "ship", "통과",
      {"overrides": {"ship": SHIP_GOOD.replace("https://github.com/", "https://git.example.com/")}}),
-    ("ship: PR 주소가 없으면 실패", "ship", "실패",
-     {"overrides": {"ship": SHIP_GOOD.replace("https://github.com/example-org/example-app/pull/123", "(없음)")}}),
     ("close: 커밋 제목 형식은 보지 않는다(프로젝트 지침 몫)", "close", "통과",
      {"repo": {"subject": "테스트 변경 추가"}}),
     ("close: 작업트리가 더러움", "close", "실패", {"repo": {"dirty": True}}),

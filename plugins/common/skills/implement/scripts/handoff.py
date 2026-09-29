@@ -252,6 +252,15 @@ def parse(text: str, path: Path) -> Handoff:
                    stages=_parse_stage_table(text, path))
 
 
+def set_meta(text: str, key: str, value: str) -> str:
+    """템플릿 텍스트의 머리말 `key:` 줄 값을 바꾼다. 키가 없으면 템플릿과 코드가 어긋난 것이다."""
+    updated, n = re.subn(rf"^{re.escape(key)}:.*$", f"{key}: {value}".rstrip(), text,
+                         count=1, flags=re.MULTILINE)
+    if n != 1:
+        raise HandoffError(f"머리말에 '{key}' 칸이 없다")
+    return updated
+
+
 def load(cycle_dir: Path) -> Handoff:
     path = Path(cycle_dir) / HANDOFF_FILENAME
     if not path.is_file():

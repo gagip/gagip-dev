@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import handoff
 import paths
 
 TEMPLATE = paths.TEMPLATE_HANDOFF
@@ -30,10 +31,7 @@ def write_cycle(
     text = TEMPLATE.read_text(encoding="utf-8")
 
     for key, value in meta.items():
-        text, n = re.subn(rf"^{re.escape(key)}:.*$", f"{key}: {value}", text,
-                          count=1, flags=re.MULTILINE)
-        if n != 1:
-            raise KeyError(f"머리말에 '{key}' 키가 템플릿에 없다")
+        text = handoff.set_meta(text, key, value)
 
     for key in drop:
         text, n = re.subn(rf"^{re.escape(key)}:.*\n", "", text, count=1, flags=re.MULTILINE)
