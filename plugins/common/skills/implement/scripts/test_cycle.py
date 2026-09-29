@@ -317,7 +317,7 @@ class CycleTests(unittest.TestCase):
         old_check = gate.check_stage
         changed = self.path.read_text() + "\n- 검사 중 사용자가 추가한 질문\n"
 
-        def concurrent_edit(h, key):
+        def concurrent_edit(h, key, **kwargs):
             self.path.write_text(changed)
             return old_check(h, key)
 
@@ -353,6 +353,31 @@ class CycleTests(unittest.TestCase):
         result = subprocess.run(cmd + ["status"], text=True, capture_output=True)
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn("다음 할 단계: branch", result.stdout)
+
+
+class PlanTransitionTests(unittest.TestCase):
+    """계획서 파일 존재는 접수 완료 전이 때만 본다."""
+
+    setUp = CycleTests.setUp
+    act = CycleTests.act
+    complete = CycleTests.complete
+    reject = CycleTests.reject
+
+    def set_plan(self, value: str) -> None:
+        text = self.path.read_text(encoding="utf-8")
+        self.path.write_text(text.replace("plan:\n", f"plan: {value}\n", 1), encoding="utf-8")
+
+    def test_missing_plan_file_blocks_intake(self):
+        self.set_plan(str(Path(self.tmp.name) / "없는계획서.md"))
+        self.reject(lambda: self.complete("intake"), "계획서 파일이 없다")
+
+    def test_existing_plan_passes_and_later_removal_keeps_status(self):
+        plan = Path(self.tmp.name) / "plan.md"
+        plan.write_text("# 계획\n", encoding="utf-8")
+        self.set_plan(str(plan))
+        self.complete("intake")
+        plan.unlink()
+        self.assertEqual("완료", cycle.inspect(self.directory).stage("intake").state)
 
 
 class InitTests(unittest.TestCase):

@@ -18,11 +18,13 @@ def write_cycle(
     dest: Path,
     meta: dict[str, str],
     stages: dict[str, tuple[str, str]],
+    drop: tuple[str, ...] = (),
 ) -> Path:
     """dest에 핸드오프를 쓴다.
 
     meta:   머리말에서 덮어쓸 키
     stages: {단계키: (상태, 산출물)}
+    drop:   머리말에서 지울 키 — 옛 형식 사이클을 흉내 낸다
     """
     dest.mkdir(parents=True, exist_ok=True)
     text = TEMPLATE.read_text(encoding="utf-8")
@@ -32,6 +34,11 @@ def write_cycle(
                           count=1, flags=re.MULTILINE)
         if n != 1:
             raise KeyError(f"머리말에 '{key}' 키가 템플릿에 없다")
+
+    for key in drop:
+        text, n = re.subn(rf"^{re.escape(key)}:.*\n", "", text, count=1, flags=re.MULTILINE)
+        if n != 1:
+            raise KeyError(f"머리말에 지울 '{key}' 키가 템플릿에 없다")
 
     for key, (state, artifact) in stages.items():
         # [^|\n] — 개행을 빼지 않으면 표가 깨졌을 때 두 줄을 한 줄로 합쳐 버린다.

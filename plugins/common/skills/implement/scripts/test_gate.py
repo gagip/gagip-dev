@@ -48,6 +48,16 @@ INTAKE_GOOD = """# intake
 ## 범위 밖
 
 - 서버 응답 형식 변경
+
+## 계획서 생략 판정
+
+| 항목 | 판정 |
+|---|---|
+| 요청과 다른 사용자 노출 변화 | 아니오 |
+| 기능·문구·데이터 삭제 | 아니오 |
+| 외부 약속 선택·변경 | 아니오 |
+| 해석·선택지 둘 이상 | 아니오 |
+| 한 번 되돌리기로 안 됨 | 아니오 |
 """
 
 BRANCH_GOOD = f"""# branch
@@ -97,6 +107,10 @@ CLOSE_GOOD = """# close
 ## 종결
 
 달성 — 검증 조건을 전부 확인했다.
+
+## 합의와 달라진 점
+
+없음
 """
 
 ARTIFACTS = {
@@ -145,7 +159,8 @@ def make_repo(root: Path, *, author: str | None = None,
 def make_cycle(dest: Path, repo: Path | str, *,
                overrides: dict[str, str] | None = None,
                meta: dict[str, str] | None = None,
-               stages: tuple[str, ...] = tuple(ARTIFACTS)) -> Path:
+               stages: tuple[str, ...] = tuple(ARTIFACTS),
+               drop: tuple[str, ...] = ()) -> Path:
     """dest에 단계 산출물과 handoff.md를 깐다. overrides로 결함을 주입한다.
 
     회귀 채점기(evals/regression/*/check.py)도 이 함수로 픽스처를 만든다 —
@@ -161,7 +176,7 @@ def make_cycle(dest: Path, repo: Path | str, *,
         "base": "main",
         "allow_main": "true",  # 임시 저장소는 항상 메인 워크트리다
         **(meta or {}),
-    }, rows)
+    }, rows, drop=drop)
     for key in stages:
         name, text = ARTIFACTS[key]
         (dest / name).write_text((overrides or {}).get(key, text), encoding="utf-8")
@@ -174,6 +189,36 @@ def gate_of(cycle: Path, stage: str) -> list[str]:
 
 
 CASES: list[tuple[str, str, str, dict]] = [
+    # 계획서 선행 — plan 값이 있으면 형식만(조회), 비었으면 생략 판정 표를 닫힌 형식으로 본다.
+    ("intake: plan 절대경로(조회라 존재는 안 봄)", "intake", "통과",
+     {"meta": {"plan": "/없는/계획서.md"}}),
+    ("intake: plan 상대경로", "intake", "실패", {"meta": {"plan": "plans/계획서.md"}}),
+    ("intake: plan 비었는데 생략 판정 절 없음", "intake", "실패",
+     {"overrides": {"intake": INTAKE_GOOD.split("## 계획서 생략 판정")[0]}}),
+    ("intake: 생략 판정에 예가 하나", "intake", "실패",
+     {"overrides": {"intake": INTAKE_GOOD.replace("| 기능·문구·데이터 삭제 | 아니오 |",
+                                                  "| 기능·문구·데이터 삭제 | 예 |")}}),
+    ("intake: 생략 판정 값이 아니요", "intake", "실패",
+     {"overrides": {"intake": INTAKE_GOOD.replace("| 외부 약속 선택·변경 | 아니오 |",
+                                                  "| 외부 약속 선택·변경 | 아니요 |")}}),
+    ("intake: 생략 판정 항목 누락", "intake", "실패",
+     {"overrides": {"intake": INTAKE_GOOD.replace("| 한 번 되돌리기로 안 됨 | 아니오 |\n", "")}}),
+    ("intake: 생략 판정 항목 중복", "intake", "실패",
+     {"overrides": {"intake": INTAKE_GOOD.replace("| 한 번 되돌리기로 안 됨 | 아니오 |",
+                                                  "| 해석·선택지 둘 이상 | 아니오 |")}}),
+    ("intake: 출처가 비었음", "intake", "실패",
+     {"overrides": {"intake": INTAKE_GOOD.replace("이슈 #12 — 로그인 화면 에러 문구 누락", "")}}),
+    ("intake: 출처가 이슈 없는 요청 한 줄", "intake", "통과",
+     {"overrides": {"intake": INTAKE_GOOD.replace("이슈 #12 — 로그인 화면 에러 문구 누락",
+                                                  "요청 — 설정 화면 문구 수정")}}),
+    ("intake: 옛 형식(plan 키 없음·규칙 전 날짜)은 판정 없이 통과", "intake", "통과",
+     {"drop": ("plan",), "overrides": {"intake": INTAKE_GOOD.split("## 계획서 생략 판정")[0]}}),
+    ("intake: 규칙 뒤 날짜에서 plan 키를 지우면 실패", "intake", "실패",
+     {"drop": ("plan",), "meta": {"cycle_id": "2026-10-01_우회"}}),
+    ("close: 합의와 달라진 점 절 없음", "close", "실패",
+     {"overrides": {"close": CLOSE_GOOD.split("## 합의와 달라진 점")[0]}}),
+    ("close: 옛 형식은 합의와 달라진 점 없이 통과", "close", "통과",
+     {"drop": ("plan",), "overrides": {"close": CLOSE_GOOD.split("## 합의와 달라진 점")[0]}}),
     # (이름, 단계, 기대, 픽스처 인자)
     ("intake: 정상", "intake", "통과", {}),
     ("intake: 검증 조건 절 삭제", "intake", "실패",
@@ -235,7 +280,8 @@ def run_case(name: str, stage: str, expect: str, spec: dict) -> bool:
         cycle = root / "cycle"
         overrides = dict(spec.get("overrides") or {})
 
-        make_cycle(cycle, repo, overrides=overrides, meta=spec.get("meta"))
+        make_cycle(cycle, repo, overrides=overrides, meta=spec.get("meta"),
+                   drop=tuple(spec.get("drop", ())))
         fails = gate_of(cycle, stage)
 
     got = "실패" if fails else "통과"

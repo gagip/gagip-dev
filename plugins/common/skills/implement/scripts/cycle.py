@@ -81,8 +81,8 @@ def validate_state(h: handoff.Handoff) -> None:
         raise TransitionError("close가 완료됐지만 종결값이 진행중이다")
 
 
-def verify(h: handoff.Handoff, key: str) -> None:
-    ok, reasons = gate.check_stage(h, key)
+def verify(h: handoff.Handoff, key: str, *, at_transition: bool = False) -> None:
+    ok, reasons = gate.check_stage(h, key, at_transition=at_transition)
     if not ok:
         raise TransitionError(f"{key}: " + " / ".join(reasons))
 
@@ -227,7 +227,7 @@ def transition(cycle_dir: Path, action: str, *, stage: str | None = None,
                 current.state = STATE_DONE
                 if stage == "close":
                     h.meta["status"] = STATUS_DONE
-                verify(h, stage)
+                verify(h, stage, at_transition=True)
         else:
             raise TransitionError(f"지원하지 않는 상태 변경: {action}")
         validate_state(h)

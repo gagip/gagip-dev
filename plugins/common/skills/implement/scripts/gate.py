@@ -24,6 +24,7 @@ import argparse
 import re
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -42,7 +43,23 @@ COMMIT_SUBJECT_RE = re.compile(
 )
 
 # 출처 표기 — 이슈 번호 또는 조직 인계 폴더의 명세 파일.
-ISSUE_RE = re.compile(r"#(\d+)\b")
+# 계획서 선행 규칙을 도입한 날. 이보다 먼저 열렸고 머리말에 plan 칸이 없는 사이클만
+# 옛 형식으로 보고 새 검사를 건너뛴다 — 키만 지워서는 빠져나갈 수 없게 폴더 날짜와 함께 본다.
+PLAN_RULE_START = date(2026, 9, 29)
+CYCLE_DATE_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})_")
+
+# 계획서 없이 진행해도 되는지 가르는 판정 항목. 값은 정확히 SKIP_VALUES 중 하나다
+# (부분 문자열로 판정하던 관문이 결함을 낸 전례가 있어 값 집합을 닫는다).
+SKIP_SECTION = "계획서 생략 판정"
+SKIP_ITEMS = (
+    "요청과 다른 사용자 노출 변화",
+    "기능·문구·데이터 삭제",
+    "외부 약속 선택·변경",
+    "해석·선택지 둘 이상",
+    "한 번 되돌리기로 안 됨",
+)
+SKIP_VALUES = ("예", "아니오")
+DIVERGENCE_SECTION = "합의와 달라진 점"
 PR_URL_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/pull/\d+")
 
 # 리뷰 판정에서 고쳐야만 넘어갈 수 있는 등급. 스타일(🟡)은 커밋을 막지 않는다.
@@ -137,8 +154,8 @@ def _check_intake(h: Handoff, row: StageRow) -> list[str]:
         return fails
 
     origin = mdsec.section(text, "출처") or ""
-    if not ISSUE_RE.search(origin):
-        fails.append("출처에 이슈 번호(#N)가 없다")
+    if not origin.strip():
+        fails.append("출처 절이 비어 있다 — 이슈 번호나 요청 한 줄을 적는다")
 
     conditions = mdsec.bullets(mdsec.section(text, "검증 조건") or "")
     if not conditions:
@@ -282,6 +299,83 @@ def _check_ship(h: Handoff, row: StageRow) -> list[str]:
     return fails
 
 
+def plan_rules_apply(h: Handoff) -> bool:
+    """계획서 선행·무정지 검사를 받는 사이클인가. 옛 형식만 면제한다."""
+    if "plan" in h.meta:
+        return True
+    match = CYCLE_DATE_RE.match(h.meta.get("cycle_id", ""))
+    if not match:
+        return True
+    try:
+        opened = date.fromisoformat(match.group(1))
+    except ValueError:
+        return True
+    return opened >= PLAN_RULE_START
+
+
+def _skip_verdicts(text: str) -> list[str]:
+    """계획서 생략 판정 표를 닫힌 형식으로 읽는다. 문제가 없으면 빈 목록."""
+    body = mdsec.section(text, SKIP_SECTION)
+    if body is None:
+        return [f"plan이 비었는데 `## {SKIP_SECTION}` 절이 없다 — 계획서가 필요하면 draft-plan부터"]
+    seen: dict[str, str] = {}
+    fails: list[str] = []
+    for cells in mdsec.table_rows(body):
+        if len(cells) < 2:
+            fails.append(f"판정 표 행 형식이 틀렸다: {cells}")
+            continue
+        item, value = cells[0], cells[1]
+        if item not in SKIP_ITEMS:
+            fails.append(f"판정 항목 이름이 목록에 없다: {item!r}")
+        elif item in seen:
+            fails.append(f"판정 항목이 중복됐다: {item}")
+        if value not in SKIP_VALUES:
+            fails.append(f"판정 값은 {'/'.join(SKIP_VALUES)} 중 하나여야 한다: {item} = {value!r}")
+        seen[item] = value
+    missing = [item for item in SKIP_ITEMS if item not in seen]
+    if missing:
+        fails.append(f"판정 항목이 빠졌다: {', '.join(missing)}")
+    if fails:
+        return fails
+    needed = [item for item in SKIP_ITEMS if seen[item] == "예"]
+    if needed:
+        return [f"계획서 필요 — draft-plan부터 ({', '.join(needed)})"]
+    return []
+
+
+def _check_plan(h: Handoff, row: StageRow, at_transition: bool) -> list[str]:
+    """계획서 선행. 파일 존재는 접수 완료 전이 때만 본다 — 달성 뒤 계획서가 옮겨져도
+    조회가 깨지지 않게 하려는 것이다."""
+    if not plan_rules_apply(h):
+        return []
+    value = h.meta.get("plan")
+    if value is None:
+        return ["머리말에 plan 칸이 없다"]
+    if value:
+        if not (value.startswith("/") or value.startswith("~")):
+            return [f"plan은 절대경로나 ~로 시작해야 한다: {value}"]
+        if at_transition and not Path(value).expanduser().is_file():
+            return [f"plan이 가리키는 계획서 파일이 없다: {value}"]
+        return []
+    path, fails = _artifact(h.cycle_dir, row)
+    if fails:
+        return fails
+    return _skip_verdicts(path.read_text(encoding="utf-8"))
+
+
+def _check_divergence(h: Handoff, row: StageRow) -> list[str]:
+    """합의 밖에서 직접 정한 판단을 사후에 볼 자리가 있는가."""
+    if not plan_rules_apply(h):
+        return []
+    path, fails = _artifact(h.cycle_dir, row)
+    if fails:
+        return fails
+    body = mdsec.section(path.read_text(encoding="utf-8"), DIVERGENCE_SECTION)
+    if body is None or not body.strip():
+        return [f"`## {DIVERGENCE_SECTION}` 절이 없거나 비었다 — 없으면 '없음'이라고 쓴다"]
+    return []
+
+
 def _check_close(h: Handoff, row: StageRow) -> list[str]:
     """사이클 종료. 리뷰에 🔴이 남아 있으면 닫지 못한다."""
     path, fails = _artifact(h.cycle_dir, row)
@@ -322,12 +416,17 @@ CHECKS = {
 assert set(CHECKS) == set(handoff.STAGE_KEYS), "관문 정의가 파이프라인 정의와 어긋난다"
 
 
-def check_stage(h: Handoff, key: str) -> tuple[bool, list[str]]:
+def check_stage(h: Handoff, key: str, *, at_transition: bool = False) -> tuple[bool, list[str]]:
+    """at_transition은 그 단계를 막 완료로 바꾸는 순간의 검증일 때만 True다(조회·재검사는 False)."""
     row = h.stage(key)
     if row.state == STATE_SKIPPED:
         return True, []
     try:
         fails = CHECKS[key](h, row)
+        if key == "intake":
+            fails += _check_plan(h, row, at_transition)
+        elif key == "close":
+            fails += _check_divergence(h, row)
     except GateError as exc:
         fails = [str(exc)]
     return (not fails), fails
