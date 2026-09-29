@@ -199,6 +199,7 @@ def validate_private_terms(errors: list[str]) -> None:
     목록 자체가 공개하면 안 되는 이름이라 저장소에 두지 않는다. 파일이 없는 기기에서는 건너뛴다.
     """
     if not PRIVATE_TERMS.is_file():
+        print(f"비공개 목록 파일이 없어 고유명사 검사를 건너뜀: {PRIVATE_TERMS.relative_to(ROOT)}")
         return
     terms = [
         line.strip().lower()
