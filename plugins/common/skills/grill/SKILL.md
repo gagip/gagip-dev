@@ -100,4 +100,5 @@ allowed-tools: AskUserQuestion, Read, Grep, Glob
 - 잠정 판단대로 간 것(사용자가 언급 안 한 항목)
 - 남은 가정
 
-규모가 커서 구현 순서·리스크까지 적어야 하면 `draft-plan`으로 넘긴다.
+규모가 커서 구현 순서·리스크까지 적어야 하면 `draft-plan`으로 넘긴다. 구현은 `implement`로
+이어가며, 계획서 없이 가려면 `implement` 접수 절차의 작은 작업 판정 5항목이 모두 `아니오`여야 한다.
