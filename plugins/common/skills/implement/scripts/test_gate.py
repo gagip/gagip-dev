@@ -228,7 +228,6 @@ CASES: list[tuple[str, str, str, dict]] = [
                     .replace("- 화면에 문구가 보이는지 사람 확인", "- 대충 확인")}}),
 
     ("branch: 정상", "branch", "통과", {}),
-    ("branch: 브랜치명 형식 위반", "branch", "실패", {"meta": {"branch": "my-work"}}),
     ("branch: 메인 워크트리인데 allow_main이 false", "branch", "실패",
      {"meta": {"allow_main": "false"}}),
 
@@ -256,7 +255,11 @@ CASES: list[tuple[str, str, str, dict]] = [
     ("close: 커밋이 없음", "close", "실패", {"repo": {"empty": True}}),
     ("close: 작성자가 레포 설정과 다름", "close", "실패",
      {"repo": {"author": "someone@example.com"}}),
-    ("close: 메시지 형식 위반", "close", "실패",
+    ("ship: github.com 밖 호스트의 PR 주소도 통과", "ship", "통과",
+     {"overrides": {"ship": SHIP_GOOD.replace("https://github.com/", "https://git.example.com/")}}),
+    ("ship: PR 주소가 없으면 실패", "ship", "실패",
+     {"overrides": {"ship": SHIP_GOOD.replace("https://github.com/example-org/example-app/pull/123", "(없음)")}}),
+    ("close: 커밋 제목 형식은 보지 않는다(프로젝트 지침 몫)", "close", "통과",
      {"repo": {"subject": "테스트 변경 추가"}}),
     ("close: 작업트리가 더러움", "close", "실패", {"repo": {"dirty": True}}),
 

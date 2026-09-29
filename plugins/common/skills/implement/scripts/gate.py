@@ -34,15 +34,6 @@ from handoff import (  # noqa: E402
     STATE_DONE, STATE_SKIPPED, STATUS_OPEN, Handoff, StageRow,
 )
 
-# 브랜치 명명 — 기존 관행(최근 머지 PR 전량이 이 형식).
-BRANCH_RE = re.compile(r"^(feat|fix|docs|chore|refactor|test)/\d+-[a-z0-9][a-z0-9-]*$")
-
-# 커밋 제목. Jira 이슈 키가 있을 때만 대괄호 접두어를 허용한다.
-COMMIT_SUBJECT_RE = re.compile(
-    r"^(\[[A-Z][A-Z0-9]*-\d+\] )?(feat|fix|test|refactor|chore|docs)(\(.+\))?: .+"
-)
-
-# 출처 표기 — 이슈 번호 또는 조직 인계 폴더의 명세 파일.
 # 계획서 선행 규칙을 도입한 날. 이보다 먼저 열렸고 머리말에 plan 칸이 없는 사이클만
 # 옛 형식으로 보고 새 검사를 건너뛴다 — 키만 지워서는 빠져나갈 수 없게 폴더 날짜와 함께 본다.
 PLAN_RULE_START = date(2026, 9, 29)
@@ -60,7 +51,7 @@ SKIP_ITEMS = (
 )
 SKIP_VALUES = ("예", "아니오")
 DIVERGENCE_SECTION = "합의와 달라진 점"
-PR_URL_RE = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/pull/\d+")
+PR_URL_RE = re.compile(r"https://[^\s/]+/[^\s]+/pull/\d+")  # GitHub 계열 호스트
 
 # 리뷰 판정에서 고쳐야만 넘어갈 수 있는 등급. 스타일(🟡)은 커밋을 막지 않는다.
 BLOCKING_MARK = "🔴"
@@ -179,8 +170,6 @@ def _check_branch(h: Handoff, row: StageRow) -> list[str]:
     branch = h.meta.get("branch", "").strip()
     if not branch:
         return ["머리말의 `branch`가 비어 있다"]
-    if not BRANCH_RE.match(branch):
-        fails.append(f"브랜치명이 `<타입>/<이슈번호>-<슬러그>` 형식이 아니다 — {branch!r}")
 
     repo = _repo(h)
     actual = _git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
@@ -275,8 +264,6 @@ def _commit_failures(h: Handoff) -> list[str]:
                 f"커밋 작성자가 레포 git 설정과 다르다 — {email!r} (설정: {expected!r}) "
                 f"· 커밋: {subject[:40]}"
             )
-        if not COMMIT_SUBJECT_RE.match(subject):
-            fails.append(f"커밋 메시지가 `타입: 한글 메시지` 형식이 아니다 — {subject[:50]!r}")
     return fails
 
 
@@ -413,7 +400,8 @@ CHECKS = {
     "ship": _check_ship,
     "close": _check_close,
 }
-assert set(CHECKS) == set(handoff.STAGE_KEYS), "관문 정의가 파이프라인 정의와 어긋난다"
+if set(CHECKS) != set(handoff.STAGE_KEYS):
+    raise RuntimeError("관문 정의가 파이프라인 정의와 어긋난다")
 
 
 def check_stage(h: Handoff, key: str, *, at_transition: bool = False) -> tuple[bool, list[str]]:

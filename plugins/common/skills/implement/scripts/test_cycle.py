@@ -157,14 +157,6 @@ class CycleTests(unittest.TestCase):
         self.act("mode", new_mode="auto")
         self.reject(lambda: self.complete("ship"), "커밋 작성자")
 
-    def test_wrong_commit_message_blocks_submission(self):
-        self.advance_to("ship")
-        self.add_commit("bad", subject="형식 없는 메시지")
-        self.reject(lambda: cycle.inspect(self.directory), "커밋 메시지")
-        self.reject(lambda: self.act("skip", "ship"), "커밋 메시지")
-        self.act("mode", new_mode="auto")
-        self.reject(lambda: self.complete("ship"), "커밋 메시지")
-
     def test_close_rechecks_changes_after_skipped_ship(self):
         self.advance_to("close")
         (self.repo / "pending").write_text("추가 수정\n")
@@ -178,8 +170,8 @@ class CycleTests(unittest.TestCase):
     def test_completed_cycle_still_checks_commits(self):
         self.advance_to("close")
         self.complete("close")
-        self.add_commit("bad", subject="형식 없는 메시지")
-        self.reject(lambda: cycle.inspect(self.directory), "커밋 메시지")
+        self.add_commit("bad", author="wrong@example.com")
+        self.reject(lambda: cycle.inspect(self.directory), "커밋 작성자")
 
     def test_commit_check_handles_git_errors_without_writing(self):
         self.advance_to("ship")
@@ -378,6 +370,27 @@ class PlanTransitionTests(unittest.TestCase):
         self.complete("intake")
         plan.unlink()
         self.assertEqual("완료", cycle.inspect(self.directory).stage("intake").state)
+
+
+class MainBranchRepoTests(unittest.TestCase):
+    """main에 직접 커밋하는 저장소는 base에 시작 시점 해시를 적어 커밋 범위를 잡는다."""
+
+    def test_hash_base_counts_commits_on_main(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo = test_gate.make_repo(root, empty=True)
+            test_gate._run(repo, "switch", "main")
+            start = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True,
+                                   text=True, check=True).stdout.strip()
+            (repo / "a.txt").write_text("base\n변경\n", encoding="utf-8")
+            test_gate._run(repo, "commit", "-am", "작은 변경")
+            meta = {"branch": "main", "allow_main": "true"}
+            for base, ok in ((start, True), ("main", False)):
+                with self.subTest(base=base):
+                    cycle_dir = test_gate.make_cycle(root / f"cycle-{ok}", repo,
+                                                     meta={**meta, "base": base})
+                    passed, reasons = gate.check_commits(handoff.load(cycle_dir))
+                    self.assertEqual(ok, passed, reasons)
 
 
 class InitTests(unittest.TestCase):
