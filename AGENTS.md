@@ -52,5 +52,6 @@ Claude Code에서는 Bash 커밋 직전 훅이 검사를 강제한다. 다른 �
   기록으로 동결되어 있으므로 갱신하지 않는다.
 - CHANGELOG bullet은 앞선 구현 커밋 short hash를 참조한다.
 - 구현 커밋과 릴리스 커밋(두 매니페스트 버전 + 플러그인 CHANGELOG)을 분리한다.
-- 릴리스 전 Codex plugin validator와 `python3 scripts/check_consistency.py`를 모두 실행한다.
+- 릴리스 전 `python3 scripts/validate_codex_plugin.py plugins/<plugin>`(git이 추적하는 파일만으로 Codex
+  plugin validator 실행)과 `python3 scripts/check_consistency.py`를 모두 실행한다.
 - 태그는 `<plugin>/v<version>` 형식을 사용한다.

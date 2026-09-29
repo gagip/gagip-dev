@@ -2,5 +2,5 @@ settings.local.json
 __pycache__/
 .DS_Store
 *.stackdump
-# skill eval 워크스페이스 (스크래치)
-plugins/*/skills/*-workspace/
+# 스킬 평가 실행 결과 (러너 JSON·산출물·채점표, 회차별)
+plugins/*/skills/*-eval-runs/
