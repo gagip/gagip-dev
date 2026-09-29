@@ -3,8 +3,8 @@ name: screen-brief
 description: >
   화면·기능 하나의 타겟·문제·목적을 사용자가 직접 정하도록 질문으로 끌어내 누적형 마크다운
   기획서로 쌓는다. 디자인 시안 전 단계다. "화면 기획서 써줘", "이 화면 기획 좀 정리하자",
-  "타겟/문제/목적부터 잡자", "product brief"에 반드시 사용한다. 구현 범위·리스크를 담는 계획서는
-  `draft-plan`, 화면이 아닌 일반 요구사항 인터뷰는 `grill`, 근거 문서 HTML은 `html-brief`,
+  "타겟/문제/목적부터 잡자", "product brief"에 반드시 사용한다. 문제 정의·설계·플랜 문서는
+  `problem-definition`·`solution-design`·`work-plan`, 화면이 아닌 일반 요구사항 인터뷰는 `grill`, 근거 문서 HTML은 `html-brief`,
   이어지는 시안 비평은 `mockup-review`가 맡는다.
 allowed-tools: Read, Write, Edit, AskUserQuestion
 ---

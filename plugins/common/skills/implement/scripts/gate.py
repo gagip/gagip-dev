@@ -307,7 +307,7 @@ def _skip_verdicts(text: str) -> list[str]:
     """계획서 생략 판정 표를 닫힌 형식으로 읽는다. 문제가 없으면 빈 목록."""
     body = mdsec.section(text, SKIP_SECTION)
     if body is None:
-        return [f"plan이 비었는데 `## {SKIP_SECTION}` 절이 없다 — 계획서가 필요하면 draft-plan부터"]
+        return [f"plan이 비었는데 `## {SKIP_SECTION}` 절이 없다 — 계획서가 필요하면 work-plan부터"]
     seen: dict[str, str] = {}
     fails: list[str] = []
     for cells in mdsec.table_rows(body):
@@ -329,7 +329,7 @@ def _skip_verdicts(text: str) -> list[str]:
         return fails
     needed = [item for item in SKIP_ITEMS if seen[item] == "예"]
     if needed:
-        return [f"계획서 필요 — draft-plan부터 ({', '.join(needed)})"]
+        return [f"계획서 필요 — work-plan부터 ({', '.join(needed)})"]
     return []
 
 

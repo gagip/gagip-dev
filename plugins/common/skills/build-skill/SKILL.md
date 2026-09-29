@@ -79,7 +79,7 @@ plugins/<plugin>/skills/<skill-name>/
 - Claude 전용 필드는 유지해도 무해하다(Codex가 무시). 다만 스킬 동작이 그 필드에 **의존하면 안 된다**.
 - 본문이 Claude 전용 도구(EnterPlanMode, 구조화 질문, 서브에이전트, Skill 호출 등)를 전제하면
   없는 하네스용 폴백을 문장으로 적는다 (예: "계획 모드 도구가 있으면 그 흐름을, 없으면 파일로
-  저장하고 대화로 승인"). `draft-plan`의 `references/plan-mode-fallback.md`가 참고 사례.
+  저장하고 대화로 승인"). `references/planning-docs.md`의 검수 폴백(서브에이전트가 없으면 "독립 검수 미실행"을 밝힘)이 참고 사례.
 - 특정 하네스에서 성립 불가한 스킬이면 감지→이유 알림→종료를 본문에 적는다 (`skill-metrics` 패턴).
 - **bash·파일 조작만으로 되는 스킬이 가장 잘 이식된다 — 되도록 그렇게 설계한다.**
 

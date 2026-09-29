@@ -61,7 +61,7 @@ allowed-tools: AskUserQuestion, Read, Grep, Glob
 ```
 그 밖에 확신이 안 서는 지점 (잠정 판단대로 가면 이렇게 됩니다):
 - 이름: `grill` — 짧고 사용자가 쓴 표현 그대로라 기억하기 쉬움
-- 종료 후: 합의 요약 3줄 남기고 바로 구현 — 규모가 크면 draft-plan으로 넘김
+- 종료 후: 합의 요약 3줄 남기고 바로 구현 — 규모가 크면 problem-definition부터 기획 문서로 넘김
 - 실패 시: 3번 물어도 방향이 안 잡히면 가정을 명시하고 진행
 ```
 
@@ -100,5 +100,6 @@ allowed-tools: AskUserQuestion, Read, Grep, Glob
 - 잠정 판단대로 간 것(사용자가 언급 안 한 항목)
 - 남은 가정
 
-규모가 커서 구현 순서·리스크까지 적어야 하면 `draft-plan`으로 넘긴다. 구현은 `implement`로
+규모가 커서 문제·설계·작업 순서까지 적어야 하면 기획 문서 세 개(`problem-definition` → `solution-design` →
+`work-plan`)로 넘긴다. 합의한 내용이 어느 문서 몫인지는 이미 정해진 만큼 건너뛴다. 구현은 `implement`로
 이어가며, 계획서 없이 가려면 `implement` 접수 절차의 작은 작업 판정 5항목이 모두 `아니오`여야 한다.
