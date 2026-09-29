@@ -14,12 +14,48 @@ from pathlib import Path
 import gate
 import handoff
 import mdsec
+import paths
 from handoff import STATE_DONE, STATE_SKIPPED, STATE_TODO
 from handoff import STATUS_DONE, STATUS_IMPOSSIBLE, STATUS_OPEN
 
 
 class TransitionError(Exception):
     """상태를 바꾸지 않고 호출자에게 복구할 이유를 돌려준다."""
+
+
+CYCLE_ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_[^/]+$")
+
+
+def init(cycle_dir: Path, title: str, plan: str | None = None) -> handoff.Handoff:
+    """템플릿으로 새 사이클을 만든다. 폴더 이름이 곧 cycle_id다.
+
+    폴더 이름의 날짜는 옛 형식 사이클을 가르는 기준이라 형식을 강제한다. `plan`은 실행 위치와
+    무관하게 같은 파일을 가리키도록 절대경로로 풀어 저장한다.
+    """
+    target = Path(cycle_dir).expanduser().resolve()
+    if not CYCLE_ID_RE.match(target.name):
+        raise TransitionError(f"사이클 폴더 이름은 YYYY-MM-DD_주제 형식이어야 한다: {target.name}")
+    if target.exists():
+        raise TransitionError(f"이미 있는 사이클 폴더다: {target}")
+    if not title.strip() or "\n" in title:
+        raise TransitionError("제목은 비어 있지 않은 한 줄이어야 한다")
+    plan_value = ""
+    if plan:
+        plan_path = Path(plan).expanduser().resolve()
+        if not plan_path.is_file():
+            raise TransitionError(f"계획서 파일이 없다: {plan_path}")
+        plan_value = str(plan_path)
+    text = paths.TEMPLATE_HANDOFF.read_text(encoding="utf-8")
+    for key, value in (("cycle_id", target.name), ("title", title.strip()),
+                       ("opened", date.today().isoformat()), ("plan", plan_value)):
+        text, n = re.subn(rf"^{key}:.*$", f"{key}: {value}".rstrip(), text,
+                          count=1, flags=re.MULTILINE)
+        if n != 1:
+            raise TransitionError(f"템플릿 머리말에 {key} 칸이 없다")
+    text = text.replace("# 사이클: (제목)", f"# 사이클: {title.strip()}", 1)
+    target.mkdir(parents=True)
+    (target / handoff.HANDOFF_FILENAME).write_text(text, encoding="utf-8")
+    return handoff.load(target)
 
 
 def mode(h: handoff.Handoff) -> str:
@@ -219,6 +255,9 @@ def main() -> int:
     ap.add_argument("cycle_dir", type=Path)
     commands = ap.add_subparsers(dest="action", required=True)
     commands.add_parser("status", help="상태와 완료 단계 실물 검증 (읽기 전용)")
+    create = commands.add_parser("init", help="템플릿으로 새 사이클 폴더를 만든다")
+    create.add_argument("--title", required=True)
+    create.add_argument("--plan", help="승인된 계획서(또는 디자인 인계 명세) 파일 경로")
     complete = commands.add_parser("complete", help="검증 성공 후 현재 단계 완료")
     complete.add_argument("stage", choices=handoff.STAGE_KEYS)
     complete.add_argument("--artifact", required=True)
@@ -233,6 +272,8 @@ def main() -> int:
     try:
         if args.action == "status":
             h = inspect(args.cycle_dir)
+        elif args.action == "init":
+            h = init(args.cycle_dir, args.title, args.plan)
         else:
             h = transition(args.cycle_dir, args.action, stage=getattr(args, "stage", None),
                            artifact=getattr(args, "artifact", ""), decision=args.decision,

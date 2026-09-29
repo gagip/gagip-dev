@@ -355,5 +355,44 @@ class CycleTests(unittest.TestCase):
         self.assertIn("다음 할 단계: branch", result.stdout)
 
 
+class InitTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def test_creates_cycle_from_template(self):
+        plan = self.root / "plan.md"
+        plan.write_text("# 계획\n", encoding="utf-8")
+        h = cycle.init(self.root / "2026-10-01_login", "로그인 문구 수정", str(plan))
+        self.assertEqual("2026-10-01_login", h.meta["cycle_id"])
+        self.assertEqual("로그인 문구 수정", h.meta["title"])
+        self.assertEqual(str(plan.resolve()), h.meta["plan"])
+        self.assertEqual("intake", h.first_incomplete().key)
+
+    def test_relative_plan_is_stored_absolute(self):
+        (self.root / "plan.md").write_text("# 계획\n", encoding="utf-8")
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(self.root)
+        h = cycle.init(self.root / "2026-10-01_rel", "상대경로", "plan.md")
+        self.assertTrue(Path(h.meta["plan"]).is_absolute())
+
+    def test_empty_plan_line_without_plan(self):
+        h = cycle.init(self.root / "2026-10-01_small", "작은 작업")
+        self.assertEqual("", h.meta["plan"])
+
+    def test_rejects_existing_folder_missing_plan_and_bad_name(self):
+        (self.root / "2026-10-01_dup").mkdir()
+        for args, message in (
+            ((self.root / "2026-10-01_dup", "중복"), "이미 있는"),
+            ((self.root / "2026-10-01_x", "계획 없음", str(self.root / "없음.md")), "계획서 파일이 없다"),
+            ((self.root / "login", "이름 형식"), "YYYY-MM-DD"),
+        ):
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(cycle.TransitionError, message):
+                    cycle.init(*args)
+        self.assertFalse((self.root / "2026-10-01_x").exists())
+
+
 if __name__ == "__main__":
     unittest.main()

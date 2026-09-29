@@ -7,6 +7,7 @@ repo:
 branch:
 base: main
 allow_main: false
+plan:
 ---
 
 # 사이클: (제목)
