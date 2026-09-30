@@ -24,6 +24,7 @@ mkdir -p docs
 
 def check(ctx):
     assert ctx.skill_fired(), f"미발동: {ctx.skill_invocations()} / 툴: {ctx.tool_names()}"
+    assert "Agent" in ctx.tool_names(), "독립 검수(plan-reviewer)를 부르지 않음 — 작성자와 검수자를 나눠야 한다"
     assert ctx.exists("docs/problem.md"), "문제 정의 문서가 생성되지 않음"
     doc = ctx.read("docs/problem.md")
 
