@@ -6,6 +6,7 @@ description: >
   "/grill"에 반드시 사용한다. 명시 요청이 없어도 기능·스크립트·스킬·문서·계획처럼 없던 것을 새로
   만드는 요청이면 첫 응답을 이 스킬로 연다. 조회·조사, 명세가 확정된 수정에는 쓰지 않는다.
   화면 하나의 타겟·문제·목적을 기획서로 남기는 일은 `screen-brief`가 맡는다.
+  사용자가 스스로 설명하며 생각을 정리하게 하는 "오리 모드"는 `rubber-duck`이 맡는다.
 allowed-tools: AskUserQuestion, Read, Grep, Glob
 ---
 
