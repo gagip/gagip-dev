@@ -15,7 +15,7 @@ from pathlib import Path
 KR_ROW = re.compile(r"^\|\s*(O[\d.]+)\s*\|\s*(KR\d+)\s*\|")
 OBJ_ID = re.compile(r"\bO\d+(?:\.\d+)*\b")
 METHODS = ("확인", "에이전트 채점", "사람 판정")
-KINDS = ("약속", "도전")
+KINDS = ("필수선", "목표선")
 NUMERIC = re.compile(r"\d+(\.\d+)?\s*(%|퍼센트|명|건|개|회|배|초|분|시간|일|주|원|안|장|곳|단계)")
 # 다른 문서(설계·플랜)가 맡는 절. 제목에 이 말이 들어가면 이 문서에 있을 내용이 아니다.
 FOREIGN_HEADING = re.compile(r"^##(?!#)\s*(\d+[.)]?\s*)?.*(작업|일정|기한 판정|위험|리스크|요구사항|하지 않는)")

@@ -26,7 +26,7 @@ O1. 로그인 실패를 사용자가 이해한다
 
 | Objective | KR | 판정 기준 | 판정 방법 | 판정 시점 | 유형 |
 |---|---|---|---|---|---|
-| O1.1 | KR1 | 실패 경로마다 안내 문구가 표시된다 | 확인 | 구현 후 | 약속 |
+| O1.1 | KR1 | 실패 경로마다 안내 문구가 표시된다 | 확인 | 구현 후 | 필수선 |
 
 ## 4. 사용자가 정할 것
 
@@ -41,7 +41,7 @@ class CheckProblemTest(unittest.TestCase):
         self.assertEqual(warnings, [])
 
     def test_bad_method_and_kind_are_errors(self):
-        doc = GOOD.replace("| 확인 | 구현 후 | 약속 |", "| 눈으로 | 구현 후 | 필수 |")
+        doc = GOOD.replace("| 확인 | 구현 후 | 필수선 |", "| 눈으로 | 구현 후 | 보류 |")
         errors, _ = check(doc)
         self.assertTrue(any("판정 방법" in e for e in errors))
         self.assertTrue(any("유형" in e for e in errors))
@@ -67,7 +67,7 @@ class CheckProblemTest(unittest.TestCase):
         self.assertTrue(any("O9.9" in e for e in errors))
 
     def test_duplicate_kr_is_error(self):
-        row = "| O1.1 | KR1 | 실패 경로마다 안내 문구가 표시된다 | 확인 | 구현 후 | 약속 |\n"
+        row = "| O1.1 | KR1 | 실패 경로마다 안내 문구가 표시된다 | 확인 | 구현 후 | 필수선 |\n"
         errors, _ = check(GOOD.replace(row, row + row))
         self.assertTrue(any("두 번" in e for e in errors))
 
