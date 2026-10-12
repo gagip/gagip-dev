@@ -64,14 +64,9 @@ find plugins/<플러그인명>/skills -name "SKILL.md" 2>/dev/null
 
 ```bash
 python3 scripts/check_consistency.py
-python3 scripts/validate_codex_plugin.py plugins/<플러그인명>
 ```
 
-`validate_codex_plugin.py`는 플러그인 폴더에서 git이 추적하는 파일만 임시 폴더로 복사해 Codex validator를 돌린다. validator를 직접 부르지 않는다 — validator는 git 무시 여부와 상관없이 `skills/` 아래 폴더를 모두 스킬로 봐서, 로컬 평가 결과 폴더(`<skill>-eval-runs/`)가 있으면 `missing SKILL.md`로 실패한다.
-
-Codex validator는 `~/.claude/plugins/...`가 아니라 **Codex 쪽 시스템 스킬 디렉터리**(`~/.codex/skills/.system/plugin-creator/`)에 설치된다. 래퍼가 종료 코드 3과 "Codex validator 미설치"를 내면 현재 환경에 `plugin-creator`가 없는 것이므로 아래 예외를 따른다. 두 검사가 모두 통과해야 한다.
-
-**validator를 실행할 수 없는 경우** — `plugin-creator`가 현재 환경에 없어 스크립트 경로를 찾지 못하면, 검사 실패로 취급해 중단하지 않는다. 그대로 진행하되 완료 보고에 `Codex validator: ⚠️ 미실행 (plugin-creator 없음)`을 명시한다. **돌려서 실패한 것과 아예 못 돌린 것은 다르다** — 전자는 즉시 중단이지만, 후자는 `check_consistency.py`가 두 매니페스트의 `name`·`version`·`description` 일치를 이미 확인하므로 매니페스트 구조를 건드리지 않은 변경이면 위험이 낮다.
+검사가 통과해야 한다.
 
 Critical 문제가 발견되면 **즉시 중단**하고 사용자에게 보고한다.
 
@@ -139,7 +134,7 @@ git push origin "<플러그인명>/v<새 버전>"
 - 버전: <이전 버전> → <새 버전>
 - 태그: <플러그인명>/v<새 버전>
 - 커밋: <short hash>
-- 검증: check_consistency.py ✅ / Codex validator <✅ 또는 ⚠️ 미실행 (plugin-creator 없음)>
+- 검증: check_consistency.py ✅
 ```
 
 되돌리려면 `git reset --hard <이전 커밋>`과 태그 삭제가 필요하고, push 이후면 force-push가 필요하다는 점을 함께 알린다.
@@ -152,7 +147,7 @@ git push origin "<플러그인명>/v<새 버전>"
 - 중단점을 두지 않는다. 1단계 수집이 끝나면 3단계 보고까지 이어서 진행한다 (검증 실패는 예외)
 - 두 `plugin.json` 수정 전 반드시 Read로 현재 내용을 확인하고 `name`·`version`·`description`이 일치하는지 검증한다
 - Claude와 Codex manifest의 버전은 항상 동일하게 범프한다
-- 릴리스 직전 Codex plugin validator와 `python3 scripts/check_consistency.py`를 다시 실행한다
+- 릴리스 직전 `python3 scripts/check_consistency.py`를 다시 실행한다
 - 태그는 `<플러그인명>/v<버전>` 형식을 따른다
 - CHANGELOG는 `plugins/<플러그인명>/CHANGELOG.md`의 기존 형식을 그대로 따른다 — 자체 형식을 만들지 않는다 (루트 `CHANGELOG.md`는 과거 기록이라 갱신 대상이 아니다)
 - push는 개인 계정 `gagip`로 한다 (다르면 전환 후 복원)

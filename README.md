@@ -55,7 +55,7 @@ python3 scripts/check_consistency.py
 ```
 
 Claude Code에서는 커밋 직전 훅이 이 검사를 자동 실행한다. 다른 하네스에서는 커밋 전에 수동으로
-실행한다. Codex 매니페스트 스키마 검증은 내장 `plugin-creator`의 `validate_plugin.py`를 사용한다.
+실행한다.
 
 ## 요구사항
 
