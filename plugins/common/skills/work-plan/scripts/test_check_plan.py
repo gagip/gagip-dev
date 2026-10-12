@@ -74,7 +74,19 @@ GOOD = """# 로그인 실패 안내 플랜
 |---|---|---|---|
 | O1 | 들어감 | 사람 몫 짧음 둘 | — |
 
-## 6. 사용자가 정할 것
+## 6. 착수 전 합의
+
+- 제출: 초안 (커밋까지)
+- 준비물: 없음
+- 착수 뒤 사람 몫:
+  - 안내 문구 고르기 — 실패 경로 목록이 나와야 초안을 만들 수 있다
+  - 실패 경로별 문구 확인 — 최종 보고 때 받음
+
+| 전제 | 깨졌다고 보는 관찰 |
+|---|---|
+| 실패 코드는 SDK가 돌려주는 값으로 모두 구분된다 | 같은 코드로 서로 다른 실패가 섞여 온다 |
+
+## 7. 사용자가 정할 것
 
 1. 없음
 """
@@ -160,6 +172,49 @@ class CheckPlanTest(unittest.TestCase):
     def test_no_tasks_is_error(self):
         doc = "\n".join(l for l in GOOD.splitlines() if not l.startswith("- [ ]"))
         self.assertTrue(any("작업 항목을 찾지 못함" in e for e in check(doc)[0]))
+
+    def test_missing_agreement_section_is_error(self):
+        doc = GOOD.split("## 6. 착수 전 합의")[0] + "## 7. 사용자가 정할 것\n\n1. 없음\n"
+        self.assertTrue(any("착수 전 합의 절이 없음" in e for e in errs(doc)))
+
+    def test_submit_mode_must_be_named(self):
+        self.assertTrue(any("`- 제출:`" in e for e in errs(GOOD.replace("- 제출: 초안 (커밋까지)", "- 제출: 알아서"))))
+        self.assertEqual(errs(GOOD.replace("- 제출: 초안 (커밋까지)", "- 제출: push·PR까지")), [])
+
+    def test_submit_mode_must_pick_one(self):
+        for value in ["초안 (커밋까지) / push·PR까지", "초안인지 PR인지 미정"]:
+            self.assertTrue(any("`- 제출:`" in e for e in errs(GOOD.replace("- 제출: 초안 (커밋까지)", f"- 제출: {value}"))), value)
+
+    def test_empty_prep_is_error(self):
+        self.assertTrue(any("준비물" in e for e in errs(GOOD.replace("- 준비물: 없음", "- 준비물: <적을 것>"))))
+        self.assertTrue(any("준비물" in e for e in errs(GOOD.replace("- 준비물: 없음", "- 준비물:\n  - <로그인>"))))
+
+    def test_missing_stop_premise_is_error(self):
+        row = "| 실패 코드는 SDK가 돌려주는 값으로 모두 구분된다 | 같은 코드로 서로 다른 실패가 섞여 온다 |\n"
+        for bad in ["| <전제> | <관찰> |\n", "| 실패 코드는 SDK가 돌려주는 값으로 모두 구분된다 | <관찰> |\n",
+                    "| 실패 코드는 SDK가 돌려주는 값으로 모두 구분된다 |  |\n"]:
+            self.assertTrue(any("멈춤 전제가 없음" in e for e in errs(GOOD.replace(row, bad))), bad)
+
+    AFTER = "- 착수 뒤 사람 몫:\n  - 안내 문구 고르기 — 실패 경로 목록이 나와야 초안을 만들 수 있다\n  - 실패 경로별 문구 확인 — 최종 보고 때 받음\n"
+
+    def test_empty_after_start_is_error(self):
+        for bad in ["- 착수 뒤 사람 몫:\n", "- 착수 뒤 사람 몫: <없음>\n", "- 착수 뒤 사람 몫:\n  - <작업>\n"]:
+            self.assertTrue(any("착수 뒤 사람 몫:`이 비어 있음" in e for e in errs(GOOD.replace(self.AFTER, bad))), bad)
+
+    def test_after_start_items_may_follow_blank_line(self):
+        doc = GOOD.replace("- 착수 뒤 사람 몫:\n", "- 착수 뒤 사람 몫:\n\n")
+        self.assertEqual(check(doc, DESIGN, PROBLEM), ([], []))
+
+    def test_open_human_task_with_none_after_start(self):
+        for none in ["없음", "해당 없음"]:
+            doc = GOOD.replace(self.AFTER, f"- 착수 뒤 사람 몫: {none}\n")
+            errors, warnings = check(doc, DESIGN, PROBLEM)
+            self.assertEqual(errors, [])
+            self.assertTrue(any("끝나지 않은 사람 작업이 2개" in w for w in warnings), none)
+            approved = doc.replace("상태: 초안", "상태: 승인됨 (2026-09-30)")
+            self.assertTrue(any("끝나지 않은 사람 작업이 2개" in e for e in errs(approved)), none)
+            done = approved.replace("- [ ] 사람(", "- [x] 사람(")
+            self.assertEqual(check(done, DESIGN, PROBLEM), ([], []))
 
     def test_cross_checks_skipped_without_other_docs(self):
         self.assertEqual(check(GOOD.replace("[D2]", "[D9]"))[0], [])

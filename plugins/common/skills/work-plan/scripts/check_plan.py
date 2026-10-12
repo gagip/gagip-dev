@@ -31,6 +31,8 @@ REVIEW_DONE = re.compile(r"승인|반려|확정|받아들|돌려보|판정|통�
 COLLECT = re.compile(r"수집|(사례|자료|예시|의견|피드백|레퍼런스)\S*\s*모[은으]")
 NUMERIC = re.compile(r"\d+\s*(건|개|곳|명|회|장)")
 STATUS = re.compile(r"^\s*-\s*상태\s*:\s*(초안|승인됨 \(\d{4}-\d{2}-\d{2}\))\s*$", re.M)
+SUBMIT = re.compile(r"^(초안( \(커밋까지\))?|push·PR까지)$")
+OPEN_HUMAN_TASK = re.compile(r"^\s*- \[ \] 사람\(")
 
 
 def header(text: str, name: str) -> str | None:
@@ -60,6 +62,80 @@ def section(secs: dict[str, str], keyword: str) -> str | None:
 
 def norm(ref: str) -> str:
     return " ".join(ref.split())
+
+
+def field(body: str, name: str) -> tuple[str, list[str]] | None:
+    """`- 이름: 값` 줄의 값과, 그 아래 들여 쓴 `- ` 항목들."""
+    lines = body.splitlines()
+    for i, line in enumerate(lines):
+        m = re.match(rf"^-\s*{name}\s*:\s*(.*)$", line)
+        if not m:
+            continue
+        children = []
+        for child in lines[i + 1:]:
+            if not child.strip():
+                continue
+            c = re.match(r"^\s+-\s+(.+)$", child)
+            if not c:
+                break
+            children.append(c.group(1).strip())
+        return m.group(1).strip(), children
+    return None
+
+
+def written(value: str) -> bool:
+    return bool(value) and not value.startswith("<")
+
+
+def filled(f: tuple[str, list[str]] | None) -> bool:
+    if f is None:
+        return False
+    value, children = f
+    return written(value) or any(written(c) for c in children)
+
+
+def table_rows(body: str) -> list[str]:
+    """표의 데이터 행. 머리 행·구분 행과, 빈 칸이나 `<...>` 자리표시 칸이 있는 행은 뺀다."""
+    rows, in_table = [], False
+    for line in body.splitlines():
+        if not line.startswith("|"):
+            in_table = False
+            continue
+        if not in_table:
+            in_table = True
+            continue
+        if re.match(r"^\|[\s\-:|]+\|\s*$", line):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if all(written(c) for c in cells):
+            rows.append(line)
+    return rows
+
+
+def check_agreement(text: str, secs: dict[str, str], errors: list[str], warnings: list[str]):
+    body = section(secs, "착수 전 합의")
+    if body is None:
+        errors.append("착수 전 합의 절이 없음 — 제출·준비물·착수 뒤 사람 몫·멈춤 전제를 승인 전에 정한다")
+        return
+    submit = field(body, "제출")
+    if submit is None or not SUBMIT.match(submit[0]):
+        errors.append("착수 전 합의에 `- 제출:`이 `초안` 또는 `push·PR까지`로 적혀 있지 않음")
+    if not filled(field(body, "준비물")):
+        errors.append("착수 전 합의에 `- 준비물:`이 비어 있음 — 없으면 `없음`")
+    if not table_rows(body):
+        errors.append("멈춤 전제가 없음 — 착수 전 합의 절의 표에 이 플랜이 기대는 사실과 깨졌다고 보는 관찰을 적는다")
+
+    after = field(body, "착수 뒤 사람 몫")
+    if not filled(after):
+        errors.append("착수 전 합의에 `- 착수 뒤 사람 몫:`이 비어 있음 — 없으면 `없음`")
+        return
+    open_human = [l.strip()[6:] for l in text.splitlines() if OPEN_HUMAN_TASK.match(l)]
+    if not any(written(c) for c in after[1]) and open_human:
+        msg = (f"착수 뒤 사람 몫에 적힌 작업이 없는데 끝나지 않은 사람 작업이 {len(open_human)}개 있음 — 승인 전에 "
+               f"끝내 `[x]`로 바꾸거나, 착수 뒤 사람 몫 아래 항목으로 적는다(최종 보고 때 받는 리뷰 포함): "
+               f"{open_human[0][:60]}")
+        status = STATUS.search(text)
+        (errors if status and status.group(1).startswith("승인됨") else warnings).append(msg)
 
 
 def check(text: str, design: str | None = None, problem: str | None = None):
@@ -144,6 +220,8 @@ def check(text: str, design: str | None = None, problem: str | None = None):
         verified = {norm(r) for l in verify.splitlines() if l.startswith("|") for r in KR_REF.findall(l.split("|")[1])}
         for kr in sorted(known_kr - verified):
             errors.append(f"{kr}의 검증 방법이 없음 — 검증 방법 표에 행을 추가할 것")
+
+    check_agreement(text, secs, errors, warnings)
     return errors, warnings
 
 
