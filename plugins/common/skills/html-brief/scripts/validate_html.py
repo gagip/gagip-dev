@@ -11,6 +11,65 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 
+def parse_span(raw: str | None, default: int, limit: int) -> int:
+    match = re.match(r"\s*(\d+)", raw or "")
+    return min(int(match.group(1)), limit) if match else default
+
+
+class TableShape:
+    def __init__(self, line: int) -> None:
+        self.line = line
+        self.section = "tbody"
+        self.head_width = 0
+        self.body_rows: list[tuple[int, int]] = []
+        self.row_line: int | None = None
+        self.row_width = 0
+        self.spans_below: list[int] = []
+        self.spans_to_section_end = 0
+
+    def start_section(self, section: str) -> None:
+        self.end_row()
+        self.section = section
+        self.spans_below = []
+        self.spans_to_section_end = 0
+
+    def start_row(self, line: int) -> None:
+        self.end_row()
+        self.row_line = line
+        self.row_width = self.spans_to_section_end + (self.spans_below.pop(0) if self.spans_below else 0)
+
+    def add_cell(self, line: int, colspan: int, rowspan: int) -> None:
+        if self.row_line is None:
+            self.start_row(line)
+        self.row_width += colspan
+        if rowspan == 0:
+            self.spans_to_section_end += colspan
+        for offset in range(rowspan - 1):
+            if offset == len(self.spans_below):
+                self.spans_below.append(0)
+            self.spans_below[offset] += colspan
+
+    def end_row(self) -> None:
+        if self.row_line is None:
+            return
+        if self.section == "thead":
+            self.head_width = max(self.head_width, self.row_width)
+        elif self.section == "tbody":
+            self.body_rows.append((self.row_line, self.row_width))
+        self.row_line = None
+
+    def width_mismatch(self) -> str | None:
+        self.end_row()
+        mismatched = [(line, width) for line, width in self.body_rows if width != self.head_width]
+        if not self.head_width or not mismatched:
+            return None
+        line, width = mismatched[0]
+        return (
+            f"{self.line}줄 표의 머리는 {self.head_width}칸인데 본문 {len(mismatched)}개 줄의 칸 수가 다릅니다"
+            f"(첫 줄: {line}줄 {width}칸)."
+        )
+
+
 class BriefParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
@@ -23,9 +82,24 @@ class BriefParser(HTMLParser):
         self.source_links = 0
         self.in_brief_data = False
         self.brief_data_parts: list[str] = []
+        self.tables: list[TableShape] = []
+        self.table_warnings: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
+        if tag == "table":
+            self.tables.append(TableShape(self.getpos()[0]))
+        elif self.tables:
+            table = self.tables[-1]
+            if tag in {"thead", "tbody", "tfoot"}:
+                table.start_section(tag)
+            elif tag == "tr":
+                table.start_row(self.getpos()[0])
+            elif tag in {"td", "th"}:
+                colspan = max(1, parse_span(values.get("colspan"), 1, 1000))
+                rowspan = parse_span(values.get("rowspan"), 1, 65534)
+                table.add_cell(self.getpos()[0], colspan, rowspan)
+
         if tag == "html":
             self.lang = values.get("lang") or ""
         elif tag == "meta" and (values.get("name") or "").lower() == "viewport":
@@ -43,6 +117,15 @@ class BriefParser(HTMLParser):
                 self.in_brief_data = True
 
     def handle_endtag(self, tag: str) -> None:
+        if tag == "table" and self.tables:
+            mismatch = self.tables.pop().width_mismatch()
+            if mismatch:
+                self.table_warnings.append(mismatch)
+        elif self.tables and tag in {"thead", "tbody", "tfoot"}:
+            self.tables[-1].start_section("tbody")
+        elif self.tables and tag == "tr":
+            self.tables[-1].end_row()
+
         if tag == "title":
             self.in_title = False
         elif tag == "script" and self.in_brief_data:
@@ -89,6 +172,7 @@ def validate(path: Path) -> tuple[list[str], list[str]]:
         warnings.append("넓은 표의 내부 가로 스크롤 규칙을 확인하세요.")
     if parser.source_links == 0:
         warnings.append("HTTP(S) 원문 링크가 없습니다. 내부 자료만 사용했다면 무시할 수 있습니다.")
+    warnings.extend(parser.table_warnings)
 
     raw_json = "".join(parser.brief_data_parts).strip()
     if not raw_json:
