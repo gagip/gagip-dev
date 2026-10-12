@@ -55,9 +55,24 @@ class TableWidthTest(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(warnings, [])
 
+    def test_rows_after_rowspan_ends_have_full_width(self):
+        path = self.brief_with("""<table>
+<thead><tr><th>항목</th><th>값</th><th>출처</th></tr></thead>
+<tbody>
+<tr><td rowspan="2">가</td><td>1</td><td>S1</td></tr>
+<tr><td>2</td><td>S2</td></tr>
+<tr><td>나</td><td>3</td><td>S3</td></tr>
+</tbody>
+</table>""")
+
+        errors, warnings = validate(path)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
+
     def test_rowspan_stays_inside_its_row_group(self):
         path = self.brief_with("""<table>
-<thead><tr><th rowspan="2">항목</th><th>값</th></tr></thead>
+<thead><tr><th rowspan="2">항목</th><th rowspan="0">값</th></tr></thead>
 <tbody>
 <tr><td rowspan="0">가</td><td>1</td></tr>
 <tr><td>2</td></tr>
@@ -70,19 +85,90 @@ class TableWidthTest(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(warnings, [])
 
-    def test_short_body_row_warns_with_table_and_row_lines(self):
+    def test_short_body_rows_warn_with_table_and_first_row_lines(self):
         path = self.brief_with("""<table>
 <thead><tr><th>항목</th><th>값</th><th>출처</th></tr></thead>
 <tbody>
 <tr><td>가</td><td>1</td><td>S1</td></tr>
 <tr><td>나</td><td>2</td></tr>
+<tr><td>다</td></tr>
 </tbody>
 </table>""")
 
         errors, warnings = validate(path)
 
         self.assertEqual(errors, [])
-        self.assertEqual(warnings, ["12줄 표의 머리는 3칸인데 본문 1개 줄의 칸 수가 다릅니다(첫 줄: 16줄 2칸)."])
+        self.assertEqual(warnings, ["12줄 표의 머리는 3칸인데 본문 2개 줄의 칸 수가 다릅니다(첫 줄: 16줄 2칸)."])
+
+    def test_wider_body_row_warns(self):
+        path = self.brief_with("""<table>
+<thead><tr><th>항목</th><th>값</th><th>출처</th></tr></thead>
+<tbody><tr><td>가</td><td>1</td><td>S1</td><td>메모</td></tr></tbody>
+</table>""")
+
+        errors, warnings = validate(path)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, ["12줄 표의 머리는 3칸인데 본문 1개 줄의 칸 수가 다릅니다(첫 줄: 14줄 4칸)."])
+
+    def test_rows_after_thead_without_tbody_are_body_rows(self):
+        path = self.brief_with("""<table>
+<thead><tr><th>항목</th><th>값</th></tr></thead>
+<tr><td>가</td></tr>
+</table>""")
+
+        errors, warnings = validate(path)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, ["12줄 표의 머리는 2칸인데 본문 1개 줄의 칸 수가 다릅니다(첫 줄: 14줄 1칸)."])
+
+    def test_header_cells_without_tr_are_counted(self):
+        path = self.brief_with("""<table>
+<thead><th>항목</th><th>값</th></thead>
+<tbody><tr><td>가</td></tr></tbody>
+</table>""")
+
+        errors, warnings = validate(path)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, ["12줄 표의 머리는 2칸인데 본문 1개 줄의 칸 수가 다릅니다(첫 줄: 14줄 1칸)."])
+
+    def test_body_row_header_cell_is_counted(self):
+        path = self.brief_with("""<table>
+<thead><tr><td></td><th>전</th><th>후</th></tr></thead>
+<tbody><tr><th>가</th><td>1</td><td>2</td></tr></tbody>
+</table>""")
+
+        errors, warnings = validate(path)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
+
+    def test_tfoot_rows_are_not_checked(self):
+        path = self.brief_with("""<table>
+<thead><tr><th>항목</th><th>값</th><th>출처</th></tr></thead>
+<tbody><tr><td>가</td><td>1</td><td>S1</td></tr></tbody>
+<tfoot><tr><td>합계 1</td></tr></tfoot>
+</table>""")
+
+        errors, warnings = validate(path)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
+
+    def test_rows_without_own_cells_are_skipped(self):
+        path = self.brief_with("""<table>
+<thead><tr><th>항목</th><th>값</th></tr></thead>
+<tbody>
+<tr></tr>
+<tr/><td>가</td><td>1</td>
+</tbody>
+</table>""")
+
+        errors, warnings = validate(path)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
 
     def test_table_without_thead_is_not_checked(self):
         path = self.brief_with("""<table>
@@ -125,6 +211,29 @@ class TableWidthTest(unittest.TestCase):
 
         self.assertEqual(errors, [])
         self.assertEqual(warnings, ["12줄 표의 머리는 2칸인데 본문 1개 줄의 칸 수가 다릅니다(첫 줄: 15줄 1칸)."])
+
+    def test_span_values_follow_html_integer_rules(self):
+        huge = "1" + "0" * 5000
+        path = self.brief_with(f"""<table>
+<thead><tr><th>a</th><th>b</th><th>c</th><th>d</th><th>e</th></tr></thead>
+<tbody><tr><td colspan="0">1</td><td colspan=" 2">2</td><td colspan="+2">3</td></tr></tbody>
+</table>
+<table>
+<thead><tr><th>a</th><th>b</th></tr></thead>
+<tbody><tr><td colspan="２">1</td></tr></tbody>
+</table>
+<table>
+<thead><tr><th>a</th><th>b</th></tr></thead>
+<tbody><tr><td colspan="{huge}">1</td></tr></tbody>
+</table>""")
+
+        errors, warnings = validate(path)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [
+            "16줄 표의 머리는 2칸인데 본문 1개 줄의 칸 수가 다릅니다(첫 줄: 18줄 1칸).",
+            "20줄 표의 머리는 2칸인데 본문 1개 줄의 칸 수가 다릅니다(첫 줄: 22줄 1000칸).",
+        ])
 
 
 if __name__ == "__main__":

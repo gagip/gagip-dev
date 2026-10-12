@@ -12,8 +12,11 @@ from pathlib import Path
 
 
 def parse_span(raw: str | None, default: int, limit: int) -> int:
-    match = re.match(r"\s*(\d+)", raw or "")
-    return min(int(match.group(1)), limit) if match else default
+    match = re.match(r"[\t\n\f\r ]*\+?([0-9]+)", raw or "")
+    if not match:
+        return default
+    digits = match.group(1).lstrip("0") or "0"
+    return limit if len(digits) > len(str(limit)) else min(int(digits), limit)
 
 
 class TableShape:
@@ -23,6 +26,7 @@ class TableShape:
         self.head_width = 0
         self.body_rows: list[tuple[int, int]] = []
         self.row_line: int | None = None
+        self.row_cells = 0
         self.row_width = 0
         self.spans_below: list[int] = []
         self.spans_to_section_end = 0
@@ -36,11 +40,13 @@ class TableShape:
     def start_row(self, line: int) -> None:
         self.end_row()
         self.row_line = line
+        self.row_cells = 0
         self.row_width = self.spans_to_section_end + (self.spans_below.pop(0) if self.spans_below else 0)
 
     def add_cell(self, line: int, colspan: int, rowspan: int) -> None:
         if self.row_line is None:
             self.start_row(line)
+        self.row_cells += 1
         self.row_width += colspan
         if rowspan == 0:
             self.spans_to_section_end += colspan
@@ -54,7 +60,7 @@ class TableShape:
             return
         if self.section == "thead":
             self.head_width = max(self.head_width, self.row_width)
-        elif self.section == "tbody":
+        elif self.row_cells and self.section == "tbody":
             self.body_rows.append((self.row_line, self.row_width))
         self.row_line = None
 
