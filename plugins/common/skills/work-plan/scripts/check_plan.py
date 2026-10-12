@@ -112,7 +112,26 @@ def table_rows(body: str) -> list[str]:
     return rows
 
 
+def pre_approval_tasks(text: str) -> list[str]:
+    """`### 승인 전에 끝낼 것` 묶음 안의 끝나지 않은 작업."""
+    out, inside = [], False
+    for line in text.splitlines():
+        if re.match(r"^#{1,3}\s", line):
+            inside = line.startswith("###") and "승인 전에 끝낼 것" in line
+            continue
+        if inside and re.match(r"^\s*- \[ \] ", line):
+            out.append(line.strip()[6:])
+    return out
+
+
 def check_agreement(text: str, secs: dict[str, str], errors: list[str], warnings: list[str]):
+    status = STATUS.search(text)
+    approved = bool(status) and status.group(1).startswith("승인됨")
+    pending = pre_approval_tasks(text)
+    if approved and pending:
+        errors.append(f"승인됨인데 `승인 전에 끝낼 것` 묶음에 끝나지 않은 작업이 {len(pending)}개 있음 — 플랜 단계에서 "
+                      f"끝내고 `[x]`로 바꾼 뒤 승인받는다: {pending[0][:60]}")
+
     body = section(secs, "착수 전 합의")
     if body is None:
         errors.append("착수 전 합의 절이 없음 — 제출·준비물·착수 뒤 사람 몫·멈춤 전제를 승인 전에 정한다")
@@ -130,12 +149,12 @@ def check_agreement(text: str, secs: dict[str, str], errors: list[str], warnings
         errors.append("착수 전 합의에 `- 착수 뒤 사람 몫:`이 비어 있음 — 없으면 `없음`")
         return
     open_human = [l.strip()[6:] for l in text.splitlines() if OPEN_HUMAN_TASK.match(l)]
+    open_human = [t for t in open_human if t not in pending]
     if not any(written(c) for c in after[1]) and open_human:
         msg = (f"착수 뒤 사람 몫에 적힌 작업이 없는데 끝나지 않은 사람 작업이 {len(open_human)}개 있음 — 승인 전에 "
                f"끝내 `[x]`로 바꾸거나, 착수 뒤 사람 몫 아래 항목으로 적는다(최종 보고 때 받는 리뷰 포함): "
                f"{open_human[0][:60]}")
-        status = STATUS.search(text)
-        (errors if status and status.group(1).startswith("승인됨") else warnings).append(msg)
+        (errors if approved else warnings).append(msg)
 
 
 def check(text: str, design: str | None = None, problem: str | None = None):

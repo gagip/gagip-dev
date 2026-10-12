@@ -139,3 +139,13 @@ def check(ctx):
     for line in body.splitlines():
         if re.search(r"App Store Connect|Apple App Store|애플 앱스토어|애플 앱 스토어|Google Play|구글 플레이", line):
             assert re.search(r"후보|질문|\?|/", line), f"스토어를 확정처럼 단정함: {line.strip()[:80]}"
+
+    names = [(c, c.split("—")[0]) for c in after_start_items(doc) if not re.search(r"최종 보고|승인 때|사용자가 정한 시각", c)]
+    user_decisions = [c for c, name in names
+                      if not re.search(r"동료|리뷰", name) and re.search(r"승인|확정|고르|선택", name)]
+    assert not user_decisions, f"사용자 결정·승인을 실행 중으로 미룸 — 플랜 단계나 승인 때 받아야 한다: {user_decisions[:2]}"
+
+
+def after_start_items(doc):
+    m = re.search(r"^- 착수 뒤 사람 몫:.*\n((?:[ \t]*\n|[ \t]+- .*\n)*)", doc, re.M)
+    return [l.strip()[2:] for l in m.group(1).splitlines() if l.strip()] if m else []

@@ -216,6 +216,29 @@ class CheckPlanTest(unittest.TestCase):
             done = approved.replace("- [ ] 사람(", "- [x] 사람(")
             self.assertEqual(check(done, DESIGN, PROBLEM), ([], []))
 
+    def test_pending_pre_approval_task_blocks_approval(self):
+        group = "### 승인 전에 끝낼 것\n\n- [ ] 에이전트: 안내 문구 초안 셋을 docs/copy.md에 저장한다 [D2]\n\n### 실패 안내\n"
+        doc = GOOD.replace("### 실패 안내\n", group)
+        self.assertFalse(any("승인 전에 끝낼 것" in e for e in errs(doc)))
+        approved = doc.replace("상태: 초안", "상태: 승인됨 (2026-09-30)")
+        self.assertTrue(any("승인 전에 끝낼 것` 묶음에 끝나지 않은 작업이 1개" in e for e in errs(approved)))
+        done = approved.replace("- [ ] 에이전트: 안내 문구 초안", "- [x] 에이전트: 안내 문구 초안")
+        self.assertFalse(any("승인 전에 끝낼 것" in e for e in errs(done)))
+
+    def test_pre_approval_group_spans_subheadings(self):
+        group = "### 승인 전에 끝낼 것\n\n#### 문구\n\n- [ ] 에이전트: 안내 문구 초안 셋을 docs/copy.md에 저장한다 [D2]\n\n### 실패 안내\n"
+        approved = GOOD.replace("### 실패 안내\n", group).replace("상태: 초안", "상태: 승인됨 (2026-09-30)")
+        self.assertTrue(any("끝나지 않은 작업이 1개" in e for e in errs(approved)))
+
+    def test_pre_approval_decisions_are_not_after_start_work(self):
+        after = "- 착수 뒤 사람 몫:\n  - 안내 문구 고르기 — 실패 경로 목록이 나와야 초안을 만들 수 있다\n  - 실패 경로별 문구 확인 — 최종 보고 때 받음\n"
+        group = "### 승인 전에 끝낼 것\n\n- [ ] 사람(결정): 초안 중 하나를 고른다 [D2]\n\n### 실패 안내\n"
+        doc = (GOOD.replace("### 실패 안내\n", group).replace(after, "- 착수 뒤 사람 몫: 없음\n")
+               .replace("- [ ] 사람(", "- [x] 사람(").replace("- [x] 사람(결정): 초안 중", "- [ ] 사람(결정): 초안 중"))
+        errors, warnings = check(doc, DESIGN, PROBLEM)
+        self.assertEqual(errors, [])
+        self.assertFalse(any("끝나지 않은 사람 작업" in w for w in warnings))
+
     def test_cross_checks_skipped_without_other_docs(self):
         self.assertEqual(check(GOOD.replace("[D2]", "[D9]"))[0], [])
 
