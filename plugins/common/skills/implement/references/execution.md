@@ -7,6 +7,8 @@
 
 `00_intake.md`가 이미 무엇을 고칠지와 무엇으로 끝났다고 할지를 정해 뒀다는 전제로 시작한다.
 여기서는 **구현 방법을 지시하지 않는다** — 대상 레포의 `CLAUDE.md`/`AGENTS.md` 관례를 그대로 따른다.
+레포 관례가 다루지 않는 코드 판단(계약·실패 표현·공개 범위·시그니처·이름 붙이는 범위·함수 분리)은
+플러그인의 `references/coding-philosophy.md`(이 스킬 폴더 기준 `../../references/coding-philosophy.md`)를 따른다.
 
 리뷰 기준은 이 문서와 [code-review-criteria.md](code-review-criteria.md)에 직접 있다.
 커밋·PR은 프로젝트·전역 지침이 정한 스킬을, 없으면 `common:commit`·`common:create-pr`을 호출한다. 필요한 스킬이 없으면
@@ -86,6 +88,8 @@ git을 돌리므로 여기가 정본이다. `base`는 비워 두면 관문이 �
 ## implement — 구현
 
 명세가 요청한 변경을 작은 동작 단위로 구현하고, 공통 원칙에 따라 각각 검증·커밋한다.
+코드를 쓰기 전에 레포 코딩 지침(없으면 `coding-philosophy.md`)을 읽고, 새로 만드는 공개 함수마다 같은 문서 12장의
+네 가지(시그니처, 숨은 상태, 본문의 전제 검사, 조용한 실패)를 스스로 확인한다.
 `02_implement.md`에 바꾼 것을 목록으로 남긴다.
 
 ---
