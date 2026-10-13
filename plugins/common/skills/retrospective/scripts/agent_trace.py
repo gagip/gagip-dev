@@ -24,6 +24,11 @@ HEAD_CHARS = 800        # --full 이 없을 때 보고서 앞부분
 TAIL_CHARS = 400        # --full 이 없을 때 보고서 뒷부분
 
 NOTIF_RE = re.compile(r"<task-notification>(.*?)</task-notification>", re.S)
+HANDBACK_RE = re.compile(r'<agent-message from="([^"]+)">(.*?)</agent-message>', re.S)
+HANDBACK_LEAD = "The report follows:"
+# 보고서를 알림 대신 agent-message 로 보낸 경우 알림 <result> 에는 이 안내문만 남는다.
+HANDBACK_PLACEHOLDER = "delivered to you as a message from"
+SESSION_ID_ENV = "CLAUDE_CODE_SESSION_ID"
 REMINDER_RE = re.compile(r"<system-reminder>.*?</system-reminder>", re.S)
 # 사람이 친 것처럼 기록되지만 실제로는 하네스가 넣은 문구 — 반응으로 읽으면 안 된다.
 SYNTHETIC_RE = re.compile(r"^\[(Request interrupted|No response requested)")
@@ -66,12 +71,28 @@ def first_date(path):
     return None
 
 
+def current_session_path():
+    """하네스가 알려 준 현재 세션 id 로 로그를 찾는다. 작업 디렉터리가 바뀌어도 같은 세션을 고른다."""
+    session_id = os.environ.get(SESSION_ID_ENV, "").strip()
+    if not session_id or not os.path.isdir(PROJECTS_DIR):
+        return None
+    for name in os.listdir(PROJECTS_DIR):
+        path = os.path.join(PROJECTS_DIR, name, f"{session_id}.jsonl")
+        if os.path.isfile(path):
+            return path
+    return None
+
+
 def collect_sessions(args):
-    """분석할 세션 파일 목록. 아무 조건도 없으면 현재 작업 디렉터리의 최신 세션 하나."""
+    """분석할 세션 파일 목록. 아무 조건도 없으면 현재 세션, 그것을 못 찾으면 작업 디렉터리의 최신 세션 하나."""
     if args.session:
         return [args.session]
     if not os.path.isdir(PROJECTS_DIR):
         return []
+    if not args.project and not args.days:
+        current = current_session_path()
+        if current:
+            return [current]
 
     roots = []
     if not args.project and not args.days:
@@ -157,33 +178,69 @@ def is_human(entry):
         if any(isinstance(b, dict) and b.get("type") == "tool_result" for b in content):
             return False
     text = block_text(content)
-    return bool(text.strip()) and "<task-notification>" not in text
+    return bool(text.strip()) and "<task-notification>" not in text and "<agent-message" not in text
 
 
 def clean(text):
     return REMINDER_RE.sub("", text or "").strip()
 
 
+def delivered_text(entry):
+    """하네스가 부모에게 넘긴 글. 버전에 따라 user 본문, 대기열 적재(queue-operation enqueue),
+    대기열 첨부(attachment queued_command) 중 한 곳 이상에 남는다. 대기열에서 빼는 remove 는
+    같은 글이 늦은 시각으로 한 번 더 남는 것이라 읽지 않는다."""
+    kind = entry.get("type")
+    if kind == "user":
+        return block_text((entry.get("message") or {}).get("content"))
+    if kind == "queue-operation" and entry.get("operation") == "enqueue":
+        content = entry.get("content")
+        return content if isinstance(content, str) else ""
+    if kind == "attachment":
+        att = entry.get("attachment") or {}
+        if att.get("type") == "queued_command" and isinstance(att.get("prompt"), str):
+            return att["prompt"]
+    return ""
+
+
 def parse_notifications(entries):
-    """완료 알림을 tool-use-id 로 색인. 같은 에이전트가 여러 번 알릴 수 있어 마지막 것을 쓴다."""
+    """완료 알림을 tool-use-id 로 색인. 같은 에이전트가 여러 번 알릴 수 있어 마지막 것을 쓰되,
+    같은 알림이 여러 곳에 남은 것은 처음 시각을 지킨다."""
     by_tool_use = {}
     for e in entries:
-        if e.get("type") != "user":
-            continue
-        text = block_text((e.get("message") or {}).get("content"))
-        for body in NOTIF_RE.findall(text):
+        for body in NOTIF_RE.findall(delivered_text(e)):
             def tag(name):
                 m = re.search(rf"<{name}>(.*?)</{name}>", body, re.S)
                 return m.group(1).strip() if m else None
             tuid = tag("tool-use-id")
             if not tuid:
                 continue
-            by_tool_use[tuid] = {
-                "status": tag("status"),
-                "result": tag("result"),
-                "ts": e.get("timestamp"),
-            }
+            notif = {"status": tag("status"), "result": tag("result"), "ts": e.get("timestamp")}
+            prev = by_tool_use.get(tuid)
+            if prev and (prev["status"], prev["result"]) == (notif["status"], notif["result"]):
+                continue
+            by_tool_use[tuid] = notif
     return by_tool_use
+
+
+def handback_body(text):
+    """agent-message 본문에서 하네스 머리말과 줄 앞 두 칸 들여쓰기를 뗀다."""
+    _, sep, rest = text.partition(HANDBACK_LEAD)
+    body = rest if sep else text
+    lines = body.strip("\n").split("\n")
+    return "\n".join(line[2:] if line.startswith("  ") else line for line in lines).strip()
+
+
+def parse_handbacks(entries):
+    """서브에이전트가 agent-message 로 보낸 최종 보고서를 agent id 로 색인. 마지막 것을 쓴다."""
+    by_agent = {}
+    for e in entries:
+        origin = e.get("origin") if e.get("type") == "user" else None
+        if isinstance(origin, dict) and origin.get("kind") == "peer" and origin.get("from") and origin.get("body"):
+            by_agent[origin["from"]] = handback_body(origin["body"])
+            continue
+        for agent_id, body in HANDBACK_RE.findall(delivered_text(e)):
+            by_agent[agent_id] = handback_body(body)
+    return by_agent
 
 
 def parse_results(entries):
@@ -379,6 +436,7 @@ def workflow_records(session_path):
 def build_records(session_path, entries):
     results = parse_results(entries)
     notifs = parse_notifications(entries)
+    handbacks = parse_handbacks(entries)
 
     records = []
     turn = 0
@@ -425,6 +483,9 @@ def build_records(session_path, entries):
                     rec["status"] = notif.get("status") or rec["status"]
                     rec["report"] = notif.get("result") or rec["report"]
                     rec["end"] = notif.get("ts") or rec["end"]
+                if rec["agent_id"] in handbacks and (
+                        not rec["report"] or HANDBACK_PLACEHOLDER in rec["report"]):
+                    rec["report"] = handbacks[rec["agent_id"]]
                 tm = transcript_metrics(transcript_path(session_path, rec["agent_id"])) if rec["agent_id"] else None
                 if tm:
                     rec.update({
