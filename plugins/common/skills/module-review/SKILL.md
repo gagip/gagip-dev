@@ -16,7 +16,7 @@ allowed-tools: Bash, Read, Glob, Grep, Write, Edit, Agent
 - **수정하지 않는다**: 리뷰 중 코드를 고치면 판단이 흐려지고 되돌리기 어려워진다.
   발견은 전부 메모에 쌓고, 실제 수정은 리뷰가 끝난 뒤 별도 작업으로 한다.
 
-판정 기준은 **현재 `SKILL.md` 디렉터리의 `references/coding-philosophy.md`를 로드해 적용한다**
+판정 기준은 **플러그인의 `references/coding-philosophy.md`(이 스킬 폴더 기준 `../../references/coding-philosophy.md`)를 로드해 적용한다**
 (특히 8~11장). 이 스킬은 "무엇을 보는가"의 순서만 정하고, "무엇이 결함인가"는 철학 문서가 정한다.
 
 ---
@@ -38,7 +38,7 @@ allowed-tools: Bash, Read, Glob, Grep, Write, Edit, Agent
 
 문서 상단에 다음을 적는다:
 - 리뷰 대상과 합의된 순서
-- 적용할 공통 원칙 요약 (`references/coding-philosophy.md` 8~11장)
+- 적용할 공통 원칙 요약 (`../../references/coding-philosophy.md` 8~11장)
 - **"리뷰 중에는 수정하지 않는다. 전체 리뷰가 끝나면 여기 모인 항목을 실제 작업으로 진행한다."**
 
 ## Step 3 — 모듈 하나씩 점검 (반복)
@@ -114,6 +114,6 @@ allowed-tools: Bash, Read, Glob, Grep, Write, Edit, Agent
 - 리뷰 중에는 코드를 수정하지 않는다. 발견은 전부 메모 파일로 간다
 - 지적마다 `파일경로:라인`과 실패 시나리오를 쓴다. 못 쓰면 뺀다
 - "잘 되어 있다"는 확인 항목은 메모에 넣지 않는다
-- 판정 기준은 `references/coding-philosophy.md`를 로드해 적용한다 — 이 스킬이 기준을 새로 만들지 않는다
+- 판정 기준은 `../../references/coding-philosophy.md`를 로드해 적용한다 — 이 스킬이 기준을 새로 만들지 않는다
 - 검증 수단·테스트 관례는 대상 레포의 것을 따른다 — 특정 언어·프레임워크를 전제하지 않는다
 - Step 5에서 triage까지만 하고 멈춘다 — 수정은 별도 작업이다

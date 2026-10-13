@@ -9,7 +9,7 @@
 여기서는 **구현 방법을 지시하지 않는다** — 대상 레포의 `CLAUDE.md`/`AGENTS.md` 관례를 그대로 따른다.
 
 리뷰 기준은 이 문서와 [code-review-criteria.md](code-review-criteria.md)에 직접 있다.
-커밋·PR은 프로젝트·전역 지침이 정한 스킬을, 없으면 `development:commit`·`development:create-pr`을 호출한다. 필요한 스킬이 없으면
+커밋·PR은 프로젝트·전역 지침이 정한 스킬을, 없으면 `common:commit`·`common:create-pr`을 호출한다. 필요한 스킬이 없으면
 첫 커밋 또는 제출 전에 그 사실을 알린다.
 
 > **cwd 확인 습관**: Bash 작업 디렉터리는 호출 간에 지속되지만 세션 상태는 아니다.
@@ -196,7 +196,7 @@ repo_root=$(git rev-parse --show-toplevel)
 옵션을 섞지 않는다 — 섞으면 리스가 있어도 확인을 받는다(의도된 동작). 예외: 커밋 정리로 원격 브랜치와
 갈라졌고 착수 전 합의에 강제 push 승인이 있으면 `git push --force-with-lease`만 쓴다.
 
-**PR 생성** — 프로젝트·전역 지침이 정한 PR 스킬(없으면 `development:create-pr`)을 호출하고, 만들어진 PR URL을 `07_ship.md`에 적는다.
+**PR 생성** — 프로젝트·전역 지침이 정한 PR 스킬(없으면 `common:create-pr`)을 호출하고, 만들어진 PR URL을 `07_ship.md`에 적는다.
 
 > **PR 스킬이 중단하면 즉시 리스를 해제한다.** PR 스킬은 워킹트리 dirty·base 모호·blocker
 > 존재 시 의도적으로 멈추도록 설계돼 있다. 그 순간 리스가 살아있으면 이후 수동 재시도가
