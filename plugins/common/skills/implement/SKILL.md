@@ -57,9 +57,11 @@ python3 scripts/cycle.py <사이클 폴더> status
 |---|---|
 | intake | [작업 접수](references/intake.md) |
 | branch·implement·simplify·review·docs·ship | [실행 절차](references/execution.md)의 공통 원칙과 해당 단계 절 |
+| ship (실행·생략 전) | [실행 절차](references/execution.md)의 커밋 정리 절을 먼저 |
 | close | 아래 종결 절차 |
 
-커밋은 별도 단계가 아니다. 구현·정리·리뷰 수정·문서 작업에서 작은 변경마다 검증하고 커밋한다.
+커밋은 별도 단계가 아니다. 구현·정리·리뷰 수정·문서 작업에서 작은 변경마다 검증하고 커밋하고,
+ship 전에 커밋 정리 절로 후속 커밋을 기능 커밋에 합친다.
 산출물 파일명: `00_intake.md` · `01_branch.md` · `02_implement.md` · `03_simplify.md` ·
 `04_review.md` · `05_docs.md` · `07_ship.md` · `08_close.md`.
 
@@ -100,7 +102,7 @@ python3 scripts/cycle.py <사이클 폴더> mode auto --decision "사용자가 -
 python3 scripts/cycle.py <사이클 폴더> mode auto --decision "승인된 플랜의 착수 전 합의가 push·PR까지"
 ```
 
-초안의 현재 단계가 ship이면 push·PR을 수행하지 않고 생략을 기록한 뒤 close로 간다. PR 머지는
+초안의 현재 단계가 ship이면 커밋 정리 절을 마친 뒤, push·PR을 수행하지 않고 생략을 기록하고 close로 간다. PR 머지는
 이 절차가 하지 않는다.
 
 ```bash
@@ -109,7 +111,7 @@ python3 scripts/cycle.py <사이클 폴더> skip ship --decision "초안 모드�
 
 ## 종결
 
-`08_close.md`에 두 절을 쓴다.
+`08_close.md`에 아래 두 절을 쓴다. 커밋 정리에서 먼저 쓴 `## 커밋 정리` 절은 지우지 않고 둔다.
 
 - `## 종결` — intake의 검증 조건 각각의 결과와 종결값(`달성`). 충족하지 못했으면 달성으로 닫지 않는다.
 - `## 합의와 달라진 점` — 계획서·판정과 다르게 직접 정한 것. 없으면 "없음".
