@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [0.47.0] - 2026-10-13
+
+### ✨ Feat
+- **implement**: 코드 리뷰를 관점별 읽기 전용 서브에이전트(정확성·계약, 가독성·명확성, 최소 변경, 테스트, 조건부 사용자 노출 문구)로 나눠 병렬로 띄우고, 보고의 HEAD를 대조해 어긋나면 버린다. docs 뒤 ship 전에 후속 커밋을 기능 커밋에 합치는 커밋 정리 절을 추가했다 (`05aa5ee`)
+- **coding-philosophy**: 12장(공개 함수는 적힌 대로만 실행 — 실패 방식은 반환 타입에, 호출 사이 숨은 상태 금지, 타입이 못 막는 전제는 런타임 검사, 내부 자원 실패를 삼키지 않음)과 13장(한 함수에서만 쓰는 값은 지역 변수, 함수 분리는 테스트·책임 분리일 때만)을 추가했다 (`a72b67e`)
+- **implement**: 구현 단계는 레포 코딩 지침이 없으면 `coding-philosophy`를 따르고 새 공개 함수마다 12장을 확인한다. 코드 리뷰는 레포 정본이 없을 때 이 문서를 폴백 정본으로 넘기고 관점별로 짚을 장을 지정한다 (`a72b67e`)
+
+### ♻️ Refactor
+- **commit/create-pr/module-review/report-issue**: `development` 플러그인을 `common`으로 합쳤다. 스킬 이름이 `development:*`에서 `common:*`으로 바뀌므로 `development@gagip-dev`는 제거하고 `common`을 다시 설치한다. `coding-philosophy`는 플러그인 공용 `references/`로 옮겨 다른 common 스킬도 읽는다 (`e47002b`)
+
 ## [0.46.1] - 2026-10-13
 
 ### 🐛 Fix
