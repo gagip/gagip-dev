@@ -35,7 +35,7 @@ class CycleFixture:
         }, {})
         self.path = self.directory / "handoff.md"
         for name, text in test_gate.ARTIFACTS.values():
-            (self.directory / name).write_text(text, encoding="utf-8")
+            (self.directory / name).write_text(test_gate.render(text, self.repo), encoding="utf-8")
         with self.path.open("a") as f:
             f.write("\n- 기존 질문과 다른 절은 보존한다.\n")
 

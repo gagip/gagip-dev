@@ -54,10 +54,10 @@ PR_URL_RE = re.compile(r"https://[^\s/]+/[^\s]+/pull/\d+")  # 호스트 무관, 
 
 # 리뷰 판정에서 고쳐야만 넘어갈 수 있는 등급. 스타일(🟡)은 커밋을 막지 않는다.
 BLOCKING_MARK = "🔴"
-# 부정형을 먼저 본다 — "미반영"은 "반영"을 부분 문자열로 품고 있어서, 긍정어만
-# 찾으면 미반영이 반영으로 통과한다(test_gate.py가 실제로 잡아낸 결함).
-NOT_APPLIED_RE = re.compile(r"미반영|미수정|안\s*함|보류|없음")
-APPLIED_RE = re.compile(r"반영|수정|고침|완료")
+# 🔴 행의 반영 칸은 `반영(<커밋 해시>[, <해시>…][: 설명])`. 낱말이 아니라 해시가 브랜치 커밋에
+# 있는지로 판정한다 — 설명 속 낱말로 판정하면 멀쩡한 칸이 거부되고, 안 고쳐도 "반영"만 적으면 통과한다.
+APPLIED_CELL_RE = re.compile(r"^반영\s*\(([^)]*)\)")
+COMMIT_HASH_RE = re.compile(r"(?<![0-9A-Za-z])[0-9a-fA-F]{7,40}(?![0-9A-Za-z])")
 
 
 class GateError(Exception):
@@ -225,15 +225,27 @@ def _check_review(h: Handoff, row: StageRow, at_transition: bool = False) -> lis
             fails.append("판정 표도 '없음' 표시도 없다 — 리뷰를 했는지 알 수 없다")
         return fails
 
+    branch_commits: list[str] | None = None
     for cells in rows:
         if BLOCKING_MARK not in cells[0]:
             continue
-        applied = cells[-1]
-        if NOT_APPLIED_RE.search(applied) or not APPLIED_RE.search(applied):
+        finding = cells[1][:40] if len(cells) > 1 else ""
+        applied = cells[-1].strip()
+        match = APPLIED_CELL_RE.match(applied)
+        cited = COMMIT_HASH_RE.findall(match.group(1).split(":", 1)[0]) if match else []
+        if not cited:
             fails.append(
-                f"{BLOCKING_MARK} 지적이 반영되지 않았다 — {cells[1][:40] if len(cells) > 1 else ''} "
-                f"(반영 칸: {applied!r})"
+                f"{BLOCKING_MARK} 지적이 반영되지 않았다 — {finding} "
+                f"(반영 칸: {applied!r}, `반영(<커밋 해시>)` 형식이어야 한다)"
             )
+            continue
+        if branch_commits is None:
+            branch_commits = _git(_repo(h), "rev-list", f"{_base(h)}..HEAD").split()
+        for short in cited:
+            if not any(full.startswith(short.lower()) for full in branch_commits):
+                fails.append(
+                    f"{BLOCKING_MARK} 반영 커밋 {short}이 이 브랜치 커밋에 없음 — {finding}"
+                )
     return fails
 
 

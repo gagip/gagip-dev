@@ -26,7 +26,7 @@ import handoff  # noqa: E402
 BRANCH = "feat/12-add-thing"
 
 # 저장소를 실제로 들여다보는 단계. 나머지 케이스는 만들지 않는다.
-GIT_STAGES = frozenset({"branch", "implement", "ship", "close"})
+GIT_STAGES = frozenset({"branch", "implement", "review", "ship", "close"})
 
 INTAKE_GOOD = """# intake
 
@@ -86,7 +86,7 @@ REVIEW_GOOD = """# review
 
 | 등급 | 내용 | 반영 |
 |---|---|---|
-| 🔴 | 외부 입력 검증 없음 | 반영 |
+| 🔴 | 외부 입력 검증 없음 | 반영({C1}) |
 | 🟡 | 변수명이 모호 | 미반영 |
 """
 
@@ -132,7 +132,7 @@ def _run(repo: Path, *args: str) -> None:
 
 def make_repo(root: Path, *, author: str | None = None,
               subject: str = "feat: 테스트 변경", dirty: bool = False,
-              empty: bool = False) -> Path:
+              empty: bool = False, extra: int = 0) -> Path:
     """base(main) 위에 작업 브랜치를 만든 임시 저장소."""
     repo = root / "repo"
     repo.mkdir()
@@ -151,9 +151,24 @@ def make_repo(root: Path, *, author: str | None = None,
         if author:
             args = ["-c", f"user.email={author}", *args]
         _run(repo, *args)
+    for i in range(extra):
+        (repo / f"extra{i}.txt").write_text("추가\n", encoding="utf-8")
+        _run(repo, "add", ".")
+        _run(repo, "commit", "-m", f"fix: 추가 변경 {i}")
     if dirty:
         (repo / "b.txt").write_text("작업 중\n", encoding="utf-8")
     return repo
+
+
+def render(text: str, repo: Path | str) -> str:
+    """`{C1}`·`{C2}`… 자리표시를 작업 브랜치 커밋(오래된 순)의 짧은 해시로 바꾼다."""
+    if not isinstance(repo, Path):
+        return text
+    commits = subprocess.run(["git", "-C", str(repo), "rev-list", "--reverse", "main..HEAD"],
+                             check=True, capture_output=True, text=True).stdout.split()
+    for i, full in enumerate(commits, 1):
+        text = text.replace(f"{{C{i}}}", full[:8])
+    return text
 
 
 def make_cycle(dest: Path, repo: Path | str, *,
@@ -175,7 +190,7 @@ def make_cycle(dest: Path, repo: Path | str, *,
     }, rows, drop=drop)
     for key in stages:
         name, text = ARTIFACTS[key]
-        (dest / name).write_text((overrides or {}).get(key, text), encoding="utf-8")
+        (dest / name).write_text(render((overrides or {}).get(key, text), repo), encoding="utf-8")
     return dest
 
 
@@ -255,8 +270,20 @@ CASES: list[tuple[str, str, str, dict]] = [
 
     ("review: 🔴 반영됨", "review", "통과", {}),
     ("review: 🔴 미반영", "review", "실패",
-     {"overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영 |",
+     {"overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영({C1}) |",
                                                   "| 🔴 | 외부 입력 검증 없음 | 미반영 |")}}),
+    ("review: 반영 칸 설명에 '없음'이 있어도 해시가 있으면 통과", "review", "통과",
+     {"overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영({C1}) |", "| 🔴 | 외부 입력 검증 없음 | 반영({C1}: 호출 없음 단언 복구) |")}}),
+    ("review: 해시 여러 개", "review", "통과",
+     {"repo": {"extra": 1}, "overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영({C1}) |", "| 🔴 | 외부 입력 검증 없음 | 반영({C1}, {C2}: 두 커밋) |")}}),
+    ("review: 반영만 적고 해시 없음", "review", "실패",
+     {"overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영({C1}) |", "| 🔴 | 외부 입력 검증 없음 | 반영 |")}}),
+    ("review: 브랜치에 없는 해시", "review", "실패",
+     {"overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영({C1}) |", "| 🔴 | 외부 입력 검증 없음 | 반영(deadbeef) |")}}),
+    ("review: 반영 안 함", "review", "실패",
+     {"overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영({C1}) |", "| 🔴 | 외부 입력 검증 없음 | 반영 안 함 |")}}),
+    ("review: 미반영(사유)", "review", "실패",
+     {"overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영({C1}) |", "| 🔴 | 외부 입력 검증 없음 | 미반영(다음 PR) |")}}),
     ("review: 판정 표도 없음 표시도 없음", "review", "실패",
      {"overrides": {"review": "# review\n\n## 판정\n\n리뷰했음.\n"}}),
 
@@ -282,7 +309,7 @@ CASES: list[tuple[str, str, str, dict]] = [
     ("close: 정상", "close", "통과", {}),
     ("close: status가 진행중", "close", "실패", {"meta": {"status": "진행중"}}),
     ("close: 리뷰 🔴이 남아 있음", "close", "실패",
-     {"overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영 |",
+     {"overrides": {"review": REVIEW_GOOD.replace("| 🔴 | 외부 입력 검증 없음 | 반영({C1}) |",
                                                   "| 🔴 | 외부 입력 검증 없음 | 미반영 |")}}),
 ]
 
