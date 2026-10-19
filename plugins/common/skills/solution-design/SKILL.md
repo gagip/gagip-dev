@@ -8,7 +8,7 @@ description: >
   독립 검수(plan-reviewer)를 거친다. 사용자가 "설계해줘", "설계 문서 써줘", "어떻게 풀지 정하자",
   "요구사항 정리해줘", "이슈 #N 설계", "구조 잡아줘", "solution-design" 같은 표현을 쓰면 반드시 이 스킬을
   사용한다. 무엇을 이뤄야 하는지는 problem-definition, 누가 무엇을 언제 하고 어떻게 확인하는지는 work-plan,
-  흐린 의도를 캐내는 인터뷰는 grill, 화면 하나의 타겟·문제·목적 기획서는 screen-brief가 맡는다.
+  흐린 의도를 캐내는 인터뷰는 grill이 맡는다.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, WebSearch, WebFetch
 argument-hint: (선택) 문제 정의 문서 위치, GitHub 이슈 번호 또는 주제. 생략 시 질문
 ---
