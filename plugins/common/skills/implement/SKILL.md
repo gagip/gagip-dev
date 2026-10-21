@@ -53,6 +53,8 @@ description: 승인된 계획서나 이슈를 받아 코드를 구현하고, 작
 7. **제출** — [verification.md](references/verification.md)대로 최종 코드의 완료 조건별 증거를 확인한다.
    실패·미실행·미확인이 남으면 전체 달성으로 보고하지 않는다. 계획서의 착수 전 합의나 사용자 지시에 push·PR 승인이 있을 때만 push하고, 프로젝트·전역 지침이 정한 PR
    스킬(없으면 `create-pr`)로 PR을 만든다. 승인이 없으면 커밋까지 하고 끝낸다. PR 머지는 하지 않는다.
+   사용자가 머지 전에 직접 리뷰할 PR이면 PR마다 [pr-review-visual.md](references/pr-review-visual.md)대로 전/후
+   시각 자료 HTML을 만들어 대화에 띄운다.
 
 검증은 [verification.md](references/verification.md)의 독립 도구로 실행·기록한다. 계획서·이슈의 조건을
 그대로 사용하고 별도 상태 문서를 만들지 않는다. 저장소 밖 작업 폴더의 실행 로그만 남긴다.
