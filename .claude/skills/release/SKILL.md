@@ -17,9 +17,9 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 
 ```bash
 git fetch origin --tags
+git rev-list --count HEAD..origin/<현재 브랜치>   # 0이 아니면 아래로 먼저 얹는다
+git rebase origin/<현재 브랜치>                   # 충돌이면 중단하고 보고
 ```
-
-> 이 단계를 건너뛰면 이미 릴리스·push된 버전이 "미push 커밋"으로 보인다. 실제로 로컬 `origin/main`이 낡아 릴리스 커밋 4개가 미push로 잡히고 "이전 릴리스가 태그 없이 끊겼다"고 오진한 적이 있다 — fetch 후 확인해보니 정상 릴리스 상태였고 실제 미push는 1개뿐이었다.
 
 그다음 아래 정보를 수집한다.
 
@@ -144,7 +144,7 @@ git push origin "<플러그인명>/v<새 버전>"
 ## 행동 원칙
 
 - 스킬 검증에서 Critical 문제가 있으면 즉시 중단하고 사용자에게 보고한다
-- 중단점을 두지 않는다. 1단계 수집이 끝나면 3단계 보고까지 이어서 진행한다 (검증 실패는 예외)
+- 중단점을 두지 않는다. 1단계 수집이 끝나면 3단계 보고까지 이어서 진행한다 (검증 실패와 rebase 충돌은 예외)
 - 두 `plugin.json` 수정 전 반드시 Read로 현재 내용을 확인하고 `name`·`version`·`description`이 일치하는지 검증한다
 - Claude와 Codex manifest의 버전은 항상 동일하게 범프한다
 - 릴리스 직전 `python3 scripts/check_consistency.py`를 다시 실행한다
