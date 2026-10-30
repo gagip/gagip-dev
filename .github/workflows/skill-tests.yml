@@ -25,6 +25,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: run script unit tests
+        run: python3 -m unittest discover -s plugins/common/skills/agent-env-diagnosis/scripts -p 'test_*.py'
+
       - name: run skill tests
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
