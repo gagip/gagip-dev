@@ -5,7 +5,7 @@ description: >
   반영한다. "회고해줘", "이번 세션 돌아봐", "주간 회고", "지난 N일 돌아봐", "배운 것 정리해줘",
   "피드백 반영해줘", "에이전트 회고"에 반드시 사용한다. 명시 요청이 없어도 작업 단락을 닫는 발화나 완료 보고 직후엔
   묻지 않고 실행한다(같은 단락에서 이미 했으면 생략). 메모리는 다루지 않고, 새 스킬 제작은
-  `build-skill`, 스킬 사용량 집계는 `skill-metrics`가 맡는다.
+  `build-skill`, 기간 통계로 고칠 곳을 고르는 일은 `agent-env-diagnosis`가 맡는다.
 allowed-tools: Bash, Read, Edit, Agent, Skill
 argument-hint: (선택) 회고 초점이나 특정 주제. 생략 시 전체 세션을 회고
 ---

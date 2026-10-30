@@ -19,7 +19,7 @@ import sys
 from datetime import datetime, timedelta
 
 PROJECTS_DIR = os.path.expanduser("~/.claude/projects")
-MIN_LINES = 20          # 이보다 짧은 세션은 즉시 종료된 빈 세션 → 제외 (skill-metrics 와 같은 기준)
+MIN_LINES = 20          # 이보다 짧은 세션은 즉시 종료된 빈 세션 → 제외 (agent-env-diagnosis 와 같은 기준)
 HEAD_CHARS = 800        # --full 이 없을 때 보고서 앞부분
 TAIL_CHARS = 400        # --full 이 없을 때 보고서 뒷부분
 
