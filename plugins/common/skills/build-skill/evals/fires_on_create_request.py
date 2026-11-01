@@ -7,7 +7,8 @@ import lint_skill  # noqa: E402
 
 PROMPT = (
     "PR 설명을 매번 요약, 변경점, 테스트 방법 순서로 쓰고 있어. 이 워크플로를 스킬로 만들어줘. "
-    "이름은 pr-description이고, 질문 없이 SKILL.md 초안까지 바로 만들어줘."
+    "이름은 pr-description이고, 질문 없이 SKILL.md 초안까지 바로 만들어줘. "
+    "위치는 현재 디렉터리 아래 skills/pr-description/ 이다. 다른 경로에는 아무것도 만들지 마."
 )
 RUNS = 3
 
