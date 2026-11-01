@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [0.57.0] - 2026-11-01
+
+### ✨ Feat
+- **build-skill**: 평가 케이스 파일에 `MODELS = ["sonnet", "opus"]`를 적으면 그 밖의 모델은 건너뛰고 `--models` 표에 `-`로 남긴다. 쓸 계획이 없는 모델을 실패로 세지 않기 위해서다. 선언이 없는 케이스는 모든 모델에서 돌고, 모든 케이스가 제외되면 오류로 알린다. `dev`의 `fires_on_small_fix`는 haiku 대상에서 뺐다 (`02b93e3`)
+
+### 🐛 Fix
+- **build-skill**: 이름·위치·형식을 다 정해 준 스킬 생성 요청에도 이 스킬을 먼저 열도록 description에 한 문장을 더했다. haiku 발동이 0/3에서 3/3으로 올랐고 질문에 발동하지 않는 케이스는 3/3 그대로다 (`c914e09`)
+
+### ♻️ Refactor
+- **module-review·rubber-duck·html-brief·build-mcp-server·notion-write·report-issue**: 대체 수단이 있거나 쓰임이 좁은 스킬 6개를 지웠다. 스킬은 엄격하고 확실한 것만 두는 방향으로 정리했다. README 표와 `grill`·`work-plan`·`coding-philosophy`의 삭제된 스킬 언급도 함께 고쳤다 (`0ca936e`)
+- **마켓플레이스**: `design`·`marketing`·`firebase` 플러그인을 마켓플레이스에서 뺐다. 도메인 플러그인은 등록 기준에 맞을 때 새로 만든다 (`dca17d3`)
+
+### 📝 Docs
+- **build-skill**: 의도 파악 단계에 레포의 스킬 등록 기준 확인 항목을 추가하고, 플러그인 선택 문구를 도메인 플러그인 기준으로 바꿨다. 기준 본문은 `AGENTS.md`의 "스킬 등록 기준"에 둔다 (`e55d6e5`)
+- **agent-env-diagnosis**: 개선 단계에 고칠 수단 선택표를 추가했다. 지침·설정·훅·점검 스크립트·스킬·MCP 중 싸고 되돌리기 쉬운 것부터 고른다 (`427a0c2`)
+
 ## [0.56.0] - 2026-11-01
 
 ### ✨ Feat
