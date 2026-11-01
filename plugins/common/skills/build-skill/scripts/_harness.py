@@ -102,7 +102,7 @@ def discover_skills(root: Path) -> list[Path]:
 # --------------------------------------------------------------------------
 
 def read_skill_name(skill_md: Path) -> str:
-    m = re.search(r"(?m)^name:\s*(.+?)\s*$", skill_md.read_text())
+    m = re.search(r"(?m)^name:\s*(.+?)\s*$", skill_md.read_text(encoding="utf-8"))
     if not m:
         raise ValueError(f"SKILL.md frontmatter에 name이 없다: {skill_md}")
     return m.group(1).strip().strip('"').strip("'")
@@ -138,7 +138,7 @@ class SkillLoader:
             self._copy_dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(self.skill_dir, self._copy_dest)
             md = self._copy_dest / "SKILL.md"
-            md.write_text(re.sub(r"(?m)^name:\s*.+$", f"name: {name}", md.read_text(), count=1))
+            md.write_text(re.sub(r"(?m)^name:\s*.+$", f"name: {name}", md.read_text(encoding="utf-8"), count=1), encoding="utf-8")
             self.load_name = name
         else:
             self.load_name = self.real_name
@@ -191,7 +191,7 @@ def run_claude(prompt: str, workdir: Path, *, extra_args: list[str], permission_
 
     proc = subprocess.run(
         cmd, cwd=workdir, env=env,
-        capture_output=True, text=True, timeout=timeout,
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout,
     )
     events: list[dict] = []
     for line in proc.stdout.splitlines():
@@ -296,7 +296,8 @@ class Ctx:
     def sh(self, cmd, **kw) -> subprocess.CompletedProcess:
         """workdir에서 셸 명령 실행 (검증용 — git log 확인 등)."""
         shell = isinstance(cmd, str)
-        return subprocess.run(cmd, cwd=self.workdir, shell=shell, capture_output=True, text=True, **kw)
+        return subprocess.run(cmd, cwd=self.workdir, shell=shell, capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", **kw)
 
     run = sh  # 별칭
 
@@ -310,7 +311,7 @@ class Ctx:
         """workdir 안에서 glob에 처음 맞는 파일 내용. 없으면 빈 문자열."""
         for p in sorted(self.workdir.glob(glob)):
             if p.is_file():
-                return p.read_text()
+                return p.read_text(encoding="utf-8")
         return ""
 
     def exists(self, glob: str) -> bool:
@@ -363,8 +364,8 @@ def _one_run(case: Case, loader: SkillLoader, *, with_skill: bool, model: str | 
     tmp = Path(tempfile.mkdtemp(prefix=f"buildskill-{case.name}-"))
     try:
         if case.scaffold.strip():
-            sc = subprocess.run(["bash", "-c", case.scaffold], cwd=tmp,
-                                capture_output=True, text=True)
+            sc = subprocess.run([shutil.which("bash") or "bash", "-c", case.scaffold], cwd=tmp,
+                                capture_output=True, text=True, encoding="utf-8", errors="replace")
             if sc.returncode != 0:
                 return RunResult(False, f"scaffold 실패: {sc.stderr[:300]}", error=True)
 
