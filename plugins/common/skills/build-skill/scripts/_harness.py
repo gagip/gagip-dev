@@ -275,6 +275,21 @@ class Ctx:
     def tool_names(self) -> list[str]:
         return [tc["name"] for tc in self.tool_calls]
 
+    def files_read(self, pattern: str | None = None) -> list[str]:
+        """Read 툴로 연 파일 경로 목록(슬래시로 통일, 중복 제거). pattern(정규식)을 주면 맞는 것만.
+
+        번들 파일(references/, assets/)을 Claude가 실제로 열었는지 볼 때 쓴다:
+        `assert ctx.files_read(r"references/rubric\\.md$")`
+        """
+        seen: dict[str, None] = {}
+        for tc in self.tool_calls:
+            if tc["name"] != "Read":
+                continue
+            path = str(tc["input"].get("file_path", "")).replace("\\", "/")
+            if path and (pattern is None or re.search(pattern, path)):
+                seen.setdefault(path)
+        return list(seen)
+
     # --- bash ----------------------------------------------------------
 
     def bash_ran(self, pattern: str) -> bool:
@@ -339,6 +354,8 @@ class RunResult:
     error: bool = False       # check 이전 단계 실패 (scaffold, claude 실행)
     tool_names: list[str] = field(default_factory=list)
     final_text: str = ""
+    files_read: list[str] = field(default_factory=list)   # Read 툴로 연 파일
+    bash_cmds: list[str] = field(default_factory=list)    # 실행한 bash 명령
 
 
 @dataclass
@@ -346,6 +363,7 @@ class CaseResult:
     case: str
     runs: list[RunResult]
     baseline: list[RunResult] = field(default_factory=list)
+    model: str | None = None
 
     @property
     def pass_count(self) -> int:
@@ -380,15 +398,17 @@ def _one_run(case: Case, loader: SkillLoader, *, with_skill: bool, model: str | 
             return RunResult(False, f"claude 실행 실패: {str(e)[:300]}", error=True)
 
         ctx = Ctx.build(tmp, events, loader)
+        trace = dict(tool_names=ctx.tool_names(), files_read=ctx.files_read(),
+                     bash_cmds=list(ctx.bash_cmds))
         try:
             case.check(ctx)
         except AssertionError as e:
             return RunResult(False, f"check 실패: {e or '(사유 미기재 assert)'}",
-                             tool_names=ctx.tool_names(), final_text=ctx.final_text)
+                             final_text=ctx.final_text, **trace)
         except Exception as e:  # noqa: BLE001 — check 코드 버그도 결과로 노출
             return RunResult(False, f"check 예외: {type(e).__name__}: {e}",
-                             error=True, tool_names=ctx.tool_names())
-        return RunResult(True, tool_names=ctx.tool_names(), final_text=ctx.final_text)
+                             error=True, **trace)
+        return RunResult(True, final_text=ctx.final_text, **trace)
     finally:
         if keep_temp:
             print(f"  [keep-temp] {tmp}", file=sys.stderr)
@@ -410,4 +430,36 @@ def run_case(skill_dir: Path, case: Case, *, baseline: bool, model: str | None,
                 _one_run(case, loader, with_skill=False, model=model, max_turns=max_turns,
                          timeout=timeout, keep_temp=keep_temp)
             ]
-    return CaseResult(case=case.name, runs=runs, baseline=base)
+    return CaseResult(case=case.name, runs=runs, baseline=base, model=model)
+
+
+# 번들 파일을 찾는 디렉터리. test_*·_*로 시작하는 파일은 러너·테스트 전용이라 Claude가 열 일이 없어 뺀다
+_BUNDLE_DIRS = ("references", "assets", "scripts")
+
+
+def unused_bundle_files(skill_dir: Path, results: list[CaseResult]) -> list[str]:
+    """스킬 번들(references/·assets/·scripts/) 중 어떤 run에서도 쓰이지 않은 파일의 상대 경로.
+
+    '쓰였다'는 Read 툴로 열렸거나, bash 명령에 상대 경로·파일명이 나온 경우다.
+    스킬 적용 run만 본다(baseline 제외). 케이스가 그 기능을 건드리지 않아서 안 쓰였을 수도
+    있으므로 실패가 아니라 정리 후보를 알리는 참고 정보다.
+    """
+    reads = [p for cr in results for r in cr.runs for p in r.files_read]
+    cmds = [c for cr in results for r in cr.runs for c in r.bash_cmds]
+    unused: list[str] = []
+    for d in _BUNDLE_DIRS:
+        base = skill_dir / d
+        if not base.is_dir():
+            continue
+        for f in sorted(base.rglob("*")):
+            if not f.is_file() or f.suffix == ".pyc" or "__pycache__" in f.parts:
+                continue
+            if f.name.startswith(("test_", "_")):
+                continue
+            rel = f.relative_to(skill_dir).as_posix()
+            if any(p.endswith("/" + rel) or p == rel for p in reads):
+                continue
+            if any(rel in c.replace("\\", "/") or f.name in c for c in cmds):
+                continue
+            unused.append(rel)
+    return unused

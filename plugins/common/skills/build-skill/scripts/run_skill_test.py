@@ -33,7 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _harness import (  # noqa: E402
-    CaseResult, discover_cases, discover_skills, load_case, run_case,
+    CaseResult, discover_cases, discover_skills, load_case, run_case, unused_bundle_files,
 )
 
 
@@ -49,10 +49,31 @@ def _fmt(cr: CaseResult, threshold: float) -> str:
     return line
 
 
+def matrix_markdown(skill_reports: list[dict], models: list[str]) -> str:
+    """스킬별로 케이스 × 모델 pass/total 표를 마크다운으로 만든다."""
+    by_skill: dict[str, dict[str, dict[str, str]]] = {}
+    for rep in skill_reports:
+        model = rep.get("model") or "(기본)"
+        for c in rep["cases"]:
+            cell = f"{c['pass']}/{c['total']}" + ("" if c["pass"] == c["total"] else " ✗")
+            by_skill.setdefault(rep["skill"], {}).setdefault(c["case"], {})[model] = cell
+    lines: list[str] = []
+    for skill, cases in by_skill.items():
+        lines += [f"### {Path(skill).name}", "",
+                  "| 케이스 | " + " | ".join(models) + " |",
+                  "|---|" + "---|" * len(models)]
+        for case, cells in cases.items():
+            lines.append(f"| {case} | " + " | ".join(cells.get(m, "-") for m in models) + " |")
+        lines.append("")
+    return "\n".join(lines)
+
+
 def _skill_payload(skill_dir: Path, results: list[CaseResult], threshold: float) -> dict:
     return {
         "skill": str(skill_dir),
+        "model": results[0].model if results else None,
         "all_ok": all(cr.ok(threshold) for cr in results),
+        "unused_files": unused_bundle_files(skill_dir, results),
         "cases": [
             {
                 "case": cr.case,
@@ -62,7 +83,8 @@ def _skill_payload(skill_dir: Path, results: list[CaseResult], threshold: float)
                 "baseline_total": len(cr.baseline),
                 "runs": [
                     {"passed": r.passed, "reason": r.reason, "error": r.error,
-                     "tools": r.tool_names, "final_text": r.final_text}
+                     "tools": r.tool_names, "files_read": r.files_read,
+                     "final_text": r.final_text}
                     for r in cr.runs
                 ],
                 "baseline_runs": [
@@ -113,6 +135,11 @@ def main() -> int:
                     help="스킬 없이 동일 프롬프트도 1회 실행해 대조 (신규 스킬 평가용)")
     ap.add_argument("--runs", type=int, help="케이스의 RUNS를 덮어씀 (개발 중 1 권장)")
     ap.add_argument("--model", help="claude -p 모델 (기본: 사용자 설정). 현재 세션과 맞추려면 지정")
+    ap.add_argument("--models",
+                    help="쉼표로 구분한 모델 목록(예: haiku,sonnet,opus). 모델마다 전체를 돌려 "
+                         "케이스 × 모델 표를 낸다. 호출이 모델 수만큼 늘어나므로 주간 CI처럼 가끔만 쓴다")
+    ap.add_argument("--matrix-md", type=Path,
+                    help="--models 결과 표를 마크다운 파일로 저장 (CI 요약용)")
     ap.add_argument("--max-turns", type=int, default=40)
     ap.add_argument("--timeout", type=int, default=300, help="run 당 초 (기본 300)")
     ap.add_argument("--threshold", type=float, default=1.0,
@@ -134,17 +161,33 @@ def main() -> int:
             return 2
         skill_dirs = [args.skill_dir]
 
-    skill_reports: list[dict] = []
-    missing: list[Path] = []
     for skill_dir in skill_dirs:
         if not (skill_dir / "SKILL.md").is_file():
             print(f"오류: SKILL.md가 없다 — {skill_dir}", file=sys.stderr)
             return 2
-        results = _run_skill(skill_dir, args)
-        if results is None:
-            missing.append(skill_dir)
-            continue
-        skill_reports.append(_skill_payload(skill_dir, results, args.threshold))
+
+    models: list[str | None] = [m.strip() for m in args.models.split(",") if m.strip()] \
+        if args.models else [args.model]
+    if args.matrix_md and not args.models:
+        print("오류: --matrix-md는 --models와 함께 쓴다", file=sys.stderr)
+        return 2
+
+    skill_reports: list[dict] = []
+    missing: list[Path] = []
+    for model in models:
+        args.model = model
+        if args.models:
+            print(f"\n=== 모델: {model} ===", file=sys.stderr)
+        for skill_dir in skill_dirs:
+            results = _run_skill(skill_dir, args)
+            if results is None:
+                missing.append(skill_dir)
+                continue
+            report = _skill_payload(skill_dir, results, args.threshold)
+            skill_reports.append(report)
+            if report["unused_files"]:
+                print("  참고: 이 평가에서 한 번도 열리지 않은 번들 파일 — "
+                      + ", ".join(report["unused_files"]), file=sys.stderr)
 
     if not skill_reports:
         where = f"evals/{args.case}.py" if args.case else "evals/*.py"
@@ -166,7 +209,13 @@ def main() -> int:
             Path(args.json_out).write_text(text)
             print(f"JSON 저장: {args.json_out}", file=sys.stderr)
 
-    if len(skill_reports) > 1:
+    if args.models:
+        table = matrix_markdown(skill_reports, [m for m in models if m])
+        print("\n" + table, file=sys.stderr)
+        if args.matrix_md:
+            args.matrix_md.write_text(table, encoding="utf-8")
+            print(f"표 저장: {args.matrix_md}", file=sys.stderr)
+    elif len(skill_reports) > 1:
         for s in skill_reports:
             print(f"  {'✓' if s['all_ok'] else '✗'} {s['skill']}", file=sys.stderr)
     print(f"\n{'전체 통과' if all_ok else '실패 케이스 있음'}", file=sys.stderr)
