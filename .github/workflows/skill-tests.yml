@@ -26,7 +26,9 @@ jobs:
           python-version: '3.12'
 
       - name: run script unit tests
-        run: python3 -m unittest discover -s plugins/common/skills/agent-env-diagnosis/scripts -p 'test_*.py'
+        run: |
+          python3 -m unittest discover -s plugins/common/skills/agent-env-diagnosis/scripts -p 'test_*.py'
+          python3 -m unittest discover -s plugins/common/skills/build-skill/scripts -p 'test_*.py'
 
       - name: run skill tests
         env:
@@ -41,3 +43,36 @@ jobs:
         with:
           name: skill-test-results
           path: skill-test-results.json
+
+  # 모델별 편차를 보는 참고용 점검이다. 호출이 모델 수만큼 늘어 주간으로만 돌리고,
+  # 실패해도 위 test 잡의 판정에는 영향을 주지 않는다(표는 실행 요약에 남는다).
+  model-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install -g @anthropic-ai/claude-code
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: run model matrix
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          python3 plugins/common/skills/build-skill/scripts/run_skill_test.py \
+            --all --models haiku,sonnet,opus --runs 1 --matrix-md model-matrix.md || true
+          if [ -f model-matrix.md ]; then cat model-matrix.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: upload matrix
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-matrix
+          path: model-matrix.md
