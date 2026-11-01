@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [0.56.0] - 2026-11-01
+
+### ✨ Feat
+- **build-skill**: `scripts/lint_skill.py`를 추가했다. name·description 규칙, 본문 500줄, 링크 대상, 참조 한 단계 깊이, 100줄 넘는 참조 파일의 목차, 백슬래시 경로를 LLM 호출 없이 먼저 점검한다. 위반을 주입하는 단위 테스트와 스킬 생성·질문 무발동 평가 2건도 함께 넣었다 (`3241d60`)
+- **build-skill**: 러너에 `ctx.files_read()`와 안 열린 번들 파일 리포트(`unused_files`)를 넣어 Claude가 스킬 파일을 어떻게 따라가는지 본다. `--models haiku,sonnet,opus`로 케이스 × 모델 표를 내고, 주간 CI에 참고용 `model-matrix` 잡을 따로 두었다 (`891e99a`)
+
+### 🐛 Fix
+- **build-skill**: 러너가 Windows에서 돌지 않던 문제를 고쳤다. 출력·scaffold를 UTF-8로 읽고, scaffold의 bash가 WSL `bash.exe`로 잡혀 실패하던 것을 Git bash로 지정했다 (`a23084c`)
+- **build-skill**: 스킬 생성 평가가 임시 폴더가 아니라 실제 레포에 스킬을 만들던 것을 프롬프트에서 위치를 지정해 막았다 (`c3cced0`)
+
+### 📝 Docs
+- **build-skill**: 지침을 Agent Skills 모범 사례에 맞췄다. 자유도 판단 기준을 추가하고, 공식 문서에 없는 pushy description 안내를 없애 무엇+언제·3인칭·구체적 트리거로 바꿨다. 참조 파일 목차 기준을 300줄에서 100줄로 고치고 없는 `development` 플러그인 언급을 정정했다 (`0764321`)
+- **build-skill**: 검수 기준 견본(`assets/review-rubric.template.md`)을 추가하고 `dev` 전용 검증 평가 사례를 `references/verification-evals.md`로 분리했다. RUNS 기본값 3의 근거를 적었다 (`e15cf35`)
+- **build-skill**: 스킬이 파일을 만드는 평가는 프롬프트에서 위치를 못박으라는 주의, 파일 탐색 관찰 지침, 모델 매트릭스를 주간 CI에서만 돌리는 기준을 추가했다 (`a65c121`)
+
 ## [0.55.1] - 2026-10-30
 
 ### 🐛 Fix
