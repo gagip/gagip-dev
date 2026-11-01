@@ -33,7 +33,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _harness import (  # noqa: E402
-    CaseResult, discover_cases, discover_skills, load_case, run_case, unused_bundle_files,
+    CaseResult, applies_to_model, discover_cases, discover_skills, load_case, run_case,
+    unused_bundle_files,
 )
 
 
@@ -109,6 +110,10 @@ def _run_skill(skill_dir: Path, args) -> list[CaseResult] | None:
     results: list[CaseResult] = []
     for cp in case_paths:
         case = load_case(cp)
+        if not applies_to_model(case, args.model):
+            print(f"▷ {skill_dir.name}/{case.name}  건너뜀 (MODELS={case.models}, 모델={args.model})",
+                  file=sys.stderr)
+            continue
         if args.runs:
             case.runs = args.runs
         print(f"▶ {skill_dir.name}/{case.name}  "
@@ -174,6 +179,7 @@ def main() -> int:
 
     skill_reports: list[dict] = []
     missing: list[Path] = []
+    skipped_all = False
     for model in models:
         args.model = model
         if args.models:
@@ -183,12 +189,18 @@ def main() -> int:
             if results is None:
                 missing.append(skill_dir)
                 continue
+            if not results:
+                skipped_all = True
+                continue
             report = _skill_payload(skill_dir, results, args.threshold)
             skill_reports.append(report)
             if report["unused_files"]:
                 print("  참고: 이 평가에서 한 번도 열리지 않은 번들 파일 — "
                       + ", ".join(report["unused_files"]), file=sys.stderr)
 
+    if not skill_reports and skipped_all:
+        print("오류: 선택한 모델이 모든 케이스의 MODELS에서 제외돼 실행할 케이스가 없다", file=sys.stderr)
+        return 2
     if not skill_reports:
         where = f"evals/{args.case}.py" if args.case else "evals/*.py"
         joined = ", ".join(str(p) for p in missing) or str(skill_dirs)

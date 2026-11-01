@@ -225,7 +225,7 @@ python3 <이 스킬>/scripts/run_skill_test.py --all           # 레포 전체 �
 | `--baseline` | 스킬 없이 동일 프롬프트도 1회 → "스킬이 차이를 만드나" 대조. 신규 스킬 평가에 권장 |
 | `--runs N` | RUNS 덮어씀 (개발 중 `--runs 1`) |
 | `--model <id>` | 현재 세션 모델과 맞추려면 지정 |
-| `--models a,b,c` | 모델마다 전체를 돌려 케이스 × 모델 pass/total 표를 낸다 (예: `haiku,sonnet,opus`). 호출이 모델 수만큼 늘어나므로 주간 CI처럼 가끔만 쓴다 |
+| `--models a,b,c` | 모델마다 전체를 돌려 케이스 × 모델 pass/total 표를 낸다 (예: `haiku,sonnet,opus`). 호출이 모델 수만큼 늘어나므로 주간 CI처럼 가끔만 쓴다. 케이스의 `MODELS = ["sonnet", "opus"]` 선언에 없는 모델은 건너뛰고 표에 `-`로 남는다 (쓸 계획이 없는 모델을 실패로 세지 않으려고) |
 | `--matrix-md <경로>` | `--models` 표를 마크다운 파일로 저장 (CI 요약용) |
 | `--threshold 0.66` | 통과 판정 비율 (기본 1.0 = 전 run 통과) |
 | `--json [경로]` | 전체 결과 JSON (툴 순서·final_text 포함) |

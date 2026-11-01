@@ -45,13 +45,15 @@ class Case:
     scaffold: str
     permission_mode: str
     check: "callable"
+    models: list[str] | None = None   # None이면 모든 모델에서 실행
 
 
 def load_case(case_path: Path) -> Case:
     """evals/<name>.py 모듈을 로드한다.
 
     모듈은 최소 PROMPT(str)와 check(ctx) 함수를 정의해야 한다.
-    RUNS(int, 기본 3), SCAFFOLD(str, 기본 ""), PERMISSION_MODE(str, 기본 bypassPermissions)는 선택.
+    RUNS(int, 기본 3), SCAFFOLD(str, 기본 ""), PERMISSION_MODE(str, 기본 bypassPermissions),
+    MODELS(list[str], 기본 모든 모델: 이 케이스가 대상으로 삼는 모델만 적는다)는 선택.
     """
     spec = importlib.util.spec_from_file_location(f"buildskill_case_{case_path.stem}", case_path)
     if spec is None or spec.loader is None:
@@ -72,6 +74,7 @@ def load_case(case_path: Path) -> Case:
         scaffold=str(getattr(mod, "SCAFFOLD", "")),
         permission_mode=str(getattr(mod, "PERMISSION_MODE", "bypassPermissions")),
         check=mod.check,
+        models=[str(m) for m in mod.MODELS] if getattr(mod, "MODELS", None) else None,
     )
 
 
@@ -95,6 +98,11 @@ def discover_skills(root: Path) -> list[Path]:
         if discover_cases(skill_dir):
             out.append(skill_dir)
     return sorted(out)
+
+
+def applies_to_model(case: Case, model: str | None) -> bool:
+    """케이스가 이 모델을 대상으로 하는가. 모델을 지정하지 않았거나 MODELS가 없으면 항상 True."""
+    return model is None or not case.models or model in case.models
 
 
 # --------------------------------------------------------------------------

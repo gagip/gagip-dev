@@ -80,6 +80,32 @@ class UnusedBundleTests(unittest.TestCase):
         self.assertIn("assets/t.md", _harness.unused_bundle_files(self.skill, [cr]))
 
 
+class ModelsDeclarationTests(unittest.TestCase):
+    def load(self, extra_lines):
+        """PROMPT·check만 있는 케이스 파일에 extra_lines를 덧붙여 불러온다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "c.py"
+            lines = ['PROMPT = "p"', *extra_lines, "def check(ctx):", "    pass", ""]
+            path.write_text("\n".join(lines), encoding="utf-8")
+            return _harness.load_case(path)
+
+    def test_no_declaration_applies_to_every_model(self):
+        case = self.load([])
+        self.assertIsNone(case.models)
+        for model in (None, "haiku", "opus"):
+            self.assertTrue(_harness.applies_to_model(case, model))
+
+    def test_declared_models_exclude_others(self):
+        case = self.load(['MODELS = ["sonnet", "opus"]'])
+        self.assertEqual(["sonnet", "opus"], case.models)
+        self.assertTrue(_harness.applies_to_model(case, "opus"))
+        self.assertFalse(_harness.applies_to_model(case, "haiku"))
+
+    def test_unspecified_model_always_runs(self):
+        case = self.load(['MODELS = ["sonnet"]'])
+        self.assertTrue(_harness.applies_to_model(case, None))
+
+
 class MatrixTests(unittest.TestCase):
     def test_table_has_a_column_per_model_and_marks_failures(self):
         def rep(model, passed):
