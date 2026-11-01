@@ -85,8 +85,9 @@ python3 "<스킬>/scripts/env_scan.py" --days 14 \
 `references/improve.md`대로 한다.
 
 1. HTML 6절 후보표를 근거 인용문과 함께 보이고 사용자가 고르게 한다.
-2. 고른 것은 넘긴다: 지침·스킬은 `retrospective`, 메모리는 `consolidate-memory`, 새 스킬은 `build-skill`.
-3. `baseline.json`을 기준값으로 남긴다.
+2. 고른 후보마다 고칠 수단(지침·설정·훅·스크립트·스킬·MCP)을 `references/improve.md`의 표로 정한다.
+3. 고른 것은 넘긴다: 지침·스킬은 `retrospective`, 메모리는 `consolidate-memory`, 새 스킬은 `build-skill`.
+4. `baseline.json`을 기준값으로 남긴다.
 
 이 스킬은 지침·스킬·메모리를 직접 고치지 않는다. 반영 규칙을 한 곳(`retrospective`)에 두기 위해서다.
 
