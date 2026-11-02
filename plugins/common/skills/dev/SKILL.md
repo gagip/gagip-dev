@@ -73,7 +73,8 @@ description: 코드를 바꾸는 개발 요청을 받아 맥락 수집·요구�
 1. 재사용·단순화·효율을 정리한다. 정리 도구가 없으면 읽기 전용 서브에이전트에 diff를 주고 같은 관점으로 검토받는다.
 2. [code-review-criteria.md](references/code-review-criteria.md)대로 관점별 독립 리뷰어를 한 응답에서 병렬로 띄운다.
    범위는 `git diff <base>...HEAD`, `git diff HEAD`, `git ls-files --others --exclude-standard`를 합친 것이다.
-3. 이 변경으로 틀리게 된 레포 안 문서(README·지침·`docs/`)를 같은 브랜치에서 고친다. 레포 밖 문서는 보고에 목록으로 남긴다.
+3. 이 변경으로 틀리게 된 레포 안 문서(README·지침·`docs/`)를 같은 브랜치에서 고친다. 변경이 외부 콘솔 값·키 발행 같은 새 운영 절차를 만들면
+   그 절차도 레포 운영 문서에 추가한다. 레포 밖 문서는 보고에 목록으로 남긴다.
 4. 고친 것이 있으면 4단계 자동 검사(타입·린트·테스트)를 다시 돌린다. 화면을 다시 바꿨으면 캡처도 다시 찍는다.
 5. 앞 커밋을 고친 커밋을 합친다. 후속 커밋은 처음부터 `git commit --fixup=<대상>`으로 만들고 `GIT_SEQUENCE_EDITOR=true
    git rebase -i --autosquash <base>`로 합친다. 합치기 전 HEAD에 백업 브랜치를 만들고, 합친 뒤 `git diff <백업> HEAD`가
