@@ -115,6 +115,7 @@ function findActiveItem():
 **리뷰 체크포인트**
 - 연산자/메서드 체인이 3단계를 초과하는가?
 - 콜백/람다 안에 콜백/람다가 중첩되어 있는가?
+- 삼항 연산자 안에 삼항 연산자가 있는가? 경우마다 `if / else if / else` 갈래로 나누고 갈래마다 어떤 경우인지 드러낸다.
 - 코드가 한 번에 이해되는가, 아니면 해석이 필요한가?
 
 ---
@@ -142,8 +143,22 @@ class OrderService:
             throw Error("Queue is empty")  // 호출자가 예외를 잡아야 함 — 계약이 불명확
 ```
 
+타입 없는 입력(이벤트 본문·JSON·저장소 값)도 경계에서 한 번 검사해 타입을 붙인다. 판단 함수는 검사된 타입만 받는다.
+
+```ts
+// 올바른 예 — 경계의 파서가 검사하고, 판단 함수는 타입 있는 값만 받는다
+function parseStatusMessage(raw: unknown): StatusMessage | null { /* 필드별 typeof 검사 */ }
+function toUpdate(message: StatusMessage, current: State): Update | null { ... }
+
+// 잘못된 예 — 검사 없이 모양을 믿고, 판단 함수가 unknown 을 받는다
+function toUpdate(payload: unknown, current: State) {
+    const { status, reason } = (payload ?? {}) as { status?: string; reason?: unknown };
+}
+```
+
 **리뷰 체크포인트**
 - 내부 비즈니스 로직에서 예외를 던지는가? (경계가 아닌 곳)
+- 판단 함수가 `unknown`·`any`를 받거나, 검사 없는 타입 단언(`as`)으로 밖에서 온 값의 모양을 믿는가?
 - 외부 API 호출이 try-catch 또는 동등한 메커니즘으로 감싸여 있는가?
 - 예외가 상위로 전파될 때 그 이유가 명확한가?
 
