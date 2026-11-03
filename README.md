@@ -32,7 +32,7 @@ Codex는 저장소의 marketplace를 현재 작업 디렉터리만으로 자동 
 
 ## 호환성
 
-- 배포 스킬 8개 모두 Claude Code와 Codex에서 사용할 수 있다.
+- 배포 스킬 9개 모두 Claude Code와 Codex에서 사용할 수 있다.
 - `common:build-skill`의 워크플로는 두 하네스에서 쓰지만, 번들된 테스트 러너(`run_skill_test.py`)는
   `claude` CLI가 필요하다. 없는 하네스에서는 테스트 케이스를 수동 실행하고 사람이 확인한다.
 - `allowed-tools`, `argument-hint`, `model` 같은 Claude Code frontmatter는 그대로 유지한다.

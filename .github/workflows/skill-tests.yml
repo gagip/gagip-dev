@@ -29,6 +29,7 @@ jobs:
         run: |
           python3 -m unittest discover -s plugins/common/skills/agent-env-diagnosis/scripts -p 'test_*.py'
           python3 -m unittest discover -s plugins/common/skills/build-skill/scripts -p 'test_*.py'
+          python3 -m unittest discover -s plugins/common/skills/market-research/scripts -p 'test_*.py'
 
       - name: run skill tests
         env:
