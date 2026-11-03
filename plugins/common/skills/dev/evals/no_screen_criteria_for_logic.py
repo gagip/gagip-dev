@@ -1,6 +1,6 @@
 """화면을 바꾸지 않는 요청이면 계획에 화면 기준을 만들지 않는다."""
 
-PROMPT = """src/sum.py의 total()이 빈 리스트에서 에러 나는 걸 0을 돌려주게 고쳐줘. dev 스킬로 진행하고, 웹·외부에 올리지 마."""
+PROMPT = """src/sum.py의 total()이 빈 리스트에서 에러 나는 걸 0을 돌려주게 고쳐줘. 구현 전에 계획을 보여주고 내 승인을 기다려. 웹·외부에 올리지 마."""
 RUNS = 1
 SCAFFOLD = r"""
 git init -q && git config user.email e@e.com && git config user.name E

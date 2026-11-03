@@ -160,7 +160,8 @@ class SkillLoader:
         """claude -p에 붙일 격리/로드 인자."""
         if self.plugin_root is not None:
             # 임시 cwd에는 .claude가 없음 → project 소스만 읽으면 사용자 설정(설치 플러그인) 배제
-            args = ["--setting-sources", "project"]
+            # --strict-mcp-config: 계정 커넥터(아티팩트 게시 등) 없이 실행해 평가가 외부로 나가지 않게 한다
+            args = ["--setting-sources", "project", "--strict-mcp-config"]
             if with_skill:
                 args += ["--plugin-dir", str(self.plugin_root)]
             return args

@@ -2,7 +2,7 @@
 
 import re
 
-PROMPT = """Badge 컴포넌트(src/Badge.tsx)를 mockup/badge.html 시안대로 바꾸고, 시안에 없는 '값이 없을 때' 상태도 추가해줘. dev 스킬로 진행하고, 웹·외부에 올리지 마."""
+PROMPT = """Badge 컴포넌트(src/Badge.tsx)를 mockup/badge.html 시안대로 바꾸고, 시안에 없는 '값이 없을 때' 상태도 추가해줘. 웹·외부에 올리지 마."""
 RUNS = 1
 SCAFFOLD = r"""
 git init -q && git config user.email e@e.com && git config user.name E
