@@ -88,7 +88,8 @@ description: 코드를 바꾸는 개발 요청을 받아 맥락 수집·요구�
 ## 6. 제출
 
 push·PR 전에 verification.md의 `check`로 모든 완료 조건을 확인한다. 실패·미실행·미확인이 남으면 전체 달성으로 보고하지
-않는다. 2단계·요청문·지침에 push·PR 승인이 있을 때만 push하고 PR을 만든다. 승인이 없으면 커밋까지 하고 7단계로 간다.
+않는다. 레포의 `.github/workflows/`를 열어 이 PR에 걸리는 CI 검사를 확인하고, 그 명령을 로컬에서 돌려 결과와 함께
+보고에 적는다. CI가 있는지는 이 폴더로 판정한다. 2단계·요청문·지침에 push·PR 승인이 있을 때만 push하고 PR을 만든다. 승인이 없으면 커밋까지 하고 7단계로 간다.
 커밋·PR 형식은 프로젝트·전역 지침이 정한 것을 따르고, 없으면 [commit-and-pr.md](references/commit-and-pr.md)를 따른다.
 
 PR을 만들었으면 [merge-criteria.md](references/merge-criteria.md)의 조건을 모두 채울 때 머지한다. 하나라도 빠지면 걸린
