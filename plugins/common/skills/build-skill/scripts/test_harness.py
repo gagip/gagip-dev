@@ -1,7 +1,9 @@
 """러너의 관찰 헬퍼와 모델 매트릭스 표를 LLM 호출 없이 합성 이벤트로 확인한다."""
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 import _harness
 import run_skill_test
@@ -121,6 +123,23 @@ class MatrixTests(unittest.TestCase):
     def test_missing_cell_is_dash(self):
         rep = {"skill": "/p/demo", "model": "haiku", "cases": [{"case": "c", "pass": 1, "total": 1}]}
         self.assertIn("| c | 1/1 | - |", run_skill_test.matrix_markdown([rep], ["haiku", "opus"]))
+
+
+class RunFailureTests(unittest.TestCase):
+    def test_timeout_reason_survives_long_prompt(self):
+        class Loader:
+            def claude_args(self, with_skill):
+                return []
+
+        def time_out(prompt, *args, **kwargs):
+            raise subprocess.TimeoutExpired(["claude", "-p", prompt], kwargs["timeout"])
+
+        case = _harness.Case("c", Path("c.py"), "긴 프롬프트 " * 100, 1, "", "bypassPermissions", lambda ctx: None)
+        with mock.patch.object(_harness, "run_claude", time_out):
+            result = _harness._one_run(case, Loader(), with_skill=True, model=None,
+                                       max_turns=1, timeout=300, keep_temp=False)
+        self.assertTrue(result.error)
+        self.assertIn("시간 초과 300초", result.reason)
 
 
 if __name__ == "__main__":

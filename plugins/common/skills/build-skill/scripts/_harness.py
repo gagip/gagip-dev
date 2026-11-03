@@ -403,7 +403,9 @@ def _one_run(case: Case, loader: SkillLoader, *, with_skill: bool, model: str | 
                 permission_mode=case.permission_mode, model=model,
                 max_turns=max_turns, timeout=timeout,
             )
-        except (subprocess.TimeoutExpired, RuntimeError) as e:
+        except subprocess.TimeoutExpired:
+            return RunResult(False, f"claude 실행 실패: 시간 초과 {timeout}초 (--timeout으로 늘린다)", error=True)
+        except RuntimeError as e:
             return RunResult(False, f"claude 실행 실패: {str(e)[:300]}", error=True)
 
         ctx = Ctx.build(tmp, events, loader)
