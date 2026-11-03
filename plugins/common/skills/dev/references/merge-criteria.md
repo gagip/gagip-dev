@@ -18,7 +18,8 @@
 | 상태 | CI가 모두 통과했고 충돌이 없다 | `gh pr checks`, `gh pr view --json mergeable,mergeStateStatus` |
 | 상태 | base보다 뒤처졌으면 강제 push 없이 따라잡았고, 그 뒤 CI가 다시 통과했다. 강제 push가 필요하면 요청한다 | `gh pr update-branch` |
 | 상태 | 레포 룰셋이 요구하는 승인·검사를 모두 채웠다. 룰셋을 우회하지 않는다 | `gh api repos/{owner}/{repo}/rules/branches/{base}` |
-| 검증 | 완료 조건마다 증거가 있고 "미검증"이 0건이다. 화면을 바꿨으면 캡처가 있다 | `verification.md`의 `check`, 4단계 캡처 |
+| 검증 | 완료 조건마다 증거가 있고 "미검증"이 0건이다 | `verification.md`의 `check` |
+| 검증 | 화면을 바꿨으면 화면 기준 대조와 독립 화면 검토에 어긋남이 0건이고, 계획의 `화면 기준`에 `기준 없음` 자리가 없다 | `screen-check.md` 2·3절 결과 |
 | 검증 | 독립 리뷰에서 고쳐야 할 지적이 남지 않았다 | 5단계 리뷰 결과 |
 | 범위 | 결과가 2단계에서 승인한 계획과 같다. 합의와 달라진 점이 동작에 영향을 주지 않는다 | 이어받기 메모·작업 목록 |
 | 범위 | 파일 10개 이하, 테스트를 뺀 400줄 이하 | `git diff --stat <base>...HEAD` |
