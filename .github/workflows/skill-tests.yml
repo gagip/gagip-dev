@@ -25,11 +25,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: run script unit tests
-        run: |
-          python3 -m unittest discover -s plugins/common/skills/agent-env-diagnosis/scripts -p 'test_*.py'
-          python3 -m unittest discover -s plugins/common/skills/build-skill/scripts -p 'test_*.py'
-          python3 -m unittest discover -s plugins/common/skills/market-research/scripts -p 'test_*.py'
+      - name: run free checks
+        run: python3 scripts/release_check.py --free
 
       - name: run skill tests
         env:

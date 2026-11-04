@@ -54,21 +54,15 @@ git log <마지막 태그>..HEAD --oneline 2>/dev/null || git log --oneline
 
 **신규 플러그인 예외** — 해당 플러그인의 기존 태그(`<name>/v*`)가 하나도 없으면 첫 릴리스다. 자동 범프하지 말고 `plugin.json`의 현재 버전을 그대로 첫 릴리스로 쓴다. 완료 보고에 "신규 플러그인 첫 릴리스 — 범프 없음"을 명시한다.
 
-**스킬·매니페스트 검증** — 대상 플러그인의 모든 SKILL.md와 공유 메타데이터를 점검:
+**스킬·매니페스트 검증** — 대상 플러그인마다 실행한다:
 
 ```bash
-find plugins/<플러그인명>/skills -name "SKILL.md" 2>/dev/null
+python3 scripts/release_check.py --plugin <플러그인명>
 ```
 
-각 SKILL.md에 대해 frontmatter 필수 필드(`name`, `description`, `allowed-tools`)와 `allowed-tools` 일치 여부를 점검한다.
+매니페스트·스킬 구조 검사와 전체 단위 테스트를 돌린 뒤, 마지막 태그 이후 바뀐 스킬의 평가를 돌린다. 평가는 `claude -p`를 호출해 10분을 넘길 수 있으므로 백그라운드로 실행하고 끝날 때까지 기다린다. `references/`만 바뀐 스킬은 평가를 생략한다.
 
-```bash
-python3 scripts/check_consistency.py
-```
-
-검사가 통과해야 한다.
-
-Critical 문제가 발견되면 **즉시 중단**하고 사용자에게 보고한다.
+종료 코드가 0이 아니면 **즉시 중단**하고 사용자에게 보고한다. 출력의 `평가 실행`·`평가 생략`·`평가 없음` 줄은 완료 보고에 옮긴다.
 
 **CHANGELOG 초안 작성** — 마지막 태그부터 HEAD까지 구현 커밋 이력을 분석해 초안을 메모리에 작성한다.
 
@@ -134,7 +128,7 @@ git push origin "<플러그인명>/v<새 버전>"
 - 버전: <이전 버전> → <새 버전>
 - 태그: <플러그인명>/v<새 버전>
 - 커밋: <short hash>
-- 검증: check_consistency.py ✅
+- 검증: release_check.py ✅ (평가 실행: <스킬>, 평가 생략: <스킬>, 평가 없음: <스킬>)
 ```
 
 되돌리려면 `git reset --hard <이전 커밋>`과 태그 삭제가 필요하고, push 이후면 force-push가 필요하다는 점을 함께 알린다.
@@ -143,7 +137,7 @@ git push origin "<플러그인명>/v<새 버전>"
 
 ## 행동 원칙
 
-- 스킬 검증에서 Critical 문제가 있으면 즉시 중단하고 사용자에게 보고한다
+- `release_check.py`가 실패하면 즉시 중단하고 사용자에게 보고한다
 - 중단점을 두지 않는다. 1단계 수집이 끝나면 3단계 보고까지 이어서 진행한다 (검증 실패와 rebase 충돌은 예외)
 - 두 `plugin.json` 수정 전 반드시 Read로 현재 내용을 확인하고 `name`·`version`·`description`이 일치하는지 검증한다
 - Claude와 Codex manifest의 버전은 항상 동일하게 범프한다
