@@ -6,7 +6,7 @@
 
 import json
 
-PROMPT = "raw/cases.json에 모은 사용자 글 사례들 인용이 원문이랑 맞는지 대조해줘. 파일은 고치지 말고 결과만 알려줘."
+PROMPT = "raw/cases.json에 모은 사용자 글 사례들 인용이 원문이랑 맞는지 대조해줘. raw/cases.json은 고치지 말고 결과만 알려줘."
 
 RUNS = 3
 

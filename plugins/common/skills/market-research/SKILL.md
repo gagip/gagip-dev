@@ -92,7 +92,8 @@ python3 <scripts>/collect_candidates.py --queries raw/queries.tsv --out raw/cand
 ### 4. 선별
 
 후보의 발췌만 보고 본인 경험·실제 제품 사실인지, 홍보·광고·복사 글인지 가려 `raw/shortlist.tsv`(칸: `id`, `url`, `title`,
-`group`, `reason`)에 남긴다. 서브에이전트에 맡겨도 된다. 이 파일이 그대로 캡처 목록이 된다. 질문별로 묶어 두면 사람이 캡처할 때
+`group`, `reason`)에 남긴다. `url`은 `candidates.tsv`의 값을 그대로 옮긴다. 저장된 페이지의 원래 주소로 되돌리면 같은 글이 다른
+주소로 갈린다. 서브에이전트에 맡겨도 된다. 이 파일이 그대로 캡처 목록이 된다. 질문별로 묶어 두면 사람이 캡처할 때
 같은 주제를 이어서 읽는다.
 
 ### 5. 원문 확보
