@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.60.5] - 2026-11-04
+
+### 🐛 Fix
+- **search-sessions**: 턴 진행 중 보낸 사용자 메시지와 Codex `AgentMessage`를 찾고, 주입된 글은 사용자 발화에서 뺀다. `--days`를 grep 전에 적용하고 `--files-only` 합계를 바로잡았다 (`d6fe67d`)
+
 ## [0.60.4] - 2026-11-04
 
 ### 🐛 Fix
