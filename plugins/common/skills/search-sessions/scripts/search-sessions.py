@@ -25,6 +25,7 @@ ALL_ROOTS = [
     ("codex", os.path.join(HOME, ".codex", "sessions")),
     ("codex", os.path.join(HOME, ".codex", "archived_sessions")),
 ]
+GREP_BATCH = 500
 
 
 def parse_ts(value):
@@ -42,18 +43,28 @@ def candidate_files(roots, term, days):
     cutoff = datetime.now().timestamp() - days * 86400 if days else None
     out = []
     for tool, root in roots:
-        try:
-            res = subprocess.run(
-                ["grep", "-rlIiF", "--include=*.jsonl", "--", term, root],
-                capture_output=True, text=True,
-            )
-        except FileNotFoundError:
-            sys.exit("grep을 찾을 수 없다.")
-        for path in res.stdout.splitlines():
-            if cutoff and os.path.getmtime(path) < cutoff:
-                continue
-            out.append((tool, path))
+        files = [
+            path for path in log_files(root)
+            if not cutoff or os.path.getmtime(path) >= cutoff
+        ]
+        for start in range(0, len(files), GREP_BATCH):
+            try:
+                res = subprocess.run(
+                    ["grep", "-lIiF", "--", term, *files[start:start + GREP_BATCH]],
+                    capture_output=True, text=True,
+                    env={**os.environ, "LC_ALL": "C"},
+                )
+            except FileNotFoundError:
+                sys.exit("grep을 찾을 수 없다.")
+            out.extend((tool, path) for path in res.stdout.splitlines())
     return out
+
+
+def log_files(root):
+    for folder, _, names in os.walk(root):
+        for name in names:
+            if name.endswith(".jsonl"):
+                yield os.path.join(folder, name)
 
 
 def flatten(content):
@@ -71,27 +82,36 @@ def flatten(content):
     return "\n".join(parts)
 
 
-def read_claude(path):
-    """(ts, role, text, cwd, session_id) 레코드를 뽑는다."""
+def read_claude(path, term):
+    """term이 든 줄에서 (ts, role, text, cwd, session_id) 레코드를 뽑는다."""
     session_id = os.path.splitext(os.path.basename(path))[0]
-    cwd = ""
+    term_lower = term.lower()
     for line in open(path, errors="replace"):
-        if '"type"' not in line:
+        if term_lower not in line.lower():
             continue
         try:
             rec = json.loads(line)
         except (json.JSONDecodeError, ValueError):
             continue
-        cwd = rec.get("cwd") or cwd
         kind = rec.get("type")
-        if kind not in ("user", "assistant"):
+        if kind == "attachment":
+            attachment = rec.get("attachment") or {}
+            # 턴 진행 중에 보낸 사용자 메시지는 user 레코드가 아니라 여기에만 남는다.
+            if attachment.get("type") != "queued_command" or attachment.get("commandMode") != "prompt":
+                continue
+            if attachment.get("isMeta"):
+                continue
+            kind, content = "user", attachment.get("prompt")
+        elif kind == "assistant" or (kind == "user" and not rec.get("isMeta")):
+            content = (rec.get("message") or {}).get("content")
+        else:
             continue
-        text = flatten((rec.get("message") or {}).get("content"))
+        text = flatten(content)
         if text:
-            yield parse_ts(rec.get("timestamp")), kind, text, cwd, session_id
+            yield parse_ts(rec.get("timestamp")), kind, text, rec.get("cwd") or "", session_id
 
 
-def read_codex(path):
+def read_codex(path, term):
     session_id = ""
     cwd = ""
     for line in open(path, errors="replace"):
@@ -110,7 +130,11 @@ def read_codex(path):
             continue
         if kind == "item_completed":
             item = payload.get("item") or {}
-            role = {"UserMessage": "user", "AssistantMessage": "assistant"}.get(item.get("type"))
+            role = {
+                "UserMessage": "user",
+                "AssistantMessage": "assistant",
+                "AgentMessage": "assistant",
+            }.get(item.get("type"))
             if role:
                 text = flatten(item.get("content"))
                 if text:
@@ -160,7 +184,7 @@ def main():
     for tool, path in candidate_files(roots, args.terms[0], args.days):
         reader = read_claude if tool == "claude" else read_codex
         try:
-            records = list(reader(path))
+            records = list(reader(path, args.terms[0]))
         except OSError:
             continue
         hits = []
@@ -195,6 +219,7 @@ def main():
 
     total = 0
     for path, (tool, hits) in sorted(sessions.items(), key=sort_key):
+        total += len(hits)
         if args.files_only:
             print(f"[{tool}] {path}")
             continue
@@ -208,7 +233,6 @@ def main():
             print(f"  {stamp} {role:<9} {snippet(text, args.terms[0], args.context)}")
         if len(hits) > args.max_per_session:
             print(f"  … 이 세션에 {len(hits) - args.max_per_session}건 더")
-        total += len(hits)
 
     print(f"\n세션 {len(sessions)}개 · 발화 {total}건")
     print(scanned)
