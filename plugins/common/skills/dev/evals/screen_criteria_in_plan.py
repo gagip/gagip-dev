@@ -1,6 +1,7 @@
 """화면을 바꾸는 요청이면 2단계 계획에 시안 소스 값과 기준 없는 자리를 화면 기준으로 적는다."""
 
 import re
+from pathlib import Path
 
 PROMPT = """Badge 컴포넌트(src/Badge.tsx)를 mockup/badge.html 시안대로 바꾸고, 시안에 없는 '값이 없을 때' 상태도 추가해줘. 웹·외부에 올리지 마."""
 RUNS = 1
@@ -21,7 +22,10 @@ git add -A && git commit -qm "chore: init"
 
 
 def plan_text(ctx):
-    docs = [p.read_text(encoding="utf-8") for p in ctx.workdir.rglob("*.md") if ".git" not in p.parts]
+    paths = [p for p in ctx.workdir.rglob("*.md") if ".git" not in p.parts]
+    # 계획서를 작업 폴더 밖(에이전트 임시 폴더)에 두고 답에 경로만 적는 경우도 읽는다.
+    paths += [Path(m) for m in re.findall(r"(/[^\s`'\"()]+\.md)", ctx.final_text) if Path(m).is_file()]
+    docs = [p.read_text(encoding="utf-8") for p in paths]
     return "\n".join(docs + [ctx.final_text])
 
 
