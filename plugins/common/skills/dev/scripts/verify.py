@@ -83,6 +83,7 @@ def _record(repo: Path, directory: Path, condition: str, command: list[str], *, 
     before = fingerprint(repo)
     result = {"schema": 1, "condition": condition, "repo": str(repo),
               "head": git(repo, "rev-parse", "HEAD").decode().strip(),
+              "dirty": bool(git(repo, "status", "--porcelain").strip()),
               "started_at": datetime.now(timezone.utc).isoformat(),
               "before": before, "kind": "human" if human else "command"}
     if human:
