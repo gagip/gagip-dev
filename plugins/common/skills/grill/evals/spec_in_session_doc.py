@@ -7,7 +7,7 @@
 import re
 
 PROMPT = (
-    "/grill calc.py에 빼기 함수 subtract(a, b)를 추가하고 싶어. 덧셈만 있어서 계산기 화면에서 빼기를 못 해. "
+    "grill me. calc.py에 빼기 함수 subtract(a, b)를 추가하고 싶어. 덧셈만 있어서 계산기 화면에서 빼기를 못 해. "
     "calc.py 말고 다른 파일은 건드리지 마. 결과물은 calc.py 수정이면 되고, 커밋은 하지 마. "
     "질문할 게 없으면 바로 명세를 닫아. 세션 문서는 현재 폴더의 session.md에 써. 구현은 아직 하지 마."
 )
