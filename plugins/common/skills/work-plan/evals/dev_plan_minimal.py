@@ -48,6 +48,7 @@ def check(ctx):
     assert re.search(r"브랜치\s*:", doc), "개발 계획서인데 브랜치명이 없음"
     assert not re.search(r"\bKR\d|\bO\d\.\d|\bD\d\b|사람\((설계|결정|리뷰|실물)\)", doc), "옛 형식(KR·결정 번호·담당 표시)이 남음"
     assert len(doc) < 6000, f"계획서가 너무 김: {len(doc)}자"
+    assert not re.search(r"^#+\s*(한 회차|루프 장치)", doc, re.M), "반복 검토 작업이 아닌데 루프 절을 남김"
 
     changed = [ln[3:] for ln in ctx.sh("git status --porcelain -uall").stdout.splitlines()]
     outside_docs = [p for p in changed if not p.strip('"').startswith("docs/")]
