@@ -3,13 +3,15 @@
 
     python3 state_snapshot.py --out <파일> [--repo <레포>] [--pr <번호 또는 브랜치>] [--config <설정 파일>]
 
-서버 URL은 레포 밖 설정 파일(기본 ~/.config/state-snapshot.json, {"servers": {"이름": "URL"}})에서 읽는다.
+서버 URL은 레포 밖 설정 파일(`--config`, 없으면 `STATE_SNAPSHOT_CONFIG`, 기본 ~/.config/state-snapshot.json,
+{"servers": {"이름": "URL"}})에서 읽는다.
 종료 코드: 전부 수집 0, 하나라도 수집 실패 1. 실패해도 나머지는 모두 수집한다.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -20,7 +22,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
-DEFAULT_CONFIG = Path("~/.config/state-snapshot.json").expanduser()
+def default_config() -> Path:
+    return Path(os.environ.get("STATE_SNAPSHOT_CONFIG") or "~/.config/state-snapshot.json").expanduser()
+
+
 HTTP_TIMEOUT = 5
 BODY_BYTES = 200
 RECENT_TAGS = 5
@@ -152,9 +157,9 @@ def main(argv: list[str] | None = None, run: Runner = shell_runner, get: HttpGet
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--repo", type=Path, default=Path.cwd())
     parser.add_argument("--pr", default="")
-    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("--config", type=Path)
     args = parser.parse_args(argv)
-    result = snapshot(args.repo.resolve(), args.pr, args.config, run, get)
+    result = snapshot(args.repo.resolve(), args.pr, args.config or default_config(), run, get)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"수집 시각(UTC) {result['collected_at_utc']} → {args.out}")

@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import unittest.mock
 
 import state_snapshot as snap
 
@@ -133,6 +134,16 @@ class MainTests(unittest.TestCase):
                                  FakeRun({"gh pr view": (1, "", "boom")}), ok_get)
             self.assertEqual(code, 1)
             self.assertFalse(json.loads(out.read_text())["items"]["pr"]["ok"])
+
+    def test_config_path_comes_from_env_when_no_flag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = Path(tmp) / "env.json"
+            cfg.write_text(json.dumps({"servers": {"envsrv": "http://env.test"}}))
+            out = Path(tmp) / "snap.json"
+            with unittest.mock.patch.dict("os.environ", {"STATE_SNAPSHOT_CONFIG": str(cfg)}), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                snap.main(["--out", str(out), "--repo", tmp], FakeRun(), ok_get)
+            self.assertIn("server:envsrv", json.loads(out.read_text())["items"])
 
 
 class HttpGetTests(unittest.TestCase):
