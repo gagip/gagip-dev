@@ -1,0 +1,84 @@
+/* 세션 문서 디자인 시스템. scripts/session_doc.py가 세션 문서의 <style id="ui">에 넣는다.
+   부품 쓰는 법은 같은 폴더 sample.html 견본. */
+
+/* 토큰 */
+:root{--primary:#4f46e5;--bg:#f2f4f6;--surface:#fff;--text:#191f28;--sub:#4e5968;--muted:#5f6875;--line:#e5e8eb;
+ --ok:#1f8a4c;--wait:#b45309;--stop:#c0392b;--warn-bg:#fff6e5;--before:#c0392b;--after:#1f8a4c;
+ --t-xs:.75rem;--t-sm:.8125rem;--t-md:.875rem;--t-lg:1.25rem;--r:12px}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--primary:#8a84ff;--bg:#101114;--surface:#1c1d22;--text:#f1f2f4;--sub:#b2b6bf;--muted:#959aa4;--line:#33353d;
+ --ok:#4cc27e;--wait:#e0a948;--stop:#ef6b5e;--warn-bg:#2c2618;--before:#ef6b5e;--after:#4cc27e}}
+:root[data-theme=dark]{--primary:#8a84ff;--bg:#101114;--surface:#1c1d22;--text:#f1f2f4;--sub:#b2b6bf;--muted:#959aa4;--line:#33353d;
+ --ok:#4cc27e;--wait:#e0a948;--stop:#ef6b5e;--warn-bg:#2c2618;--before:#ef6b5e;--after:#4cc27e}
+
+/* 바탕 */
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 -apple-system,"Apple SD Gothic Neo","Pretendard",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 48px}
+h1{font-size:var(--t-lg);margin:0 0 2px}
+h2{font-size:var(--t-md);margin:22px 0 8px}
+h3{font-size:.9375rem;margin:0 0 6px}
+p{margin:0 0 8px}
+ul,ol{font-size:var(--t-md);line-height:1.8;margin:0;padding-left:20px}
+code{font-size:var(--t-sm);background:var(--bg);border:1px solid var(--line);padding:0 5px;border-radius:4px}
+pre{font-size:var(--t-sm);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;margin:0}
+pre code{border:0;padding:0;background:none}
+.meta{font-size:var(--t-xs);color:var(--muted)}
+.muted{color:var(--muted)}
+
+/* 상태 표시: run 진행 중 · wait 사용자 답 기다림 · stop 막힘 · ok 끝 */
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:var(--t-xs);font-weight:700;border:1px solid currentColor;margin-right:6px}
+.pill.run{color:var(--primary)}.pill.wait{color:var(--wait)}.pill.stop{color:var(--stop)}.pill.ok{color:var(--muted)}
+#state{margin:8px 0 10px}#state p{margin:0}
+
+/* 상자 */
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+.box+.box{margin-top:10px}
+.note{font-size:var(--t-sm);color:var(--sub);background:var(--warn-bg);border-radius:8px;padding:6px 10px}
+
+/* 이름표 줄 (명세 등) */
+.spec{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:0;font-size:var(--t-sm);line-height:1.55}
+.spec dt{color:var(--muted);font-weight:600;white-space:nowrap}.spec dd{margin:0;color:var(--sub)}
+
+/* 진행 한 줄: li.ok 완료 · li.now 지금 · li.wait 대기 · 표시 없음 남음 */
+.flow{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px;font-size:var(--t-xs);line-height:1.6}
+.flow li{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;color:var(--muted)}
+.flow li.ok{color:var(--sub)}.flow li.ok::before{content:'✓ ';color:var(--primary);font-weight:700}
+.flow li.now{border:2px solid var(--primary);color:var(--text);font-weight:700}.flow li.now::before{content:'지금 ';color:var(--primary)}
+.flow li.wait{border-color:var(--wait);color:var(--wait)}.flow li.wait::before{content:'대기 '}
+
+/* 카드 격자와 질문 카드: i.rec 권장 · i.pick 고른 안 · .decided 안에선 고르지 않은 안을 흐리게 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.q{display:flex;flex-direction:column;align-items:flex-start;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.q b{font-size:var(--t-md)}.qn{font-size:var(--t-xs);font-weight:700;color:var(--primary)}
+.q .note{font-size:var(--t-xs)}
+.op{display:flex;flex-wrap:wrap;gap:6px}
+.op i{font-style:normal;font-size:var(--t-xs);background:var(--bg);border:2px solid transparent;border-radius:999px;padding:4px 10px;color:var(--sub)}
+.op i.rec{border-color:var(--primary);color:var(--text);font-weight:700}.op i.rec::after{content:' 권장';color:var(--primary)}
+.op i.pick{border-color:var(--primary);background:var(--primary);color:#fff;font-weight:700}.op i.pick::after{content:' ✓'}
+.decided .op i:not(.pick){opacity:.45}
+
+/* 한 일 카드 */
+.item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-top:10px;font-size:var(--t-md)}
+.item dl{display:grid;grid-template-columns:72px 1fr;gap:4px 12px;margin:0}.item dt{color:var(--sub)}.item dd{margin:0}
+
+/* 표: td.hi 강조 칸 */
+table{border-collapse:collapse;width:100%;font-size:var(--t-sm);background:var(--surface)}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{color:var(--sub);font-weight:600;background:var(--bg)}
+td.hi{border-left:3px solid var(--primary)}
+
+/* 전후 비교 */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.compare>div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;font-size:var(--t-sm)}
+.compare>div::before{display:block;font-size:var(--t-xs);font-weight:700;margin-bottom:4px}
+.compare .before::before{content:'전';color:var(--before)}.compare .after::before{content:'후';color:var(--after)}
+
+/* 그림 자리: img·svg와 설명 */
+figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+figure img,figure svg{display:block;max-width:100%;height:auto;margin:0 auto}
+figcaption{font-size:var(--t-xs);color:var(--muted);margin-top:6px}
+
+/* 접는 칸 */
+details{font-size:var(--t-sm);color:var(--sub);margin-top:10px}details summary{cursor:pointer;font-weight:700;color:var(--text)}
+
+@media (max-width:640px){.compare{grid-template-columns:1fr}.spec{grid-template-columns:1fr}.spec dd{margin-bottom:4px}}
