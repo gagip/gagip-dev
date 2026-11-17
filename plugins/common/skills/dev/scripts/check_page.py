@@ -26,7 +26,7 @@ BOT_BLOCK_STATUSES = {401, 403, 429, 999}
 COLLECT_JS = """() => ({
   links: [...document.querySelectorAll('a[href]')].map(a => ({raw: a.getAttribute('href'), abs: a.href})),
   ids: [...document.querySelectorAll('[id], a[name]')].map(e => e.id || e.getAttribute('name')),
-  brokenImages: [...document.images].filter(i => i.complete && i.naturalWidth === 0).map(i => i.currentSrc || i.src),
+  brokenImages: [...document.images].filter(i => i.getAttribute('src') && i.complete && i.naturalWidth === 0).map(i => i.currentSrc || i.src),
 })"""
 
 

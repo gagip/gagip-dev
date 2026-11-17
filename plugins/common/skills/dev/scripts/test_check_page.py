@@ -81,6 +81,11 @@ class CheckPageTests(unittest.TestCase):
     def test_없는_이미지는_실패한다(self):
         self.assert_fails('<img src="missing.png">', "이미지")
 
+    def test_주소가_빈_이미지는_검사하지_않는다(self):
+        done = self.run_check('<img id="later" alt="">')
+        self.assertEqual(0, done.returncode, done.stdout + done.stderr)
+        self.assertIn("실패 0개", done.stdout)
+
     def test_콘솔_오류는_실패한다(self):
         self.assert_fails('<script>console.error("x")</script>', "콘솔 오류")
 
