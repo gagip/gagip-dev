@@ -115,7 +115,7 @@ macOS 전용이고 기본 브라우저는 Google Chrome이다. 다른 브라우�
 캡처는 서브에이전트에 글별로 나눠 옮겨 적게 하고(`raw/captures/<id>.txt`), 보고 원문을 저장한다.
 서브에이전트 위임이 불가능하면 직접 이미지를 읽어 옮겨 적는다.
 사례는 `raw/cases.json`에 적는다. 사례 `id`는 `shortlist.tsv`의 `id`를 그대로 쓰고, 댓글은 `<id>-c<n>`으로 둔다. 칸·증거 수준·행동/불편/추론 구분·제품 사실표는
-[references/case-coding.md](references/case-coding.md)를 따른다. 사례 분류 전에 읽는다.
+[references/case-classification.md](references/case-classification.md)를 따른다. 사례 분류 전에 읽는다.
 
 ### 7. 대조
 
