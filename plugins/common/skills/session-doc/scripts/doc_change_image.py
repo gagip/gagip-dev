@@ -4,6 +4,7 @@
   python3 doc_change_image.py <문서> --out <결과.png>                  # git HEAD와 비교
   python3 doc_change_image.py <문서> --base-file <사본> --out <결과.png> # 고치기 전 사본과 비교
 
+바뀐 줄 앞뒤로 그대로인 줄을 --context개(기본 1, 빈 줄 제외)씩 흐리게 함께 보여 어디에 들어갔는지 알 수 있게 한다.
 바뀐 줄이 20줄을 넘으면 절(가장 가까운 제목)별로 나눠 <결과>_2.png, <결과>_3.png …를 만든다.
 """
 import argparse
@@ -21,6 +22,7 @@ from pathlib import Path
 ROWS_PER_IMAGE = 20
 PAGE_WIDTH = 1100
 PAIR_RATIO = 0.4
+CONTEXT_CHARS = 140
 TOKEN_RE = re.compile(r"\s+|\w+|[^\w\s]")
 MD_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.+?)(?:\s+#+)?\s*$")
 HTML_HEADING_RE = re.compile(r"<h[1-6][^>]*>(.*?)</h[1-6]>", re.I)
@@ -31,11 +33,12 @@ HEIGHT_RE = re.compile(r'data-h="(\d+)"')
 
 @dataclass(frozen=True)
 class Row:
-    """바뀐 줄 하나. old·new 중 하나가 None이면 지운 줄·새 줄이다."""
+    """바뀐 줄 하나. old·new 중 하나가 None이면 지운 줄·새 줄이다. context면 바뀌지 않은 앞뒤 줄이다."""
     line: int
     section: str
     old: str | None
     new: str | None
+    context: bool = False
 
 
 def headings(lines: list[str]) -> list[str]:
@@ -80,15 +83,30 @@ def _pair(old: list[str], new: list[str]) -> list[tuple[int | None, int | None]]
     return pairs
 
 
-def diff_rows(old_text: str, new_text: str) -> list[Row]:
-    """두 본문에서 바뀐 줄만 문서 순서대로 돌려준다. 행 번호는 새 줄이면 후, 지운 줄이면 전 기준이다."""
+def _context_indexes(lines: list[str], start: int, end: int, count: int, after_change: bool, before_change: bool) -> list[int]:
+    """그대로인 덩어리 lines[start:end]에서 앞 바뀐 줄 바로 뒤·뒤 바뀐 줄 바로 앞의 빈 줄 아닌 줄을 count개씩 고른다."""
+    filled = [k for k in range(start, end) if lines[k].strip()]
+    picked = set()
+    if after_change:
+        picked.update(filled[:count])
+    if before_change:
+        picked.update(filled[-count:] if count else [])
+    return sorted(picked)
+
+
+def diff_rows(old_text: str, new_text: str, context: int = 0) -> list[Row]:
+    """두 본문에서 바뀐 줄을 문서 순서대로 돌려준다. 행 번호는 새 줄이면 후, 지운 줄이면 전 기준이다.
+    context가 1 이상이면 바뀐 줄 앞뒤의 그대로인 줄을 context=True 행으로 끼워 넣는다."""
     # splitlines는 \x0c 등에서도 나눠 편집기 행 번호와 어긋난다.
     old = [s.rstrip("\r") for s in old_text.split("\n")]
     new = [s.rstrip("\r") for s in new_text.split("\n")]
     old_sec, new_sec = headings(old), headings(new)
     rows = []
-    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, old, new, autojunk=False).get_opcodes():
+    opcodes = difflib.SequenceMatcher(None, old, new, autojunk=False).get_opcodes()
+    for k, (tag, i1, i2, j1, j2) in enumerate(opcodes):
         if tag == "equal":
+            for n in _context_indexes(new, j1, j2, context, k > 0, k < len(opcodes) - 1):
+                rows.append(Row(n + 1, new_sec[n], new[n], new[n], context=True))
             continue
         for oi, nj in _pair(old[i1:i2], new[j1:j2]):
             if nj is not None:
@@ -143,7 +161,7 @@ h1{font-size:19px;margin:0 0 4px} p{margin:0 0 14px;color:#4e5968;font-size:13px
 table{border-collapse:collapse;width:100%%;table-layout:fixed} th,td{border:1px solid #e5e8eb;padding:10px 12px;vertical-align:top;text-align:left;word-break:break-all;white-space:pre-wrap}
 thead th{background:#f2f4f6;font-size:13px} thead th:first-child,tbody th{width:200px} tbody th{font-size:13px;color:#4e5968;font-weight:600}
 del{background:#ffe3e0;color:#b42318} ins{background:#dcfce7;color:#166534;text-decoration:none;font-weight:600}
-.none{color:#8b95a1}
+.none{color:#8b95a1} tr.ctx td,tr.ctx th{color:#8b95a1;background:#fafbfc;font-size:13px}
 """ % PAGE_WIDTH
 MEASURE_JS = ("<script>addEventListener('load',()=>{const m=document.createElement('meta');"
               "m.setAttribute('data-h',Math.ceil(document.body.getBoundingClientRect().height));document.head.append(m)})</script>")
@@ -154,6 +172,11 @@ def render_html(rows: list[Row], title: str, page: int, pages: int) -> str:
     body = []
     for r in rows:
         where = f"{r.line}행" + (f" · {r.section}" if r.section else "")
+        if r.context:
+            text = r.new if len(r.new) <= CONTEXT_CHARS else r.new[:CONTEXT_CHARS] + "…"
+            cell = html.escape(text)
+            body.append(f'<tr class="ctx"><th>{html.escape(where)} · 그대로</th><td>{cell}</td><td>{cell}</td></tr>')
+            continue
         if r.old is None:
             before, after = NONE_CELL, f"<ins>{html.escape(r.new)}</ins>"
             where += " · 새 줄"
@@ -163,7 +186,7 @@ def render_html(rows: list[Row], title: str, page: int, pages: int) -> str:
         else:
             before, after = word_diff(r.old, r.new)
         body.append(f"<tr><th>{html.escape(where)}</th><td>{before}</td><td>{after}</td></tr>")
-    sub = "빨강 취소선은 지운 말, 초록은 넣은 말."
+    sub = "빨강 취소선은 지운 말, 초록은 넣은 말. 흐린 줄은 바뀌지 않은 앞뒤 줄."
     if pages > 1:
         sub += f" {page}/{pages}장."
     return (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>{html.escape(title)}</title>'
@@ -219,6 +242,7 @@ def main(argv: list[str] | None = None) -> int:
     src.add_argument("--base-file", type=Path, help="고치기 전 사본 파일")
     ap.add_argument("--out", type=Path, required=True, help="결과 PNG 경로. 같은 이름 .html도 만든다")
     ap.add_argument("--title", help="이미지 제목 (기본 「<파일 이름> — 바뀐 줄 N개」)")
+    ap.add_argument("--context", type=int, default=1, help="바뀐 줄 앞뒤로 보여 줄 그대로인 줄 수 (기본 1, 0이면 안 보임)")
     ap.add_argument("--html-only", action="store_true", help="PNG 없이 HTML만 만든다")
     args = ap.parse_args(argv)
 
@@ -236,12 +260,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"실패: {label}", file=sys.stderr)
             return 2
 
-    rows = diff_rows(old_text, args.doc.read_text(encoding="utf-8"))
-    if not rows:
+    rows = diff_rows(old_text, args.doc.read_text(encoding="utf-8"), max(args.context, 0))
+    changed = sum(1 for r in rows if not r.context)
+    if not changed:
         print(f"바뀐 줄 없음 (기준: {label})")
         return 0
 
-    title = args.title or f"{args.doc.name} — 바뀐 줄 {len(rows)}개"
+    title = args.title or f"{args.doc.name} — 바뀐 줄 {changed}개"
     pages = split_pages(rows)
     chrome = None if args.html_only else find_chrome()
     if not args.html_only and chrome is None:
@@ -261,7 +286,7 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
         outputs.append(png if chrome else page_html)
 
-    print(f"바뀐 줄 {len(rows)}개 (기준: {label})")
+    print(f"바뀐 줄 {changed}개 (기준: {label})")
     print(outputs[0])
     if len(outputs) > 1:
         print(f"나머지 {len(outputs) - 1}장: " + ", ".join(str(p) for p in outputs[1:]))

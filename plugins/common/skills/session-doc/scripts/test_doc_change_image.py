@@ -35,6 +35,30 @@ class DiffRows(unittest.TestCase):
         page = dci.render_html(rows, "t", 1, 1)
         self.assertIn("(없음)</span></td><td><ins>새로 넣은 줄.</ins>", page)
 
+    def test_context_shows_unchanged_neighbors_of_new_line(self):
+        new = BASE.replace("첫 줄은 그대로 둔다.\n", "첫 줄은 그대로 둔다.\n새로 넣은 줄.\n")
+        rows = dci.diff_rows(BASE, new, context=1)
+        self.assertEqual([(r.line, r.new, r.context) for r in rows],
+                         [(3, "첫 줄은 그대로 둔다.", True), (4, "새로 넣은 줄.", False),
+                          (5, "버튼 이름은 다시 재기로 한다.", True)])
+        page = dci.render_html(rows, "t", 1, 1)
+        self.assertIn('<tr class="ctx"><th>3행 · 범위 · 그대로</th>', page)
+
+    def test_context_skips_blank_lines(self):
+        new = BASE.replace("| 첫 화면 | 시작하기 |", "| 첫 화면 | 시작 |")
+        rows = dci.diff_rows(BASE, new, context=1)
+        self.assertEqual([(r.line, r.context) for r in rows], [(7, True), (8, False)])
+
+    def test_cli_counts_only_changed_lines_with_context(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, doc = Path(tmp) / "old.md", Path(tmp) / "doc.md"
+            old.write_text(BASE, encoding="utf-8")
+            doc.write_text(BASE.replace("첫 줄은 그대로 둔다.\n", "첫 줄은 그대로 둔다.\n새로 넣은 줄.\n"), encoding="utf-8")
+            r = run(doc, "--base-file", old, "--out", Path(tmp) / "o.png", "--html-only")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("바뀐 줄 1개", r.stdout)
+            self.assertIn("그대로", (Path(tmp) / "o.html").read_text(encoding="utf-8"))
+
     def test_deleted_line_only(self):
         new = BASE.replace("첫 줄은 그대로 둔다.\n", "")
         rows = dci.diff_rows(BASE, new)
