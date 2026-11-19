@@ -54,10 +54,37 @@ class DiffRows(unittest.TestCase):
             old, doc = Path(tmp) / "old.md", Path(tmp) / "doc.md"
             old.write_text(BASE, encoding="utf-8")
             doc.write_text(BASE.replace("첫 줄은 그대로 둔다.\n", "첫 줄은 그대로 둔다.\n새로 넣은 줄.\n"), encoding="utf-8")
-            r = run(doc, "--base-file", old, "--out", Path(tmp) / "o.png", "--html-only")
+            r = run(doc, "--base-file", old, "--out", Path(tmp) / "o.png", "--html-only", "--style", "table")
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn("바뀐 줄 1개", r.stdout)
-            self.assertIn("그대로", (Path(tmp) / "o.html").read_text(encoding="utf-8"))
+            self.assertIn('<tr class="ctx">', (Path(tmp) / "o.html").read_text(encoding="utf-8"))
+
+    def test_cli_default_style_is_unified(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, doc = Path(tmp) / "old.md", Path(tmp) / "doc.md"
+            old.write_text(BASE, encoding="utf-8")
+            doc.write_text(BASE.replace("다시 재기", "다시 측정"), encoding="utf-8")
+            r = run(doc, "--base-file", old, "--out", Path(tmp) / "o.png", "--html-only")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            page = (Path(tmp) / "o.html").read_text(encoding="utf-8")
+            self.assertIn('class="diff"', page)
+            self.assertNotIn("<table>", page)
+
+    def test_unified_edit_is_minus_then_plus_with_word_marks(self):
+        rows = dci.diff_rows(BASE, BASE.replace("다시 재기", "다시 측정"), context=1)
+        page = dci.render_unified(rows, "t", 1, 1)
+        minus = page.index('<span class="s">-</span>')
+        plus = page.index('<span class="s">+</span>')
+        self.assertLess(minus, plus)
+        self.assertIn("<del>재기로</del>", page)
+        self.assertIn("<ins>측정로</ins>", page)
+        self.assertEqual(page.count('class="hunk"'), 1)
+        self.assertIn("@@ 범위 @@", page)
+
+    def test_unified_new_hunk_when_lines_jump(self):
+        new = BASE.replace("# 계획\n", "# 계획 문서\n").replace("| 첫 화면 | 시작하기 |", "| 첫 화면 | 시작 |")
+        page = dci.render_unified(dci.diff_rows(BASE, new), "t", 1, 1)
+        self.assertEqual(page.count('class="hunk"'), 2)
 
     def test_deleted_line_only(self):
         new = BASE.replace("첫 줄은 그대로 둔다.\n", "")

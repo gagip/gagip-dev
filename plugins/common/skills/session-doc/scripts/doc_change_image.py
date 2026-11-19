@@ -1,4 +1,5 @@
-"""문서에서 바뀐 줄만 골라 「위치 · 전 · 후」 표 이미지(PNG)와 같은 이름 HTML을 만든다.
+"""문서에서 바뀐 줄을 GitHub 차이 보기처럼 -/+ 줄로 그린 이미지(PNG)와 같은 이름 HTML을 만든다.
+--style table이면 「위치 · 전 · 후」 표로 그린다.
 
 실행:
   python3 doc_change_image.py <문서> --out <결과.png>                  # git HEAD와 비교
@@ -195,6 +196,47 @@ def render_html(rows: list[Row], title: str, page: int, pages: int) -> str:
             f"<tbody>{''.join(body)}</tbody></table></body></html>")
 
 
+UNIFIED_CSS = """
+body{margin:0;padding:24px;background:#fff;color:#1f2328;font:14px/1.6 -apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;width:%dpx}
+h1{font-size:17px;margin:0 0 10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.diff{border:1px solid #d1d9e0;border-radius:6px;overflow:hidden;font:13px/1.7 ui-monospace,SFMono-Regular,Menlo,"Apple SD Gothic Neo",monospace}
+.l{display:grid;grid-template-columns:52px 22px 1fr} .l>span{padding:1px 8px;white-space:pre-wrap;word-break:break-all}
+.n{color:#59636e;text-align:right;user-select:none} .s{color:#59636e;padding-left:6px!important;padding-right:0!important}
+.hunk{background:#ddf4ff;color:#59636e;padding:4px 12px}
+.add{background:#dafbe1} .add .n,.add .s{background:#ccffd8;color:#1a7f37}
+.del{background:#ffebe9} .del .n,.del .s{background:#ffd7d5;color:#cf222e}
+ins{background:#abf2bc;text-decoration:none;border-radius:3px} del{background:#ff818266;text-decoration:none;border-radius:3px}
+""" % PAGE_WIDTH
+
+
+def render_unified(rows: list[Row], title: str, page: int, pages: int) -> str:
+    """GitHub 차이 보기처럼 한 줄씩 -/+ 로 쌓은 HTML. 행 번호가 끊기거나 절이 바뀌면 절 이름 줄을 넣는다."""
+    out, prev = [], None
+
+    def line(kind: str, num: int, sign: str, body_html: str) -> None:
+        out.append(f'<div class="l {kind}"><span class="n">{num}</span><span class="s">{sign}</span><span>{body_html}</span></div>')
+
+    for r in rows:
+        if prev is None or r.section != prev.section or r.line > prev.line + 2:
+            out.append(f'<div class="hunk">@@ {html.escape(r.section or "문서 처음")} @@</div>')
+        if r.context:
+            text = r.new if len(r.new) <= CONTEXT_CHARS else r.new[:CONTEXT_CHARS] + "…"
+            line("", r.line, " ", html.escape(text))
+        elif r.old is None:
+            line("add", r.line, "+", html.escape(r.new))
+        elif r.new is None:
+            line("del", r.line, "-", html.escape(r.old))
+        else:
+            before, after = word_diff(r.old, r.new)
+            line("del", r.line, "-", before)
+            line("add", r.line, "+", after)
+        prev = r
+    head = title + (f" ({page}/{pages})" if pages > 1 else "")
+    return (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>{html.escape(head)}</title>'
+            f"<style>{UNIFIED_CSS}</style></head><body><h1>{html.escape(head)}</h1>"
+            f'<div class="diff">{"".join(out)}</div></body></html>')
+
+
 def find_chrome() -> str | None:
     """CHROME 환경 변수 → macOS 기본 위치 → PATH 순으로 크롬을 찾는다."""
     candidates = [os.environ.get("CHROME"), "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -243,6 +285,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, required=True, help="결과 PNG 경로. 같은 이름 .html도 만든다")
     ap.add_argument("--title", help="이미지 제목 (기본 「<파일 이름> — 바뀐 줄 N개」)")
     ap.add_argument("--context", type=int, default=1, help="바뀐 줄 앞뒤로 보여 줄 그대로인 줄 수 (기본 1, 0이면 안 보임)")
+    ap.add_argument("--style", choices=["unified", "table"], default="unified",
+                    help="unified(기본)는 GitHub 차이 보기처럼 -/+ 줄, table은 「위치·전·후」 표")
     ap.add_argument("--html-only", action="store_true", help="PNG 없이 HTML만 만든다")
     args = ap.parse_args(argv)
 
@@ -278,7 +322,8 @@ def main(argv: list[str] | None = None) -> int:
     for k, page_rows in enumerate(pages, 1):
         png = args.out if k == 1 else args.out.with_name(f"{args.out.stem}_{k}{args.out.suffix}")
         page_html = png.with_suffix(".html")
-        page_html.write_text(render_html(page_rows, title, k, len(pages)), encoding="utf-8")
+        render = render_unified if args.style == "unified" else render_html
+        page_html.write_text(render(page_rows, title, k, len(pages)), encoding="utf-8")
         if chrome:
             error = screenshot(chrome, page_html, png)
             if error:
