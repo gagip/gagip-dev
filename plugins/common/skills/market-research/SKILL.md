@@ -16,7 +16,7 @@ argument-hint: 조사 질문이나 계획서 경로 (선택) — 예 "구독 서
 # Market Research
 
 시장 조사의 결론은 다음 사람이 그 숫자를 다시 셀 수 있을 때만 쓸모가 있다. 이 스킬은 출처 접근 확인부터
-원문 확보·코딩·대조까지를 원자료가 남는 순서로 진행하고, 자동으로 못 읽는 출처는 사람 손을 빌려 캡처한다.
+원문 확보·사례 분류·대조까지를 원자료가 남는 순서로 진행하고, 자동으로 못 읽는 출처는 사람 손을 빌려 캡처한다.
 
 **핵심 원칙**:
 - 원자료를 작업 폴더에 둔다. 검색 결과 원본, 본문 저장본, 캡처, 판독본, 서브에이전트 보고 원문을 `/tmp`나
@@ -110,12 +110,12 @@ python3 <scripts>/capture_helper.py --list raw/shortlist.tsv --out raw/captures
 macOS 전용이고 기본 브라우저는 Google Chrome이다. 다른 브라우저면 `--app <앱 이름>`을 붙인다. macOS가 아니면 사람에게
 운영체제 캡처 기능으로 찍어 `raw/captures/<id>_<n>.png`로 저장해 달라고 하고, 건너뛴 글은 `capture_log.tsv` 칸(`id`, `url`, `files`, `status`)으로 직접 적는다.
 
-### 6. 판독·코딩
+### 6. 판독·사례 분류
 
 캡처는 서브에이전트에 글별로 나눠 옮겨 적게 하고(`raw/captures/<id>.txt`), 보고 원문을 저장한다.
 서브에이전트 위임이 불가능하면 직접 이미지를 읽어 옮겨 적는다.
 사례는 `raw/cases.json`에 적는다. 사례 `id`는 `shortlist.tsv`의 `id`를 그대로 쓰고, 댓글은 `<id>-c<n>`으로 둔다. 칸·증거 수준·행동/불편/추론 구분·제품 사실표는
-[references/case-coding.md](references/case-coding.md)를 따른다. 코딩 전에 읽는다.
+[references/case-coding.md](references/case-coding.md)를 따른다. 사례 분류 전에 읽는다.
 
 ### 7. 대조
 
@@ -127,7 +127,7 @@ python3 <scripts>/verify_quotes.py raw/facts.json
 
 첫 명령은 모든 인용이 저장본에 있는지 보고 `raw/verify_cases.tsv`를 쓴다. 셋째 명령은 제품 사실표를 같은 방식으로 대조해 `raw/verify_facts.tsv`를 쓴다. 불일치는 고치거나 사례에서 뺀다. 스크린샷 판독본은 판독본 자체와 대조되므로,
 두 번째 명령이 고른 사례를 캡처 이미지와 직접 나란히 보고 `evidence`를 `직접 대조`로 바꾼다.
-서브에이전트가 코딩한 칸은 원문을 다시 보고 확인하고, 바꾼 칸은 `changed`에 남긴다.
+서브에이전트가 분류한 칸은 원문을 다시 보고 확인하고, 바꾼 칸은 `changed`에 남긴다.
 
 ### 8. 집계와 결론
 
