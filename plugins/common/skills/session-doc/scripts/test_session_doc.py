@@ -71,8 +71,13 @@ class Problems(unittest.TestCase):
         t = self.base().replace("</main>", "<script>1</script></main>")
         self.assertTrue(any("script" in p for p in session_doc.problems(t, CSS)))
 
+    def test_card_and_chip_classes_are_rejected(self):
+        for cls in session_doc.LEGACY_CLASSES:
+            t = self.base().replace("</main>", f'<div class="x {cls}">a</div></main>')
+            self.assertTrue(any("카드·칩" in p for p in session_doc.problems(t, CSS)), cls)
+
     def test_free_sections_after_flow_are_allowed(self):
-        t = self.base().replace("</main>", '<h2>실험</h2><div class="compare"></div></main>')
+        t = self.base().replace("</main>", '<h2>실험</h2><div class="compare"></div><ol class="ask"><li><span class="rec">권장</span></li></ol></main>')
         self.assertEqual(session_doc.problems(t, CSS), [])
 
 

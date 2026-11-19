@@ -46,27 +46,21 @@ pre code{border:0;padding:0;background:none}
 .spec{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:0;font-size:var(--t-sm);line-height:1.55}
 .spec dt{color:var(--muted);font-weight:600;white-space:nowrap}.spec dd{margin:0;color:var(--sub)}
 
-/* 진행 한 줄: li.ok 완료 · li.now 지금 · li.wait 대기 · 표시 없음 남음 */
-.flow{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px;font-size:var(--t-xs);line-height:1.6}
-.flow li{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;color:var(--muted)}
-.flow li.ok{color:var(--sub)}.flow li.ok::before{content:'✓ ';color:var(--primary);font-weight:700}
-.flow li.now{border:2px solid var(--primary);color:var(--text);font-weight:700}.flow li.now::before{content:'지금 ';color:var(--primary)}
-.flow li.wait{border-color:var(--wait);color:var(--wait)}.flow li.wait::before{content:'대기 '}
+/* 진행 한 줄(글자만): li.ok 완료 · li.now 지금 · li.wait 대기 · 표시 없음 남음 */
+.flow{list-style:none;margin:6px 0 0;padding:0;font-size:var(--t-sm);line-height:1.8;color:var(--muted)}
+.flow li{display:inline}.flow li+li::before{content:'›';color:var(--muted);margin:0 8px;font-weight:400}
+.flow li.ok{color:var(--sub)}.flow li.ok::after{content:' ✓';color:var(--primary)}
+.flow li.now{color:var(--text);font-weight:700}.flow li.now::after{content:' (지금)';color:var(--primary)}
+.flow li.wait{color:var(--wait);font-weight:700}.flow li.wait::after{content:' (대기)'}
 
-/* 카드 격자와 질문 카드: i.rec 권장 · i.pick 고른 안 · .decided 안에선 고르지 않은 안을 흐리게 */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-.q{display:flex;flex-direction:column;align-items:flex-start;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
-.q b{font-size:var(--t-md)}.qn{font-size:var(--t-xs);font-weight:700;color:var(--primary)}
-.q .note{font-size:var(--t-xs)}
-.op{display:flex;flex-wrap:wrap;gap:6px}
-.op i{font-style:normal;font-size:var(--t-xs);background:var(--bg);border:2px solid transparent;border-radius:999px;padding:4px 10px;color:var(--sub)}
-.op i.rec{border-color:var(--primary);color:var(--text);font-weight:700}.op i.rec::after{content:' 권장';color:var(--primary)}
-.op i.pick{border-color:var(--primary);background:var(--primary);color:#fff;font-weight:700}.op i.pick::after{content:' ✓'}
-.decided .op i:not(.pick){opacity:.45}
+/* 물을 것 번호 목록: .rec 권장안 · .why 이유 한 줄 */
+ol.ask{padding-left:22px}ol.ask>li{margin-bottom:8px}
+.rec{color:var(--primary);font-weight:700}
+.why{display:block;font-size:var(--t-sm);color:var(--sub)}
 
-/* 한 일 카드 */
-.item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-top:10px;font-size:var(--t-md)}
-.item dl{display:grid;grid-template-columns:72px 1fr;gap:4px 12px;margin:0}.item dt{color:var(--sub)}.item dd{margin:0}
+/* 상자 없는 이름표 줄 (코드 발췌가 긴 한 일 등) */
+dl.rows{display:grid;grid-template-columns:72px 1fr;gap:2px 12px;margin:0 0 10px;font-size:var(--t-md)}
+dl.rows dt{color:var(--muted)}dl.rows dd{margin:0;min-width:0}
 
 /* 표: td.hi 강조 칸 */
 table{border-collapse:collapse;width:100%;font-size:var(--t-sm);background:var(--surface)}
@@ -94,7 +88,7 @@ details{font-size:var(--t-sm);color:var(--sub);margin-top:10px}details summary{c
 <body>
 <main>
 <h1>세션 문서 부품 견본</h1>
-<div class="meta">부품마다 보이는 모습 아래에 쓰는 HTML을 둔다 · 마지막 갱신 <span id="updated">2026-11-12 13:30</span></div>
+<div class="meta">부품마다 보이는 모습 아래에 쓰는 HTML을 둔다 · 마지막 갱신 <span id="updated">2026-11-19 15:29</span></div>
 
 <!-- 고정 칸 1: 지금 상태. pill 종류 run 진행 중 · wait 사용자 답 기다림 · stop 막힘 · ok 끝 -->
 <section id="state"><p><span class="pill wait">사용자 답 기다림</span>시안 두 개를 만들었다. 다음: 고른 안으로 구현.</p></section>
@@ -118,35 +112,29 @@ details{font-size:var(--t-sm);color:var(--sub);margin-top:10px}details summary{c
  <li>검증</li>
 </ol>
 
-<!-- 여기부터는 세션마다 필요한 칸만 골라 쓴다 -->
+<!-- 여기부터는 세션마다 필요한 칸만 골라 쓴다. 상자는 #spec·figure·.compare에만 쓴다 -->
 
-<h2>질문 카드 — <code>.grid</code> 안 <code>.q</code>, 권장 <code>i.rec</code></h2>
-<div class="grid">
- <div class="q"><span class="qn">1</span><b>알림 항목 위치</b><span class="op"><i class="rec">맨 위</i><i>계정 아래</i></span><span class="note">맨 위로 올리면 계정 항목이 한 칸 내려간다</span></div>
-</div>
-<pre><code>&lt;div class="grid"&gt;
- &lt;div class="q"&gt;&lt;span class="qn"&gt;1&lt;/span&gt;&lt;b&gt;질문&lt;/b&gt;
-  &lt;span class="op"&gt;&lt;i class="rec"&gt;권장안&lt;/i&gt;&lt;i&gt;다른 안&lt;/i&gt;&lt;/span&gt;
-  &lt;span class="note"&gt;권장안의 반론이나 한계&lt;/span&gt;&lt;/div&gt;
-&lt;/div&gt;</code></pre>
+<h2>사용자가 정할 것 — <code>ol.ask</code>, 권장안 <code>.rec</code>, 이유 <code>.why</code></h2>
+<ol class="ask">
+ <li><b>알림 항목 위치</b> — <span class="rec">권장: 맨 위.</span> 다른 안: 계정 아래.<span class="why">맨 위로 올리면 계정 항목이 한 칸 내려간다</span></li>
+</ol>
+<pre><code>&lt;ol class="ask"&gt;
+ &lt;li&gt;&lt;b&gt;질문&lt;/b&gt; — &lt;span class="rec"&gt;권장: 권장안.&lt;/span&gt; 다른 안: 안2, 안3.
+  &lt;span class="why"&gt;권장안의 이유나 반론 한 줄&lt;/span&gt;&lt;/li&gt;
+&lt;/ol&gt;</code></pre>
 
-<h2>정한 것 — <code>.decided</code> 안 질문 카드, 고른 안 <code>i.pick</code></h2>
-<div class="grid decided">
- <div class="q"><span class="qn">1</span><b>알림 항목 위치</b><span class="op"><i class="pick">맨 위</i><i>계정 아래</i></span></div>
-</div>
-<details><summary>사용자 결정 원문 · 합의와 달라진 점</summary><ul><li>「맨 위로」</li></ul></details>
-<pre><code>&lt;section class="decided"&gt;&lt;div class="grid"&gt; … &lt;i class="pick"&gt;고른 안&lt;/i&gt; … &lt;/div&gt;
-&lt;details&gt;&lt;summary&gt;사용자 결정 원문 · 합의와 달라진 점&lt;/summary&gt;&lt;ul&gt;…&lt;/ul&gt;&lt;/details&gt;&lt;/section&gt;</code></pre>
+<h2>정한 것 — 표 한 장</h2>
+<table><tr><th>질문</th><th>고른 안</th><th>근거</th></tr>
+<tr><td>알림 항목 위치</td><td>맨 위</td><td>사용자 「맨 위로」</td></tr></table>
+<details><summary>합의와 달라진 점</summary><ul><li>없음</li></ul></details>
 
-<h2>한 일 카드 — <code>.item</code></h2>
-<div class="item"><h3>설정 화면 <code>Settings.tsx</code></h3><dl>
- <dt>문제</dt><dd>알림 항목이 세 번째 화면에 있었다.</dd>
- <dt>바꾼 것</dt><dd>항목 순서 배열에서 알림을 맨 앞으로.</dd>
- <dt>확인</dt><dd><code>npm test settings</code> 12개 통과 · 캡처 경로</dd>
-</dl></div>
-<pre><code>&lt;div class="item"&gt;&lt;h3&gt;대상 이름&lt;/h3&gt;&lt;dl&gt;
- &lt;dt&gt;문제&lt;/dt&gt;&lt;dd&gt;…&lt;/dd&gt;&lt;dt&gt;바꾼 것&lt;/dt&gt;&lt;dd&gt;…&lt;/dd&gt;&lt;dt&gt;확인&lt;/dt&gt;&lt;dd&gt;…&lt;/dd&gt;
-&lt;/dl&gt;&lt;/div&gt;</code></pre>
+<h2>한 일 — 표 한 장</h2>
+<table><tr><th>대상</th><th>문제</th><th>바꾼 것</th><th>확인</th></tr>
+<tr><td>설정 화면 <code>Settings.tsx</code></td><td>알림 항목이 세 번째 화면에 있었다</td><td>항목 순서 배열에서 알림을 맨 앞으로</td><td><code>npm test settings</code> 12개 통과 · 캡처 경로</td></tr></table>
+<p>코드 발췌처럼 칸에 안 들어가는 것만 소제목과 <code>dl.rows</code>로 쓴다.</p>
+<h3>설정 저장 형식 확인</h3>
+<dl class="rows"><dt>문제</dt><dd>순서를 바꾸면 저장된 설정이 깨지는지 몰랐다.</dd><dt>확인</dt><dd><pre><code>settings.order = ["notification", ...rest]</code></pre></dd></dl>
+<pre><code>&lt;h3&gt;대상&lt;/h3&gt;&lt;dl class="rows"&gt;&lt;dt&gt;문제&lt;/dt&gt;&lt;dd&gt;…&lt;/dd&gt;&lt;dt&gt;확인&lt;/dt&gt;&lt;dd&gt;…&lt;/dd&gt;&lt;/dl&gt;</code></pre>
 
 <h2>전후 비교 — <code>.compare</code></h2>
 <div class="compare">
@@ -161,9 +149,8 @@ details{font-size:var(--t-sm);color:var(--sub);margin-top:10px}details summary{c
 <h2>그림 — <code>figure</code></h2>
 <figure><svg width="240" height="60" viewBox="0 0 240 60" role="img" aria-label="막대 두 개"><rect x="10" y="10" width="180" height="16" rx="3" fill="var(--line)"/><rect x="10" y="34" width="60" height="16" rx="3" fill="var(--primary)"/></svg><figcaption>그림·캡처는 경로나 인라인 SVG로. 색은 CSS 변수로</figcaption></figure>
 
-<h2>상자·주의 — <code>.box</code>, <code>.note</code></h2>
-<div class="box">일반 내용 상자</div>
-<p class="note" style="margin-top:10px">한계·위험을 한 줄로</p>
+<h2>주의 한 줄 — <code>.note</code></h2>
+<p class="note">한계·위험을 한 줄로</p>
 
 </main>
 </body>

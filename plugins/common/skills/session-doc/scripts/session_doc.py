@@ -20,6 +20,7 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 CSS_PATH = SKILL_DIR / "assets" / "ui.css"
 FIXED_IDS = ("state", "spec", "flow")
 STATE_KINDS = ("run", "wait", "stop", "ok")
+LEGACY_CLASSES = ("q", "op", "item", "grid", "decided")  # 카드·칩 부품. 목록·표로 바꾼다
 STYLE_RE = re.compile(r'(<style id="ui">)(.*?)(</style>)', re.S)
 UPDATED_RE = re.compile(r'(<span id="updated">)(.*?)(</span>)', re.S)
 
@@ -67,6 +68,7 @@ class _Scan(HTMLParser):
         self.ids: list[str] = []
         self.scripts = 0
         self.state_pills: list[str] = []
+        self.legacy: set[str] = set()
         self._in_state = 0
 
     def handle_starttag(self, tag, attrs):
@@ -75,6 +77,7 @@ class _Scan(HTMLParser):
             self.scripts += 1
         if a.get("id"):
             self.ids.append(a["id"])
+        self.legacy.update(c for c in (a.get("class") or "").split() if c in LEGACY_CLASSES)
         if self._in_state:
             self._in_state += 1
             classes = (a.get("class") or "").split()
@@ -110,6 +113,9 @@ def problems(text: str, css: str) -> list[str]:
     kinds = [k for k in scan.state_pills if k in STATE_KINDS]
     if len(kinds) != 1:
         found.append(f"#state에 상태 표시(pill {'/'.join(STATE_KINDS)})가 정확히 하나여야 한다: {kinds}")
+    if scan.legacy:
+        names = ", ".join("." + c for c in sorted(scan.legacy))
+        found.append(f"카드·칩 부품({names})을 쓴다. 물을 것은 ol.ask, 정한 것·한 일은 표로 바꾼다")
     if scan.scripts:
         found.append(f"<script>가 {scan.scripts}개 있다. 옆 창은 스크립트를 돌리지 않는다")
     m = STYLE_RE.search(text)
