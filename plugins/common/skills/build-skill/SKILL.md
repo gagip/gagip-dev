@@ -149,6 +149,7 @@ printf 'a\n' > app.js && git add app.js && git commit -qm "chore: init"
 printf 'b\n' > app.js && printf '# notes\n' > NOTES.md
 """                               # 선택, 각 run 전 임시 디렉토리(=cwd)에서 실행
 PERMISSION_MODE = "bypassPermissions"   # 선택, 기본값
+FOLLOWUPS = ["권장안으로 해줘"]         # 선택, 첫 응답 뒤 같은 세션(--resume)에 차례로 보낼 답. 묻고 답받는 스킬용
 
 def check(ctx):
     assert ctx.skill_fired(), f"미발동: {ctx.skill_invocations()}"

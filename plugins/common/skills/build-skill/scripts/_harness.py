@@ -46,6 +46,7 @@ class Case:
     permission_mode: str
     check: "callable"
     models: list[str] | None = None   # None이면 모든 모델에서 실행
+    followups: list[str] = field(default_factory=list)   # 첫 응답 뒤 같은 세션에 차례로 보낼 사용자 답
 
 
 def load_case(case_path: Path) -> Case:
@@ -53,7 +54,8 @@ def load_case(case_path: Path) -> Case:
 
     모듈은 최소 PROMPT(str)와 check(ctx) 함수를 정의해야 한다.
     RUNS(int, 기본 3), SCAFFOLD(str, 기본 ""), PERMISSION_MODE(str, 기본 bypassPermissions),
-    MODELS(list[str], 기본 모든 모델: 이 케이스가 대상으로 삼는 모델만 적는다)는 선택.
+    MODELS(list[str], 기본 모든 모델: 이 케이스가 대상으로 삼는 모델만 적는다),
+    FOLLOWUPS(list[str], 기본 없음: 질문에 답하는 다음 턴들)는 선택.
     """
     spec = importlib.util.spec_from_file_location(f"buildskill_case_{case_path.stem}", case_path)
     if spec is None or spec.loader is None:
@@ -75,6 +77,7 @@ def load_case(case_path: Path) -> Case:
         permission_mode=str(getattr(mod, "PERMISSION_MODE", "bypassPermissions")),
         check=mod.check,
         models=[str(m) for m in mod.MODELS] if getattr(mod, "MODELS", None) else None,
+        followups=[str(f) for f in getattr(mod, "FOLLOWUPS", [])],
     )
 
 
@@ -182,8 +185,9 @@ class SkillLoader:
 # --------------------------------------------------------------------------
 
 def run_claude(prompt: str, workdir: Path, *, extra_args: list[str], permission_mode: str,
-               model: str | None, max_turns: int, timeout: int) -> list[dict]:
-    """claude -p를 workdir에서 실행하고 stream-json 이벤트 리스트를 반환한다."""
+               model: str | None, max_turns: int, timeout: int,
+               resume: str | None = None) -> list[dict]:
+    """claude -p를 workdir에서 실행하고 stream-json 이벤트 리스트를 반환한다. resume이면 그 세션을 잇는다."""
     cmd = [
         "claude", "-p", prompt,
         "--output-format", "stream-json",
@@ -194,6 +198,8 @@ def run_claude(prompt: str, workdir: Path, *, extra_args: list[str], permission_
     ]
     if model:
         cmd += ["--model", model]
+    if resume:
+        cmd += ["--resume", resume]
 
     # CLAUDECODE를 지워 Claude Code 세션 안에서 claude -p 중첩 실행을 허용한다
     env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
@@ -228,6 +234,11 @@ def run_claude(prompt: str, workdir: Path, *, extra_args: list[str], permission_
                     f"stderr: {proc.stderr[:500]}"
                 )
     return events
+
+
+def session_id(events: list[dict]) -> str | None:
+    """마지막 이벤트부터 찾아 세션 ID를 돌려준다(이어 보낸 턴은 새 ID를 받을 수 있다)."""
+    return next((e["session_id"] for e in reversed(events) if e.get("session_id")), None)
 
 
 # --------------------------------------------------------------------------
@@ -407,6 +418,21 @@ def _one_run(case: Case, loader: SkillLoader, *, with_skill: bool, model: str | 
             return RunResult(False, f"claude 실행 실패: 시간 초과 {timeout}초 (--timeout으로 늘린다)", error=True)
         except RuntimeError as e:
             return RunResult(False, f"claude 실행 실패: {str(e)[:300]}", error=True)
+
+        for reply in case.followups:
+            session = session_id(events)
+            assert session, "이어 보낼 세션 ID가 이벤트에 없다"
+            try:
+                events += run_claude(
+                    reply, tmp,
+                    extra_args=loader.claude_args(with_skill=with_skill),
+                    permission_mode=case.permission_mode, model=model,
+                    max_turns=max_turns, timeout=timeout, resume=session,
+                )
+            except subprocess.TimeoutExpired:
+                return RunResult(False, f"claude 실행 실패: 후속 턴 시간 초과 {timeout}초", error=True)
+            except RuntimeError as e:
+                return RunResult(False, f"claude 실행 실패(후속 턴): {str(e)[:300]}", error=True)
 
         ctx = Ctx.build(tmp, events, loader)
         trace = dict(tool_names=ctx.tool_names(), files_read=ctx.files_read(),

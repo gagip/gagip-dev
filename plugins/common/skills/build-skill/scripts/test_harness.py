@@ -142,5 +142,36 @@ class RunFailureTests(unittest.TestCase):
         self.assertIn("시간 초과 300초", result.reason)
 
 
+class FollowupTests(unittest.TestCase):
+    def test_followups_resume_the_last_session_and_join_events(self):
+        class Loader:
+            def claude_args(self, with_skill):
+                return []
+
+        calls = []
+
+        def fake(prompt, workdir, **kwargs):
+            calls.append((prompt, kwargs.get("resume")))
+            sid = f"s{len(calls)}"
+            return [{"type": "system", "subtype": "init", "session_id": sid},
+                    {"type": "assistant", "message": {"content": [{"type": "text", "text": f"답 {prompt}"}]}}]
+
+        seen = {}
+        case = _harness.Case("c", Path("c.py"), "요청", 1, "", "bypassPermissions",
+                             lambda ctx: seen.update(text=ctx.final_text), followups=["권장안으로", "진행"])
+        with mock.patch.object(_harness, "run_claude", fake):
+            result = _harness._one_run(case, Loader(), with_skill=True, model=None,
+                                       max_turns=1, timeout=300, keep_temp=False)
+        self.assertTrue(result.passed, result.reason)
+        self.assertEqual([("요청", None), ("권장안으로", "s1"), ("진행", "s2")], calls)
+        self.assertEqual("답 진행", seen["text"])
+
+    def test_followups_load_from_case_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "c.py"
+            path.write_text('PROMPT = "p"\nFOLLOWUPS = ["응"]\ndef check(ctx):\n    pass\n', encoding="utf-8")
+            self.assertEqual(["응"], _harness.load_case(path).followups)
+
+
 if __name__ == "__main__":
     unittest.main()
