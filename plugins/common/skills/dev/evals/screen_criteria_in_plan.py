@@ -32,7 +32,9 @@ def plan_text(ctx):
 def check(ctx):
     assert ctx.skill_fired(), f"미발동: {ctx.skill_invocations()}"
     plan = plan_text(ctx)
-    start = plan.find("화면 기준")
+    # 완료 조건 등에서 "화면 기준 1~6"처럼 먼저 언급될 수 있어 절 제목을 우선 찾는다.
+    head = re.search(r"(?m)^#+ [^\n]*화면 기준[^\n]*\n", plan)
+    start = head.end() if head else plan.find("화면 기준")
     assert start >= 0, "계획에 화면 기준이 없음"
     rest = plan[start:]
     nxt = re.search(r"(?m)^#+ ", rest[1:])
