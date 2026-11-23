@@ -112,10 +112,10 @@ class LintTests(unittest.TestCase):
         problems = self.problems(body="[a](references/a.md)\n", files={"references/a.md": "줄\n" * 100})
         self.assertEqual([], problems)
 
-    def test_discover_skips_hidden_and_eval_runs(self):
+    def test_discover_skips_hidden_dirs_including_eval_runs(self):
         make_skill(self.root, name="real-skill")
         make_skill(self.root / ".hidden", name="hidden-skill")
-        make_skill(self.root / "x-eval-runs", name="run-skill")
+        make_skill(self.root / ".eval-runs" / "2026-01-01_000000", name="run-skill")
         found = [p.name for p in lint_skill.discover(self.root)]
         self.assertEqual(["real-skill"], found)
 

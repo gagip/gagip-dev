@@ -252,9 +252,9 @@ python3 <이 스킬>/scripts/run_skill_test.py --all           # 레포 전체 �
   `~/.claude/skills/`에 임시 복사 후 정리한다.
 - **러너는 `claude` CLI가 필요하다.** 없는 하네스(Codex 등)에서는 케이스의 `PROMPT`를 수동
   실행하고 `check` 항목을 사람이 확인한다. 케이스 파일 자체는 하네스 무관이다.
-- 실행 결과(`--json` 결과, `--keep-temp`에서 꺼낸 산출물, 채점표)는 스킬 옆
-  `plugins/<plugin>/skills/<skill>-eval-runs/<YYYY-MM-DD>_run<N>/`에 회차별로 둔다. 레포 `.gitignore`가 이
-  경로를 무시하므로 공개되지 않고, 회차끼리 비교할 수 있다. 러너 임시 폴더는 나중에 지워진다.
+- REVIEW·FAIL 케이스의 산출물(바뀐 파일·마지막 응답·run 기록·판정)은 러너가 레포 루트
+  `.eval-runs/<날짜시각>/<스킬>/<케이스>/`에 남기고 콘솔에 경로를 찍는다(`--runs-dir`로 바꿀 수 있다).
+  레포 `.gitignore`가 이 경로를 무시하므로 공개되지 않는다. PASS 케이스의 임시 폴더는 바로 지운다.
 - 실행 결과 JSON을 `--json`으로 받아 `final_text`와 출력물을, 검수 에이전트 채점표와 함께 사용자에게
   보여 주고 최종 판정을 요청한다: "이렇게 나왔고 채점은 이런데, 쓸 만해? 뭘 바꿀까?"
 

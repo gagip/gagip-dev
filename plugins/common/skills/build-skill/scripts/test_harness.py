@@ -143,6 +143,7 @@ class RunFailureTests(unittest.TestCase):
         with mock.patch.object(_harness, "run_claude", time_out):
             result = _harness._one_run(case, Loader(), with_skill=True, model=None,
                                        max_turns=1, timeout=300, keep_temp=False)
+        self.addCleanup(result.discard)
         self.assertTrue(result.error)
         self.assertIn("시간 초과 300초", result.reason)
 
@@ -182,6 +183,7 @@ class CostTests(unittest.TestCase):
         with mock.patch.object(_harness, "run_claude", fake):
             r = _harness._one_run(case, Loader(), with_skill=True, model=None,
                                   max_turns=1, timeout=300, keep_temp=False)
+        self.addCleanup(r.discard)
         self.assertTrue(r.skill_fired)
         self.assertEqual(2, r.cost.turns)
 
@@ -227,6 +229,7 @@ class FollowupTests(unittest.TestCase):
         with mock.patch.object(_harness, "run_claude", fake):
             result = _harness._one_run(case, Loader(), with_skill=True, model=None,
                                        max_turns=1, timeout=300, keep_temp=False)
+        self.addCleanup(result.discard)
         self.assertTrue(result.passed, result.reason)
         self.assertEqual([("요청", None), ("권장안으로", "s1"), ("진행", "s2")], calls)
         self.assertEqual("답 진행", seen["text"])

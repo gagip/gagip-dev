@@ -31,6 +31,7 @@ import argparse
 import json
 import sys
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -38,6 +39,7 @@ from _harness import (  # noqa: E402
     Case, CaseResult, RunCost, RunResult, applies_to_model, discover_cases, discover_skills,
     load_case, run_case, unused_bundle_files,
 )
+from _artifacts import find_runs_root, save_case  # noqa: E402
 from _verdict import Judgement, Verdict, judge  # noqa: E402
 
 
@@ -168,10 +170,24 @@ def _run_skill(skill_dir: Path, args) -> list[Outcome] | None:
             baseline=args.baseline, model=args.model,
             max_turns=args.max_turns, timeout=args.timeout, keep_temp=args.keep_temp,
         )
-        outcome = Outcome(case, cr, judge(case, cr, args.threshold))
-        outcomes.append(outcome)
-        print(_fmt(outcome), file=sys.stderr)
+        try:
+            outcome = Outcome(case, cr, judge(case, cr, args.threshold))
+            outcomes.append(outcome)
+            print(_fmt(outcome), file=sys.stderr)
+            if outcome.judgement.verdict is not Verdict.PASS:
+                saved = save_case(args.run_root, skill_dir.name, cr, _case_record(outcome))
+                print(f"      산출물: {saved}", file=sys.stderr)
+        finally:
+            if not args.keep_temp:
+                cr.discard()
     return outcomes
+
+
+def _case_record(o: Outcome) -> dict:
+    return {"case": o.result.case, "model": o.result.model, "verdict": o.judgement.verdict.value,
+            "reason": o.judgement.reason, "grader": o.case.grader, "review_focus": o.case.review_focus,
+            "pass": o.result.pass_count, "total": len(o.result.runs),
+            "cost": _cost_json(total_cost(o.result.runs))}
 
 
 def main() -> int:
@@ -196,6 +212,8 @@ def main() -> int:
                     help="이 비율보다 적게 통과하면 FAIL (기본 1.0 = 전 run 통과). 넘었지만 일부 run이 "
                          "실패하면 REVIEW")
     ap.add_argument("--keep-temp", action="store_true", help="임시 디렉토리 보존 (디버깅)")
+    ap.add_argument("--runs-dir", type=Path,
+                    help="REVIEW·FAIL 산출물을 둘 곳 (기본: 스킬이 든 레포 루트의 .eval-runs)")
     ap.add_argument("--json", dest="json_out", nargs="?", const="-",
                     help="전체 결과를 JSON으로 (경로 없으면 stdout)")
     args = ap.parse_args()
@@ -216,6 +234,9 @@ def main() -> int:
         if not (skill_dir / "SKILL.md").is_file():
             print(f"오류: SKILL.md가 없다 — {skill_dir}", file=sys.stderr)
             return 2
+
+    runs_dir = args.runs_dir or find_runs_root(skill_dirs[0])
+    args.run_root = runs_dir / datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
     models: list[str | None] = [m.strip() for m in args.models.split(",") if m.strip()] \
         if args.models else [args.model]

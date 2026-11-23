@@ -165,8 +165,6 @@ def discover(root: Path) -> list[Path]:
     for skill_md in root.rglob("SKILL.md"):
         if any(part.startswith(".") for part in skill_md.relative_to(root).parts):
             continue
-        if any(part.endswith("-eval-runs") for part in skill_md.relative_to(root).parts):
-            continue
         out.append(skill_md.parent)
     return sorted(out)
 

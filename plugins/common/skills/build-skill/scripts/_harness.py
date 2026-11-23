@@ -19,6 +19,7 @@ CLI 진입점은 run_skill_test.py. 이 모듈은 로직만 담아 수정 지점
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -441,6 +442,31 @@ class RunResult:
     bash_cmds: list[str] = field(default_factory=list)    # 실행한 bash 명령
     skill_fired: bool = False
     cost: RunCost | None = None   # None: 이벤트가 없어 모름(시간 초과 등)
+    workdir: Path | None = None   # 판정 뒤 산출물을 복사하고 지울 임시 디렉터리
+    snapshot: dict[str, str] = field(default_factory=dict)   # scaffold 직후 {상대 경로: sha1}
+
+    def changed_files(self) -> list[str]:
+        """scaffold 이후 새로 생기거나 내용이 바뀐 파일의 상대 경로."""
+        if self.workdir is None or not self.workdir.is_dir():
+            return []
+        now = snapshot_files(self.workdir)
+        return sorted(rel for rel, digest in now.items() if self.snapshot.get(rel) != digest)
+
+    def discard(self) -> None:
+        if self.workdir is not None:
+            shutil.rmtree(self.workdir, ignore_errors=True)
+            self.workdir = None
+
+
+def snapshot_files(root: Path) -> dict[str, str]:
+    """root 아래 파일의 {상대 경로: sha1}. .git 아래는 뺀다."""
+    out: dict[str, str] = {}
+    for f in root.rglob("*"):
+        rel = f.relative_to(root)
+        if rel.parts[0] == ".git" or not f.is_file():
+            continue
+        out[rel.as_posix()] = hashlib.sha1(f.read_bytes()).hexdigest()
+    return out
 
 
 @dataclass
@@ -461,64 +487,78 @@ class CaseResult:
     def ok(self, threshold: float = 1.0) -> bool:
         return bool(self.runs) and (self.pass_count / len(self.runs)) >= threshold
 
+    def discard(self) -> None:
+        for r in [*self.runs, *self.baseline]:
+            r.discard()
 
+
+# 결정: run의 임시 디렉터리는 케이스 판정이 끝날 때까지 남긴다. REVIEW·FAIL은 케이스 단위로만 정해지고,
+#   LLM 채점도 산출물이 있어야 하므로 run이 끝나자마자 지우면 둘 다 할 수 없다. 지우는 쪽은 호출자
+#   (CaseResult.discard)다.
 def _one_run(case: Case, loader: SkillLoader, *, with_skill: bool, model: str | None,
              max_turns: int, timeout: int, keep_temp: bool) -> RunResult:
     tmp = Path(tempfile.mkdtemp(prefix=f"buildskill-{case.name}-"))
-    try:
-        if case.scaffold.strip():
-            sc = subprocess.run([shutil.which("bash") or "bash", "-c", case.scaffold], cwd=tmp,
-                                capture_output=True, text=True, encoding="utf-8", errors="replace")
-            if sc.returncode != 0:
-                return RunResult(False, f"scaffold 실패: {sc.stderr[:300]}", error=True)
+    snapshot: dict[str, str] = {}
+    result = _run_in(tmp, snapshot, case, loader, with_skill=with_skill, model=model,
+                     max_turns=max_turns, timeout=timeout)
+    result.workdir, result.snapshot = tmp, snapshot
+    if keep_temp:
+        print(f"  [keep-temp] {tmp}", file=sys.stderr)
+    return result
 
+
+def _run_in(tmp: Path, snapshot: dict[str, str], case: Case, loader: SkillLoader, *, with_skill: bool,
+            model: str | None, max_turns: int, timeout: int) -> RunResult:
+    """tmp에서 scaffold → claude -p → check를 돌린다. scaffold 직후 파일 목록을 snapshot에 채운다."""
+    if case.scaffold.strip():
+        sc = subprocess.run([shutil.which("bash") or "bash", "-c", case.scaffold], cwd=tmp,
+                            capture_output=True, text=True, encoding="utf-8", errors="replace")
+        if sc.returncode != 0:
+            return RunResult(False, f"scaffold 실패: {sc.stderr[:300]}", error=True)
+    snapshot.update(snapshot_files(tmp))
+
+    try:
+        events = run_claude(
+            case.prompt, tmp,
+            extra_args=loader.claude_args(with_skill=with_skill),
+            permission_mode=case.permission_mode, model=model,
+            max_turns=max_turns, timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return RunResult(False, f"claude 실행 실패: 시간 초과 {timeout}초 (--timeout으로 늘린다)", error=True)
+    except RuntimeError as e:
+        return RunResult(False, f"claude 실행 실패: {str(e)[:300]}", error=True)
+
+    for reply in case.followups:
+        session = session_id(events)
+        assert session, "이어 보낼 세션 ID가 이벤트에 없다"
         try:
-            events = run_claude(
-                case.prompt, tmp,
+            events += run_claude(
+                reply, tmp,
                 extra_args=loader.claude_args(with_skill=with_skill),
                 permission_mode=case.permission_mode, model=model,
-                max_turns=max_turns, timeout=timeout,
+                max_turns=max_turns, timeout=timeout, resume=session,
             )
         except subprocess.TimeoutExpired:
-            return RunResult(False, f"claude 실행 실패: 시간 초과 {timeout}초 (--timeout으로 늘린다)", error=True)
+            return RunResult(False, f"claude 실행 실패: 후속 턴 시간 초과 {timeout}초", error=True,
+                             cost=cost_from_events(events))
         except RuntimeError as e:
-            return RunResult(False, f"claude 실행 실패: {str(e)[:300]}", error=True)
+            return RunResult(False, f"claude 실행 실패(후속 턴): {str(e)[:300]}", error=True,
+                             cost=cost_from_events(events))
 
-        for reply in case.followups:
-            session = session_id(events)
-            assert session, "이어 보낼 세션 ID가 이벤트에 없다"
-            try:
-                events += run_claude(
-                    reply, tmp,
-                    extra_args=loader.claude_args(with_skill=with_skill),
-                    permission_mode=case.permission_mode, model=model,
-                    max_turns=max_turns, timeout=timeout, resume=session,
-                )
-            except subprocess.TimeoutExpired:
-                return RunResult(False, f"claude 실행 실패: 후속 턴 시간 초과 {timeout}초", error=True,
-                                 cost=cost_from_events(events))
-            except RuntimeError as e:
-                return RunResult(False, f"claude 실행 실패(후속 턴): {str(e)[:300]}", error=True,
-                                 cost=cost_from_events(events))
-
-        ctx = Ctx.build(tmp, events, loader)
-        trace = dict(tool_names=ctx.tool_names(), files_read=ctx.files_read(),
-                     bash_cmds=list(ctx.bash_cmds), skill_fired=ctx.skill_fired(),
-                     cost=cost_from_events(events))
-        try:
-            case.check(ctx)
-        except AssertionError as e:
-            return RunResult(False, f"check 실패: {e or '(사유 미기재 assert)'}",
-                             final_text=ctx.final_text, **trace)
-        except Exception as e:  # noqa: BLE001 — check 코드 버그도 결과로 노출
-            return RunResult(False, f"check 예외: {type(e).__name__}: {e}",
-                             error=True, **trace)
-        return RunResult(True, final_text=ctx.final_text, **trace)
-    finally:
-        if keep_temp:
-            print(f"  [keep-temp] {tmp}", file=sys.stderr)
-        else:
-            shutil.rmtree(tmp, ignore_errors=True)
+    ctx = Ctx.build(tmp, events, loader)
+    trace = dict(tool_names=ctx.tool_names(), files_read=ctx.files_read(),
+                 bash_cmds=list(ctx.bash_cmds), skill_fired=ctx.skill_fired(),
+                 cost=cost_from_events(events))
+    try:
+        case.check(ctx)
+    except AssertionError as e:
+        return RunResult(False, f"check 실패: {e or '(사유 미기재 assert)'}",
+                         final_text=ctx.final_text, **trace)
+    except Exception as e:  # noqa: BLE001 — check 코드 버그도 결과로 노출
+        return RunResult(False, f"check 예외: {type(e).__name__}: {e}",
+                         error=True, **trace)
+    return RunResult(True, final_text=ctx.final_text, **trace)
 
 
 def run_case(skill_dir: Path, case: Case, *, baseline: bool, model: str | None,
