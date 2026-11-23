@@ -40,7 +40,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: skill-test-results
-          path: skill-test-results.json
+          # .eval-runs/는 REVIEW·FAIL 케이스의 산출물이다. 공개 레포라 외부에서도 받을 수 있지만 합성 scaffold뿐이다.
+          path: |
+            skill-test-results.json
+            .eval-runs/
+          include-hidden-files: true
 
   # 모델별 편차를 보는 참고용 점검이다. 호출이 모델 수만큼 늘어 주간으로만 돌리고,
   # 실패해도 위 test 잡의 판정에는 영향을 주지 않는다(표는 실행 요약에 남는다).

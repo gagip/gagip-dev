@@ -2,8 +2,8 @@ settings.local.json
 __pycache__/
 .DS_Store
 *.stackdump
-# 스킬 평가 실행 결과 (러너 JSON·산출물·채점표, 회차별)
-plugins/*/skills/*-eval-runs/
+# 스킬 평가의 REVIEW·FAIL 산출물 (run_skill_test.py가 남긴다)
+.eval-runs/
 .private/
 
 # 작업 계획서 (공개 레포라 커밋하지 않는다)
