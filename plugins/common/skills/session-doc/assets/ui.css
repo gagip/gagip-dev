@@ -2,22 +2,24 @@
    부품 쓰는 법은 같은 폴더 sample.html 견본. */
 
 /* 토큰 */
-:root{--primary:#4f46e5;--bg:#f2f4f6;--surface:#fff;--text:#191f28;--sub:#4e5968;--muted:#5f6875;--line:#e5e8eb;
- --ok:#1f8a4c;--wait:#b45309;--stop:#c0392b;--warn-bg:#fff6e5;--before:#c0392b;--after:#1f8a4c;
- --t-xs:.75rem;--t-sm:.8125rem;--t-md:.875rem;--t-lg:1.25rem;--r:12px}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--primary:#8a84ff;--bg:#101114;--surface:#1c1d22;--text:#f1f2f4;--sub:#b2b6bf;--muted:#959aa4;--line:#33353d;
- --ok:#4cc27e;--wait:#e0a948;--stop:#ef6b5e;--warn-bg:#2c2618;--before:#ef6b5e;--after:#4cc27e}}
-:root[data-theme=dark]{--primary:#8a84ff;--bg:#101114;--surface:#1c1d22;--text:#f1f2f4;--sub:#b2b6bf;--muted:#959aa4;--line:#33353d;
- --ok:#4cc27e;--wait:#e0a948;--stop:#ef6b5e;--warn-bg:#2c2618;--before:#ef6b5e;--after:#4cc27e}
+:root{--primary:#99533c;--bg:#faf7ef;--surface:#fffdf8;--text:#282620;--sub:#565047;--muted:#62594e;--line:#ddd4c6;--table-head:#f2ede2;
+ --ok:#285d49;--wait:#875026;--stop:#9b4136;--warn-bg:#f4e7d6;--before:#824334;--after:#285d49;
+ --t-xs:.79rem;--t-sm:.92rem;--t-md:1.02rem;--t-lg:clamp(2.25rem,6.7vw,4.35rem);--r:7px;
+ --title-font:"Noto Serif CJK KR","Songti SC",Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--primary:#eeab8d;--bg:#1c1916;--surface:#27221e;--text:#f2e9dd;--sub:#ded1c2;--muted:#bfb0a0;--line:#53483e;--table-head:#332a24;
+ --ok:#9ed1b7;--wait:#edc189;--stop:#f0a49a;--warn-bg:#3b2c1e;--before:#f0a49a;--after:#9ed1b7}}
+:root[data-theme=dark]{--primary:#eeab8d;--bg:#1c1916;--surface:#27221e;--text:#f2e9dd;--sub:#ded1c2;--muted:#bfb0a0;--line:#53483e;--table-head:#332a24;
+ --ok:#9ed1b7;--wait:#edc189;--stop:#f0a49a;--warn-bg:#3b2c1e;--before:#f0a49a;--after:#9ed1b7}
 
 /* 바탕 */
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 -apple-system,"Apple SD Gothic Neo","Pretendard",sans-serif}
-main{max-width:1100px;margin:0 auto;padding:18px 16px 48px}
-h1{font-size:var(--t-lg);margin:0 0 2px}
-h2{font-size:var(--t-md);margin:22px 0 8px}
-h3{font-size:.9375rem;margin:0 0 6px}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.72 system-ui,"Apple SD Gothic Neo",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:44px 22px 56px}
+h1{font:650 var(--t-lg)/1.14 var(--title-font);letter-spacing:-.058em;margin:0 0 13px}
+h2{font-size:1.34rem;letter-spacing:-.028em;margin:29px 0 9px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+h3{font-size:1rem;margin:0 0 6px}
 p{margin:0 0 8px}
+a{color:var(--primary);text-underline-offset:3px}
 ul,ol{font-size:var(--t-md);line-height:1.8;margin:0;padding-left:20px}
 code{font-size:var(--t-sm);background:var(--bg);border:1px solid var(--line);padding:0 5px;border-radius:4px}
 pre{font-size:var(--t-sm);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;margin:0}
@@ -28,19 +30,24 @@ pre code{border:0;padding:0;background:none}
 /* 상태 표시: run 진행 중 · wait 사용자 답 기다림 · stop 막힘 · ok 끝 */
 .pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:var(--t-xs);font-weight:700;border:1px solid currentColor;margin-right:6px}
 .pill.run{color:var(--primary)}.pill.wait{color:var(--wait)}.pill.stop{color:var(--stop)}.pill.ok{color:var(--muted)}
-#state{margin:8px 0 10px}#state p{margin:0}
+#state{margin:20px 0 12px}#state p{margin:0}
 
 /* 상자 */
+#decision{margin-top:22px;padding:20px 22px 17px;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--primary);border-radius:var(--r)}
+#decision>h2:first-child{margin-top:0}
+#context{margin-top:23px}
+#context>summary{padding:6px 0}
 .box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+#spec{border:0;border-left:3px solid var(--primary);padding:13px 15px}
 .box+.box{margin-top:10px}
 .note{font-size:var(--t-sm);color:var(--sub);background:var(--warn-bg);border-radius:8px;padding:6px 10px}
 
 /* 이름표 줄 (명세 등) */
 .spec{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:0;font-size:var(--t-sm);line-height:1.55}
-.spec dt{color:var(--muted);font-weight:600;white-space:nowrap}.spec dd{margin:0;color:var(--sub)}
+.spec dt{color:var(--text);font-weight:600;white-space:nowrap}.spec dd{margin:0;color:var(--sub)}
 
 /* 진행 한 줄(글자만): li.ok 완료 · li.now 지금 · li.wait 대기 · 표시 없음 남음 */
-.flow{list-style:none;margin:6px 0 0;padding:0;font-size:var(--t-sm);line-height:1.8;color:var(--muted)}
+.flow{list-style:none;margin:11px 0 0;padding:0;font-size:var(--t-sm);line-height:1.8;color:var(--muted)}
 .flow li{display:inline}.flow li+li::before{content:'›';color:var(--muted);margin:0 8px;font-weight:400}
 .flow li.ok{color:var(--sub)}.flow li.ok::after{content:' ✓';color:var(--primary)}
 .flow li.now{color:var(--text);font-weight:700}.flow li.now::after{content:' (지금)';color:var(--primary)}
@@ -56,14 +63,14 @@ dl.rows{display:grid;grid-template-columns:72px 1fr;gap:2px 12px;margin:0 0 10px
 dl.rows dt{color:var(--muted)}dl.rows dd{margin:0;min-width:0}
 
 /* 표: td.hi 강조 칸 */
-table{border-collapse:collapse;width:100%;font-size:var(--t-sm);background:var(--surface)}
-th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
-th{color:var(--sub);font-weight:600;background:var(--bg)}
+table{border-collapse:collapse;width:100%;font-size:var(--t-sm)}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{color:var(--text);font-weight:600;background:var(--table-head)}
 td.hi{border-left:3px solid var(--primary)}
 
 /* 전후 비교 */
-.compare{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.compare>div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;font-size:var(--t-sm)}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.compare>div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;font-size:var(--t-sm)}
 .compare>div::before{display:block;font-size:var(--t-xs);font-weight:700;margin-bottom:4px}
 .compare .before::before{content:'전';color:var(--before)}.compare .after::before{content:'후';color:var(--after)}
 
@@ -75,4 +82,4 @@ figcaption{font-size:var(--t-xs);color:var(--muted);margin-top:6px}
 /* 접는 칸 */
 details{font-size:var(--t-sm);color:var(--sub);margin-top:10px}details summary{cursor:pointer;font-weight:700;color:var(--text)}
 
-@media (max-width:640px){.compare{grid-template-columns:1fr}.spec{grid-template-columns:1fr}.spec dd{margin-bottom:4px}}
+@media (max-width:640px){main{padding:25px 14px 36px}th,td{padding:6px}#decision{padding:13px 12px}.compare{grid-template-columns:1fr}.spec{grid-template-columns:1fr}.spec dd{margin-bottom:4px}}

@@ -34,7 +34,11 @@ class NewAndCheck(unittest.TestCase):
 
     def test_sync_restores_stale_css_and_sets_time(self):
         run("new", self.doc, "--title", "시험")
-        text = self.doc.read_text().replace("--primary:#4f46e5", "--primary:#000000", 1)
+        text = session_doc.STYLE_RE.sub(
+            lambda m: f"{m[1]}\n:root{{--primary:#000000}}\n{m[3]}",
+            self.doc.read_text(),
+            count=1,
+        )
         text = session_doc.UPDATED_RE.sub(r"\g<1>옛 시각\g<3>", text)
         self.doc.write_text(text)
         self.assertEqual(run("check", self.doc).returncode, 1)
@@ -52,6 +56,39 @@ class Problems(unittest.TestCase):
     def test_missing_fixed_section(self):
         text = self.base().replace('id="flow"', 'id="steps"')
         self.assertTrue(any("#flow" in p for p in session_doc.problems(text, CSS)))
+
+    def test_open_context_can_be_omitted_in_existing_documents(self):
+        t = self.base().replace('<details id="context" open>\n<summary>목표·완료 기준과 진행 상태</summary>\n', "")
+        t = t.replace('</ol>\n</details>', '</ol>')
+        self.assertEqual(session_doc.problems(t, CSS), [])
+
+    def test_decision_precedes_collapsed_context(self):
+        decision = '<section id="decision"><h2>지금 고를 것</h2><a href="experiment.html">실험</a></section>'
+        t = self.base().replace('<details id="context" open>', decision + '\n<details id="context">')
+        self.assertEqual(session_doc.problems(t, CSS), [])
+
+    def test_hidden_decision_is_rejected(self):
+        decision = '<section id="decision"><h2>지금 검토할 것</h2></section>'
+        t = self.base().replace(
+            '<section id="spec"', decision + '<section id="spec"',
+        ).replace('<details id="context" open>', '<details id="context">')
+        self.assertTrue(any("#decision" in p for p in session_doc.problems(t, CSS)))
+
+    def test_context_without_decision_starts_open(self):
+        t = self.base().replace('<details id="context" open>', '<details id="context">')
+        self.assertTrue(any("#context" in p for p in session_doc.problems(t, CSS)))
+
+    def test_other_section_cannot_precede_decision(self):
+        decision = '<section id="decision"><h2>지금 고를 것</h2></section>'
+        t = self.base().replace(
+            '<details id="context" open>', '<h2>참고</h2>' + decision + '<details id="context">',
+        )
+        self.assertTrue(any("바로 다음" in p for p in session_doc.problems(t, CSS)))
+
+    def test_late_decision_is_rejected(self):
+        decision = '<section id="decision"><h2>지금 검토할 것</h2></section>'
+        t = self.base().replace('</main>', decision + '\n</main>')
+        self.assertTrue(any("#decision" in p for p in session_doc.problems(t, CSS)))
 
     def test_wrong_order(self):
         t = self.base()

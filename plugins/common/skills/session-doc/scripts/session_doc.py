@@ -40,6 +40,8 @@ SKELETON = """<!doctype html>
 
 <section id="state"><p><span class="pill run">진행 중</span>{{지금 하는 작업 한 문장}}. 다음: {{다음에 할 일}}.</p></section>
 
+<details id="context" open>
+<summary>목표·완료 기준과 진행 상태</summary>
 <section id="spec" class="box"><dl class="spec">
  <dt>목표</dt><dd>{{왜 하는지, 무엇을 바꾸는지}}</dd>
  <dt>완료 기준</dt><dd>{{기준마다 증거 종류 하나}}</dd>
@@ -53,6 +55,7 @@ SKELETON = """<!doctype html>
  <li class="now">{{하는 단계}}</li>
  <li>{{남은 단계}}</li>
 </ol>
+</details>
 
 </main>
 </body>
@@ -66,6 +69,8 @@ class _Scan(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
         self.ids: list[str] = []
+        self.sections: list[str | None] = []
+        self.context_open: bool | None = None
         self.scripts = 0
         self.state_pills: list[str] = []
         self.legacy: set[str] = set()
@@ -73,6 +78,10 @@ class _Scan(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
+        if tag in ("section", "h2"):
+            self.sections.append(a.get("id"))
+        if tag == "details" and a.get("id") == "context":
+            self.context_open = "open" in a
         if tag == "script":
             self.scripts += 1
         if a.get("id"):
@@ -107,6 +116,16 @@ def problems(text: str, css: str) -> list[str]:
         pos = [scan.ids.index(i) for i in FIXED_IDS]
         if pos != sorted(pos):
             found.append("고정 칸 순서가 #state → #spec → #flow가 아니다")
+        has_decision = "decision" in scan.ids
+        if has_decision:
+            next_section = scan.sections.index("state") + 1 if "state" in scan.sections else len(scan.sections)
+            if scan.ids.count("decision") != 1 or scan.sections[next_section:next_section + 1] != ["decision"]:
+                found.append("#decision은 #state 바로 다음 칸에 하나만 둔다")
+            if "context" not in scan.ids or not scan.ids.index("decision") < scan.ids.index("context") < pos[1]:
+                found.append("#decision 다음에 #spec을 담는 #context를 둔다")
+        context_should_open = not has_decision
+        if "context" in scan.ids and scan.context_open != context_should_open:
+            found.append("판단할 내용이 있을 때만 #context를 접는다")
         sections_before = re.search(r"<(section|h2)\b", text[: text.find('id="flow"')].split('id="spec"', 1)[-1])
         if sections_before:
             found.append("#spec과 #flow 사이에 다른 칸이 있다")
