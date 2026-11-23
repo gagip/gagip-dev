@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [0.69.0] - 2026-11-24
+
+### ✨ Feat
+- **build-skill**: 평가 러너가 케이스마다 PASS·REVIEW·FAIL 판정과 이유 한 줄을 내고, 시간·토큰·턴·usd 비용을 콘솔과 `--json`에 기록한다. 종료 코드는 FAIL이 있을 때만 1이다 (`4cbdae0`)
+- **build-skill**: REVIEW·FAIL 케이스의 산출물(바뀐 파일·마지막 응답·run 기록·판정)을 레포 루트 `.eval-runs/`에 남긴다. 위치는 `--runs-dir`로 바꿀 수 있다 (`094f3a8`)
+- **build-skill**: 케이스에 `GRADER = "llm"`을 두면 구조 검사를 통과한 run을 스킬의 `references/review-rubric.md`로 도구 없이 채점해 항목별 판정과 인용을 보인다. 채점은 REVIEW까지만 올리고 FAIL은 내지 않는다. `REVIEW_FOCUS`·`SOFT_MAX_TURNS`·`SOFT_MAX_TOKENS` 필드와 `--grader-model`·`--no-llm-grade` 옵션을 더한다 (`d2da8c1`)
+- **grill·work-plan**: 검수 기준 `references/review-rubric.md`를 더하고 해당 평가 케이스를 LLM 채점 대상으로 둔다 (`d2da8c1`)
+
+### 🐛 Fix
+- **build-skill**: run 도중 예외가 나도 임시 폴더를 지우고, 채점 호출의 실행 오류가 평가를 종료 1로 끝내지 않게 한다. 비용의 캐시 토큰을 입력 토큰과 따로 적는다 (`0b58961`)
+
+### 📝 Docs
+- **build-skill**: 판정 규칙, LLM 채점 필드, 산출물 위치를 SKILL.md에 적는다 (`60f0571`)
+
 ## [0.68.0] - 2026-11-23
 
 ### ✨ Feat
