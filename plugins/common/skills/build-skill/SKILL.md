@@ -150,6 +150,9 @@ printf 'b\n' > app.js && printf '# notes\n' > NOTES.md
 """                               # 선택, 각 run 전 임시 디렉토리(=cwd)에서 실행
 PERMISSION_MODE = "bypassPermissions"   # 선택, 기본값
 FOLLOWUPS = ["권장안으로 해줘"]         # 선택, 첫 응답 뒤 같은 세션(--resume)에 차례로 보낼 답. 묻고 답받는 스킬용
+GRADER = "code"                   # 선택, "code" | "llm". llm이면 통과한 run을 루브릭으로 채점하고 REVIEW로 올린다
+REVIEW_FOCUS = "근거 없는 단정"     # 선택, REVIEW일 때 사람이 볼 곳 한 줄
+SOFT_MAX_TURNS = 30               # 선택, 넘으면 REVIEW (SOFT_MAX_TOKENS도 같다)
 
 def check(ctx):
     assert ctx.skill_fired(), f"미발동: {ctx.skill_invocations()}"
@@ -159,7 +162,7 @@ def check(ctx):
     assert ctx.git_status_clean()
 ```
 
-`check(ctx)` 안은 **100% 코드** — LLM 심판 없음. `AssertionError`의 메시지가 실패 사유로 뜬다.
+`check(ctx)` 안은 **100% 코드** — LLM 판단은 `GRADER = "llm"`의 채점에만 있고 FAIL을 내지 않는다. `AssertionError`의 메시지가 실패 사유로 뜬다.
 정확한 문자열 대신 **안정적 결과**로 검증한다 (git log 형식, 파일 존재, push 안 함) — Claude
 행동이 비결정적이라.
 
@@ -203,7 +206,10 @@ def check(ctx):
 | 형식·순서·툴 발동·파일 상태·push 안 함 | 톤, 내용 적절성, 가독성, 판단 품질 |
 
 주관적 품질이 있는 스킬은 `assets/review-rubric.template.md`를 대상 스킬의 `references/review-rubric.md`로
-복사해 항목별 기준을 적는다(항목마다 통과·미통과와 근거 인용). 맥락 없는 검수 에이전트에게 산출물 경로·기준 파일 경로·사용자 요청 원문만 주고 채점을 받는다.
+복사해 항목별 기준을 적는다(항목마다 통과·미통과와 근거 인용). 그 스킬의 케이스에 `GRADER = "llm"`을 두면 러너가
+구조 검사를 통과한 run마다 도구 없는 채점 호출(`--grader-model`, 기본 sonnet)에 요청 원문·루브릭·바뀐 파일·마지막
+응답만 주고 항목별 판정과 인용을 받아 콘솔·JSON·`.eval-runs/`에 그대로 보인다. 채점은 케이스를 REVIEW까지만 올리고,
+최종 판정은 사람이 한다.
 결정론적 테스트가 전부 통과해도 내용 결함(요청에 없던 전제를 지어냄 등)은 이 채점에서 드러난다. 같은 기준
 파일을 스킬 실행 중 끝 검토에도 쓰게 하면, 개발 때 평가와 실제 사용 때 검토가 한 기준으로 맞는다.
 
@@ -236,8 +242,14 @@ python3 <이 스킬>/scripts/run_skill_test.py --all           # 레포 전체 �
 | `--threshold 0.66` | 통과 판정 비율 (기본 1.0 = 전 run 통과) |
 | `--json [경로]` | 전체 결과 JSON (툴 순서·final_text 포함) |
 | `--keep-temp` | 임시 디렉토리 보존 (디버깅) |
+| `--grader-model <별칭>` | `GRADER = "llm"` 채점 모델 (기본 `sonnet`) |
+| `--no-llm-grade` | LLM 채점을 끈다 (모델 매트릭스·재실행용) |
+| `--runs-dir <경로>` | REVIEW·FAIL 산출물을 남길 곳 (기본 레포 루트 `.eval-runs/`) |
 
-출력: 케이스별 `pass/total` + 실패 사유, 종료 코드 0/1. 끝에 "이 평가에서 한 번도 열리지 않은 번들
+출력: 케이스마다 판정 한 줄(PASS·REVIEW·FAIL과 이유)과 비용(시간·토큰·턴·usd, 채점 비용은 따로).
+FAIL은 실행 오류가 있거나 통과율이 임계값 미만일 때다. REVIEW는 일부만 통과했거나, `--baseline`에서 스킬 없이도
+같거나 더 잘 통과했거나(발동 케이스만), SOFT_MAX를 넘었거나, `GRADER = "llm"`일 때다. 종료 코드는 FAIL이 있을
+때만 1이다. 끝에 "이 평가에서 한 번도 열리지 않은 번들
 파일"을 참고로 알린다(`--json`의 `unused_files`). 케이스가 그 기능을 건드리지 않은 것일 수 있어 실패는
 아니다. 케이스를 충분히 늘렸는데도 계속 안 열리면 불필요하거나 SKILL.md가 제대로 안내하지 못한 파일이니
 지우거나 링크를 눈에 띄게 고친다.
