@@ -120,6 +120,11 @@ class MatrixTests(unittest.TestCase):
         self.assertIn("| 케이스 | haiku | sonnet |", table)
         self.assertIn("| fires | 2/3 ✗ | 3/3 |", table)
 
+    def test_review_cell_is_marked_separately_from_failure(self):
+        rep = {"skill": "/p/demo", "model": "haiku",
+               "cases": [{"case": "c", "pass": 3, "total": 3, "verdict": "REVIEW"}]}
+        self.assertIn("| c | 3/3 △ |", run_skill_test.matrix_markdown([rep], ["haiku"]))
+
     def test_missing_cell_is_dash(self):
         rep = {"skill": "/p/demo", "model": "haiku", "cases": [{"case": "c", "pass": 1, "total": 1}]}
         self.assertIn("| c | 1/1 | - |", run_skill_test.matrix_markdown([rep], ["haiku", "opus"]))
@@ -140,6 +145,66 @@ class RunFailureTests(unittest.TestCase):
                                        max_turns=1, timeout=300, keep_temp=False)
         self.assertTrue(result.error)
         self.assertIn("시간 초과 300초", result.reason)
+
+
+def result_event(duration_ms=1000, input_tokens=10, cache=5, output_tokens=3, turns=2, usd=0.01):
+    return {"type": "result", "duration_ms": duration_ms, "num_turns": turns, "total_cost_usd": usd,
+            "usage": {"input_tokens": input_tokens, "cache_creation_input_tokens": cache,
+                      "cache_read_input_tokens": 0, "output_tokens": output_tokens}}
+
+
+class CostTests(unittest.TestCase):
+    def test_sums_every_result_event_including_followups(self):
+        cost = _harness.cost_from_events([result_event(), {"type": "assistant"}, result_event(turns=3)])
+        self.assertEqual(2000, cost.duration_ms)
+        self.assertEqual(30, cost.input_tokens)   # 캐시 생성 토큰 포함
+        self.assertEqual(6, cost.output_tokens)
+        self.assertEqual(5, cost.turns)
+        self.assertAlmostEqual(0.02, cost.usd)
+        self.assertEqual(36, cost.tokens)
+
+    def test_no_result_event_means_unknown(self):
+        self.assertIsNone(_harness.cost_from_events([{"type": "assistant"}]))
+
+    def test_run_records_cost_and_firing(self):
+        class Loader:
+            def claude_args(self, with_skill):
+                return []
+
+            def skill_name_matches(self, invoked):
+                return invoked == "demo"
+
+        def fake(prompt, workdir, **kwargs):
+            return [{"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "name": "Skill", "input": {"skill": "demo"}}]}}, result_event()]
+
+        case = _harness.Case("c", Path("c.py"), "p", 1, "", "bypassPermissions", lambda ctx: None)
+        with mock.patch.object(_harness, "run_claude", fake):
+            r = _harness._one_run(case, Loader(), with_skill=True, model=None,
+                                  max_turns=1, timeout=300, keep_temp=False)
+        self.assertTrue(r.skill_fired)
+        self.assertEqual(2, r.cost.turns)
+
+
+class GraderFieldTests(unittest.TestCase):
+    def load(self, text):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "c.py"
+            path.write_text('PROMPT = "p"\n' + text + "\ndef check(ctx):\n    pass\n", encoding="utf-8")
+            return _harness.load_case(path)
+
+    def test_defaults(self):
+        case = self.load("")
+        self.assertEqual("code", case.grader)
+        self.assertIsNone(case.soft_max_turns)
+
+    def test_reads_llm_grader_and_focus(self):
+        case = self.load('GRADER = "llm"\nREVIEW_FOCUS = "권장안 타당성"\nSOFT_MAX_TURNS = 20')
+        self.assertEqual(("llm", "권장안 타당성", 20), (case.grader, case.review_focus, case.soft_max_turns))
+
+    def test_unknown_grader_is_rejected(self):
+        with self.assertRaises(ValueError):
+            self.load('GRADER = "human"')
 
 
 class FollowupTests(unittest.TestCase):

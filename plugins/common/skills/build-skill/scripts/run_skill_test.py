@@ -5,7 +5,8 @@
     python3 run_skill_test.py --all [<스캔루트>]   # 루트 아래 모든 스킬 (기본 루트: cwd)
 
 <스킬디렉토리>/evals/*.py 각 케이스를 격리 환경에서 `claude -p`로 실행하고,
-케이스 파일의 check(ctx)로 결과를 검증한다. check는 100% 코드 — LLM 심판 없음.
+케이스 파일의 check(ctx)로 결과를 검증한다. check는 코드다. 케이스마다 PASS / FAIL / REVIEW를
+판정하고 근거 한 줄과 비용(시간·토큰·턴)을 함께 낸다(판정 규칙은 _verdict.judge).
 `--all`은 SKILL.md와 실행 가능한 evals/*.py를 함께 가진 디렉터리를 모두 찾아 순회한다
 (CI 주간 실행용). `--json`은 이때 {"all_ok", "skills": [...]} 형태로 나온다.
 
@@ -23,31 +24,63 @@
 
 ctx 헬퍼는 _harness.py의 Ctx 참조.
 
-종료 코드: 전 케이스가 임계값(--threshold, 기본 1.0) 이상 통과하면 0, 아니면 1.
+종료 코드: FAIL 케이스가 있으면 1, 없으면 0(REVIEW만 있어도 0). 인자 오류는 2.
 """
 
 import argparse
 import json
 import sys
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _harness import (  # noqa: E402
-    CaseResult, applies_to_model, discover_cases, discover_skills, load_case, run_case,
-    unused_bundle_files,
+    Case, CaseResult, RunCost, RunResult, applies_to_model, discover_cases, discover_skills,
+    load_case, run_case, unused_bundle_files,
 )
+from _verdict import Judgement, Verdict, judge  # noqa: E402
 
 
-def _fmt(cr: CaseResult, threshold: float) -> str:
-    total = len(cr.runs)
-    mark = "PASS" if cr.ok(threshold) else "FAIL"
-    line = f"  {cr.case:<24} {cr.pass_count}/{total} {mark}"
+@dataclass
+class Outcome:
+    """케이스 하나의 실행 결과와 판정."""
+    case: Case
+    result: CaseResult
+    judgement: Judgement
+
+
+def total_cost(runs: list[RunResult]) -> RunCost | None:
+    costs = [r.cost for r in runs if r.cost is not None]
+    if not costs:
+        return None
+    out = RunCost()
+    for c in costs:
+        out += c
+    return out
+
+
+def fmt_cost(cost: RunCost | None) -> str:
+    if cost is None:
+        return "비용 모름"
+    return (f"{cost.duration_ms / 1000:.1f}s · 입력 {cost.input_tokens:,} / 출력 {cost.output_tokens:,} 토큰"
+            f" · 턴 {cost.turns} · ${cost.usd:.3f}")
+
+
+def _fmt(o: Outcome) -> str:
+    cr, j = o.result, o.judgement
+    line = f"  {cr.case:<24} {cr.pass_count}/{len(cr.runs)} {j.verdict.value:<6} {j.reason}"
     if cr.baseline:
         line += f"   (baseline {cr.baseline_pass_count}/{len(cr.baseline)})"
+    line += f"\n      비용: {fmt_cost(total_cost(cr.runs))}"
+    if j.verdict is not Verdict.PASS and o.case.review_focus:
+        line += f"\n      볼 것: {o.case.review_focus}"
     fails = [r for r in cr.runs if not r.passed]
-    for i, r in enumerate(fails[:3]):
+    for r in fails[:3]:
         line += f"\n      - {r.reason}"
     return line
+
+
+_MATRIX_MARK = {"PASS": "", "REVIEW": " △", "FAIL": " ✗"}
 
 
 def matrix_markdown(skill_reports: list[dict], models: list[str]) -> str:
@@ -56,7 +89,8 @@ def matrix_markdown(skill_reports: list[dict], models: list[str]) -> str:
     for rep in skill_reports:
         model = rep.get("model") or "(기본)"
         for c in rep["cases"]:
-            cell = f"{c['pass']}/{c['total']}" + ("" if c["pass"] == c["total"] else " ✗")
+            verdict = c.get("verdict") or ("PASS" if c["pass"] == c["total"] else "FAIL")
+            cell = f"{c['pass']}/{c['total']}" + _MATRIX_MARK[verdict]
             by_skill.setdefault(rep["skill"], {}).setdefault(c["case"], {})[model] = cell
     lines: list[str] = []
     for skill, cases in by_skill.items():
@@ -69,37 +103,47 @@ def matrix_markdown(skill_reports: list[dict], models: list[str]) -> str:
     return "\n".join(lines)
 
 
-def _skill_payload(skill_dir: Path, results: list[CaseResult], threshold: float) -> dict:
+def _cost_json(cost: RunCost | None) -> dict | None:
+    return None if cost is None else {**asdict(cost), "tokens": cost.tokens}
+
+
+def _run_json(r: RunResult, *, files_read: bool) -> dict:
+    out = {"passed": r.passed, "reason": r.reason, "error": r.error, "skill_fired": r.skill_fired,
+           "tools": r.tool_names, "final_text": r.final_text, "cost": _cost_json(r.cost)}
+    if files_read:
+        out["files_read"] = r.files_read
+    return out
+
+
+def _skill_payload(skill_dir: Path, outcomes: list[Outcome]) -> dict:
+    # pass·total·all_ok 키는 release_check와 CI artifact를 읽는 쪽이 쓰므로 뜻을 유지한다(all_ok = FAIL 없음).
+    results = [o.result for o in outcomes]
     return {
         "skill": str(skill_dir),
         "model": results[0].model if results else None,
-        "all_ok": all(cr.ok(threshold) for cr in results),
+        "all_ok": all(o.judgement.verdict is not Verdict.FAIL for o in outcomes),
         "unused_files": unused_bundle_files(skill_dir, results),
         "cases": [
             {
-                "case": cr.case,
-                "pass": cr.pass_count,
-                "total": len(cr.runs),
-                "baseline_pass": cr.baseline_pass_count,
-                "baseline_total": len(cr.baseline),
-                "runs": [
-                    {"passed": r.passed, "reason": r.reason, "error": r.error,
-                     "tools": r.tool_names, "files_read": r.files_read,
-                     "final_text": r.final_text}
-                    for r in cr.runs
-                ],
-                "baseline_runs": [
-                    {"passed": r.passed, "reason": r.reason, "error": r.error,
-                     "tools": r.tool_names, "final_text": r.final_text}
-                    for r in cr.baseline
-                ],
+                "case": o.result.case,
+                "verdict": o.judgement.verdict.value,
+                "reason": o.judgement.reason,
+                "grader": o.case.grader,
+                "review_focus": o.case.review_focus,
+                "pass": o.result.pass_count,
+                "total": len(o.result.runs),
+                "baseline_pass": o.result.baseline_pass_count,
+                "baseline_total": len(o.result.baseline),
+                "cost": _cost_json(total_cost(o.result.runs)),
+                "runs": [_run_json(r, files_read=True) for r in o.result.runs],
+                "baseline_runs": [_run_json(r, files_read=False) for r in o.result.baseline],
             }
-            for cr in results
+            for o in outcomes
         ],
     }
 
 
-def _run_skill(skill_dir: Path, args) -> list[CaseResult] | None:
+def _run_skill(skill_dir: Path, args) -> list[Outcome] | None:
     """한 스킬의 케이스를 모두 실행. 케이스가 없으면 None."""
     case_paths = discover_cases(skill_dir)
     if args.case:
@@ -107,7 +151,7 @@ def _run_skill(skill_dir: Path, args) -> list[CaseResult] | None:
     if not case_paths:
         return None
 
-    results: list[CaseResult] = []
+    outcomes: list[Outcome] = []
     for cp in case_paths:
         case = load_case(cp)
         if not applies_to_model(case, args.model):
@@ -124,9 +168,10 @@ def _run_skill(skill_dir: Path, args) -> list[CaseResult] | None:
             baseline=args.baseline, model=args.model,
             max_turns=args.max_turns, timeout=args.timeout, keep_temp=args.keep_temp,
         )
-        results.append(cr)
-        print(_fmt(cr, args.threshold), file=sys.stderr)
-    return results
+        outcome = Outcome(case, cr, judge(case, cr, args.threshold))
+        outcomes.append(outcome)
+        print(_fmt(outcome), file=sys.stderr)
+    return outcomes
 
 
 def main() -> int:
@@ -148,7 +193,8 @@ def main() -> int:
     ap.add_argument("--max-turns", type=int, default=40)
     ap.add_argument("--timeout", type=int, default=300, help="run 당 초 (기본 300)")
     ap.add_argument("--threshold", type=float, default=1.0,
-                    help="케이스 통과 판정 비율 (기본 1.0 = 전 run 통과)")
+                    help="이 비율보다 적게 통과하면 FAIL (기본 1.0 = 전 run 통과). 넘었지만 일부 run이 "
+                         "실패하면 REVIEW")
     ap.add_argument("--keep-temp", action="store_true", help="임시 디렉토리 보존 (디버깅)")
     ap.add_argument("--json", dest="json_out", nargs="?", const="-",
                     help="전체 결과를 JSON으로 (경로 없으면 stdout)")
@@ -192,7 +238,7 @@ def main() -> int:
             if not results:
                 skipped_all = True
                 continue
-            report = _skill_payload(skill_dir, results, args.threshold)
+            report = _skill_payload(skill_dir, results)
             skill_reports.append(report)
             if report["unused_files"]:
                 print("  참고: 이 평가에서 한 번도 열리지 않은 번들 파일 — "
@@ -230,7 +276,9 @@ def main() -> int:
     elif len(skill_reports) > 1:
         for s in skill_reports:
             print(f"  {'✓' if s['all_ok'] else '✗'} {s['skill']}", file=sys.stderr)
-    print(f"\n{'전체 통과' if all_ok else '실패 케이스 있음'}", file=sys.stderr)
+    counts = {v: sum(c["verdict"] == v.value for s in skill_reports for c in s["cases"]) for v in Verdict}
+    print(f"\nPASS {counts[Verdict.PASS]} · REVIEW {counts[Verdict.REVIEW]} · FAIL {counts[Verdict.FAIL]}"
+          f" — {'FAIL 없음' if all_ok else 'FAIL 케이스 있음'}", file=sys.stderr)
     return 0 if all_ok else 1
 
 

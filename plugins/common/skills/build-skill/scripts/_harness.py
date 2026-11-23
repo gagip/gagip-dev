@@ -47,6 +47,13 @@ class Case:
     check: "callable"
     models: list[str] | None = None   # None이면 모든 모델에서 실행
     followups: list[str] = field(default_factory=list)   # 첫 응답 뒤 같은 세션에 차례로 보낼 사용자 답
+    grader: str = "code"   # "llm"이면 구조 검사를 통과한 run을 루브릭으로 채점한다(판정은 REVIEW까지)
+    review_focus: str = ""   # 사람이 REVIEW 결과에서 볼 것 한 줄
+    soft_max_turns: int | None = None    # run 평균 턴이 이보다 크면 REVIEW
+    soft_max_tokens: int | None = None   # run 평균 입출력 토큰 합이 이보다 크면 REVIEW
+
+
+GRADERS = ("code", "llm")
 
 
 def load_case(case_path: Path) -> Case:
@@ -55,7 +62,8 @@ def load_case(case_path: Path) -> Case:
     모듈은 최소 PROMPT(str)와 check(ctx) 함수를 정의해야 한다.
     RUNS(int, 기본 3), SCAFFOLD(str, 기본 ""), PERMISSION_MODE(str, 기본 bypassPermissions),
     MODELS(list[str], 기본 모든 모델: 이 케이스가 대상으로 삼는 모델만 적는다),
-    FOLLOWUPS(list[str], 기본 없음: 질문에 답하는 다음 턴들)는 선택.
+    FOLLOWUPS(list[str], 기본 없음: 질문에 답하는 다음 턴들),
+    GRADER("code" | "llm", 기본 "code"), REVIEW_FOCUS(str), SOFT_MAX_TURNS(int), SOFT_MAX_TOKENS(int)는 선택.
     """
     spec = importlib.util.spec_from_file_location(f"buildskill_case_{case_path.stem}", case_path)
     if spec is None or spec.loader is None:
@@ -68,6 +76,10 @@ def load_case(case_path: Path) -> Case:
     if not hasattr(mod, "check") or not callable(mod.check):
         raise ValueError(f"{case_path.name}: check(ctx) 함수가 필요하다")
 
+    grader = str(getattr(mod, "GRADER", "code"))
+    if grader not in GRADERS:
+        raise ValueError(f"{case_path.name}: GRADER는 {GRADERS} 중 하나여야 한다 — {grader!r}")
+
     return Case(
         name=case_path.stem,
         path=case_path,
@@ -78,7 +90,16 @@ def load_case(case_path: Path) -> Case:
         check=mod.check,
         models=[str(m) for m in mod.MODELS] if getattr(mod, "MODELS", None) else None,
         followups=[str(f) for f in getattr(mod, "FOLLOWUPS", [])],
+        grader=grader,
+        review_focus=str(getattr(mod, "REVIEW_FOCUS", "")),
+        soft_max_turns=_optional_int(mod, "SOFT_MAX_TURNS"),
+        soft_max_tokens=_optional_int(mod, "SOFT_MAX_TOKENS"),
     )
+
+
+def _optional_int(mod, name: str) -> int | None:
+    value = getattr(mod, name, None)
+    return None if value is None else int(value)
 
 
 def discover_cases(skill_dir: Path) -> list[Path]:
@@ -236,6 +257,48 @@ def run_claude(prompt: str, workdir: Path, *, extra_args: list[str], permission_
     return events
 
 
+@dataclass
+class RunCost:
+    """claude -p 호출 비용. result 이벤트 값의 합이다."""
+    duration_ms: int = 0
+    input_tokens: int = 0    # 캐시 생성·읽기 토큰 포함
+    output_tokens: int = 0
+    turns: int = 0
+    usd: float = 0.0
+
+    @property
+    def tokens(self) -> int:
+        return self.input_tokens + self.output_tokens
+
+    def __add__(self, other: "RunCost") -> "RunCost":
+        return RunCost(self.duration_ms + other.duration_ms, self.input_tokens + other.input_tokens,
+                       self.output_tokens + other.output_tokens, self.turns + other.turns,
+                       self.usd + other.usd)
+
+
+def cost_from_events(events: list[dict]) -> RunCost | None:
+    """result 이벤트를 모두 더한다. 후속 턴마다 result가 하나씩 생기므로 마지막 것만 읽으면 적게 잡힌다.
+
+    result 이벤트가 하나도 없으면 None(비용을 모름)이다.
+    """
+    results = [e for e in events if e.get("type") == "result"]
+    if not results:
+        return None
+    total = RunCost()
+    for e in results:
+        usage = e.get("usage") or {}
+        total += RunCost(
+            duration_ms=int(e.get("duration_ms") or 0),
+            input_tokens=int(usage.get("input_tokens") or 0)
+            + int(usage.get("cache_creation_input_tokens") or 0)
+            + int(usage.get("cache_read_input_tokens") or 0),
+            output_tokens=int(usage.get("output_tokens") or 0),
+            turns=int(e.get("num_turns") or 0),
+            usd=float(e.get("total_cost_usd") or 0.0),
+        )
+    return total
+
+
 def session_id(events: list[dict]) -> str | None:
     """마지막 이벤트부터 찾아 세션 ID를 돌려준다(이어 보낸 턴은 새 ID를 받을 수 있다)."""
     return next((e["session_id"] for e in reversed(events) if e.get("session_id")), None)
@@ -376,6 +439,8 @@ class RunResult:
     final_text: str = ""
     files_read: list[str] = field(default_factory=list)   # Read 툴로 연 파일
     bash_cmds: list[str] = field(default_factory=list)    # 실행한 bash 명령
+    skill_fired: bool = False
+    cost: RunCost | None = None   # None: 이벤트가 없어 모름(시간 초과 등)
 
 
 @dataclass
@@ -430,13 +495,16 @@ def _one_run(case: Case, loader: SkillLoader, *, with_skill: bool, model: str | 
                     max_turns=max_turns, timeout=timeout, resume=session,
                 )
             except subprocess.TimeoutExpired:
-                return RunResult(False, f"claude 실행 실패: 후속 턴 시간 초과 {timeout}초", error=True)
+                return RunResult(False, f"claude 실행 실패: 후속 턴 시간 초과 {timeout}초", error=True,
+                                 cost=cost_from_events(events))
             except RuntimeError as e:
-                return RunResult(False, f"claude 실행 실패(후속 턴): {str(e)[:300]}", error=True)
+                return RunResult(False, f"claude 실행 실패(후속 턴): {str(e)[:300]}", error=True,
+                                 cost=cost_from_events(events))
 
         ctx = Ctx.build(tmp, events, loader)
         trace = dict(tool_names=ctx.tool_names(), files_read=ctx.files_read(),
-                     bash_cmds=list(ctx.bash_cmds))
+                     bash_cmds=list(ctx.bash_cmds), skill_fired=ctx.skill_fired(),
+                     cost=cost_from_events(events))
         try:
             case.check(ctx)
         except AssertionError as e:
