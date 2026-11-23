@@ -20,6 +20,7 @@ Claude Code와 Codex가 함께 쓰는 개인 플러그인 마켓플레이스 레
 ## Git 워크플로우
 
 - **PR, 작업 브랜치, worktree를 쓰지 않는다.** `main` 체크아웃에서 직접 작업한다.
+- 작업 계획서는 레포 루트 `.work/`에 둔다(gitignore). 공개 레포라 커밋하지 않는다.
 - 커밋은 이 레포의 `plugin-commit` 스킬을 따른다. 변경 경로로 scope를 감지하고
   `type(scope): 한글 메시지` 컨벤션을 사용한다.
 - 원격에 올릴 때는 `release` 스킬을 거친다. `git push`를 직접 호출하지 않는다.
