@@ -12,6 +12,8 @@ PROMPT = (
 )
 
 RUNS = 3
+GRADER = "llm"
+REVIEW_FOCUS = "작은 버그에 맞게 짧고 완료 기준이 테스트로 잡히는가"
 
 SCAFFOLD = r"""
 git init -q && git config user.name t && git config user.email t@t

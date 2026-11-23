@@ -9,6 +9,8 @@ PROMPT = (
 )
 
 RUNS = 3
+GRADER = "llm"
+REVIEW_FOCUS = "결정 전 상태가 끝까지 유지되고 선택지 비교가 한쪽으로 기울지 않았는가"
 
 SCAFFOLD = r"""
 git init -q && git config user.name t && git config user.email t@t

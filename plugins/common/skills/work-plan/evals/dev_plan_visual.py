@@ -12,6 +12,8 @@ PROMPT = (
 )
 
 RUNS = 3
+GRADER = "llm"
+REVIEW_FOCUS = "시각 자료만 보고 바뀐 모습과 고를 선택지를 그릴 수 있는가"
 
 SCAFFOLD = r"""
 git init -q && git config user.name t && git config user.email t@t

@@ -13,6 +13,8 @@ PROMPT = (
 )
 
 RUNS = 3
+GRADER = "llm"
+REVIEW_FOCUS = "회차 상한·확정 목록·끝 검토가 실제로 루프를 멈추게 하는가"
 
 SCAFFOLD = r"""
 git init -q && git config user.name t && git config user.email t@t

@@ -13,6 +13,8 @@ PROMPT = (
 )
 
 RUNS = 3
+GRADER = "llm"
+REVIEW_FOCUS = "옛 메모와 코드가 다를 때 코드 기준으로 썼고 그 차이를 확인 필요로 남겼는가"
 
 SCAFFOLD = r"""
 git init -q && git config user.name t && git config user.email t@t

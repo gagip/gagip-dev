@@ -13,6 +13,8 @@ PROMPT = (
 )
 
 RUNS = 3
+GRADER = "llm"
+REVIEW_FOCUS = "명세가 요청보다 넓어지지 않았고 묻지 않아도 될 것을 묻지 않았는가"
 
 SCAFFOLD = r"""
 git init -q && git config user.name t && git config user.email t@t

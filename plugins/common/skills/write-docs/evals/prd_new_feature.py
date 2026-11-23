@@ -10,6 +10,8 @@ PROMPT = (
 )
 
 RUNS = 3
+GRADER = "llm"
+REVIEW_FOCUS = "구현 방식 없이 목표·사용자·확인 방법만으로 문서가 서는가"
 
 SCAFFOLD = r"""
 git init -q && git config user.name t && git config user.email t@t

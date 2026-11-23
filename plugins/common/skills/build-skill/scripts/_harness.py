@@ -580,6 +580,8 @@ def run_case(skill_dir: Path, case: Case, *, baseline: bool, model: str | None,
 
 # 번들 파일을 찾는 디렉터리. test_*·_*로 시작하는 파일은 러너·테스트 전용이라 Claude가 열 일이 없어 뺀다
 _BUNDLE_DIRS = ("references", "assets", "scripts")
+# LLM 채점기가 읽는 루브릭은 스킬 run이 열지 않아도 쓰이는 파일이다
+_GRADER_RUBRIC = "references/review-rubric.md"
 
 
 def unused_bundle_files(skill_dir: Path, results: list[CaseResult]) -> list[str]:
@@ -602,6 +604,8 @@ def unused_bundle_files(skill_dir: Path, results: list[CaseResult]) -> list[str]
             if f.name.startswith(("test_", "_")):
                 continue
             rel = f.relative_to(skill_dir).as_posix()
+            if rel == _GRADER_RUBRIC:
+                continue
             if any(p.endswith("/" + rel) or p == rel for p in reads):
                 continue
             if any(rel in c.replace("\\", "/") or f.name in c for c in cmds):

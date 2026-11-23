@@ -30,7 +30,7 @@ ctx 헬퍼는 _harness.py의 Ctx 참조.
 import argparse
 import json
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 
@@ -40,15 +40,26 @@ from _harness import (  # noqa: E402
     load_case, run_case, unused_bundle_files,
 )
 from _artifacts import find_runs_root, save_case  # noqa: E402
+from _llm_grade import Grade, grade_run, summarize  # noqa: E402
 from _verdict import Judgement, Verdict, judge  # noqa: E402
 
 
 @dataclass
 class Outcome:
-    """케이스 하나의 실행 결과와 판정."""
+    """케이스 하나의 실행 결과와 판정. grades[i]는 i번째 run의 LLM 채점(채점 안 했으면 None)."""
     case: Case
     result: CaseResult
     judgement: Judgement
+    grades: list[Grade | None] = field(default_factory=list)
+
+    def grade_cost(self) -> RunCost | None:
+        costs = [g.cost for g in self.grades if g is not None and g.cost is not None]
+        if not costs:
+            return None
+        out = RunCost()
+        for c in costs:
+            out += c
+        return out
 
 
 def total_cost(runs: list[RunResult]) -> RunCost | None:
@@ -74,6 +85,16 @@ def _fmt(o: Outcome) -> str:
     if cr.baseline:
         line += f"   (baseline {cr.baseline_pass_count}/{len(cr.baseline)})"
     line += f"\n      비용: {fmt_cost(total_cost(cr.runs))}"
+    if o.grades:
+        line += f"\n      채점 비용: {fmt_cost(o.grade_cost())}"
+    for i, g in enumerate(o.grades, 1):
+        if g is None:
+            continue
+        for item in g.items:
+            if not item.passed:
+                line += f"\n      run{i} LLM #{item.no} 미통과: \"{item.quote[:160]}\""
+                if item.fix:
+                    line += f"\n        고칠 문장: {item.fix[:160]}"
     if j.verdict is not Verdict.PASS and o.case.review_focus:
         line += f"\n      볼 것: {o.case.review_focus}"
     fails = [r for r in cr.runs if not r.passed]
@@ -109,12 +130,18 @@ def _cost_json(cost: RunCost | None) -> dict | None:
     return None if cost is None else {**asdict(cost), "tokens": cost.tokens}
 
 
-def _run_json(r: RunResult, *, files_read: bool) -> dict:
+def _run_json(r: RunResult, *, files_read: bool, grade: Grade | None = None) -> dict:
     out = {"passed": r.passed, "reason": r.reason, "error": r.error, "skill_fired": r.skill_fired,
            "tools": r.tool_names, "final_text": r.final_text, "cost": _cost_json(r.cost)}
     if files_read:
         out["files_read"] = r.files_read
+    if grade is not None:
+        out["llm"] = grade.to_json()
     return out
+
+
+def _grade_at(o: Outcome, i: int) -> Grade | None:
+    return o.grades[i] if i < len(o.grades) else None
 
 
 def _skill_payload(skill_dir: Path, outcomes: list[Outcome]) -> dict:
@@ -137,7 +164,9 @@ def _skill_payload(skill_dir: Path, outcomes: list[Outcome]) -> dict:
                 "baseline_pass": o.result.baseline_pass_count,
                 "baseline_total": len(o.result.baseline),
                 "cost": _cost_json(total_cost(o.result.runs)),
-                "runs": [_run_json(r, files_read=True) for r in o.result.runs],
+                "grade_cost": _cost_json(o.grade_cost()),
+                "runs": [_run_json(r, files_read=True, grade=_grade_at(o, i))
+                         for i, r in enumerate(o.result.runs)],
                 "baseline_runs": [_run_json(r, files_read=False) for r in o.result.baseline],
             }
             for o in outcomes
@@ -171,11 +200,13 @@ def _run_skill(skill_dir: Path, args) -> list[Outcome] | None:
             max_turns=args.max_turns, timeout=args.timeout, keep_temp=args.keep_temp,
         )
         try:
-            outcome = Outcome(case, cr, judge(case, cr, args.threshold))
+            grades, summary = _grade_case(skill_dir, case, cr, args)
+            outcome = Outcome(case, cr, judge(case, cr, args.threshold, llm_summary=summary), grades)
             outcomes.append(outcome)
             print(_fmt(outcome), file=sys.stderr)
             if outcome.judgement.verdict is not Verdict.PASS:
-                saved = save_case(args.run_root, skill_dir.name, cr, _case_record(outcome))
+                extras = [None if g is None else {"llm": g.to_json()} for g in grades] if grades else None
+                saved = save_case(args.run_root, skill_dir.name, cr, _case_record(outcome), extras)
                 print(f"      산출물: {saved}", file=sys.stderr)
         finally:
             if not args.keep_temp:
@@ -183,11 +214,25 @@ def _run_skill(skill_dir: Path, args) -> list[Outcome] | None:
     return outcomes
 
 
+def _grade_case(skill_dir: Path, case: Case, cr: CaseResult, args) -> tuple[list[Grade | None], str | None]:
+    """GRADER="llm"이면 구조 검사를 통과한 run을 채점한다. (run별 채점, 요약 한 줄)."""
+    if case.grader != "llm":
+        return [], None
+    if args.no_llm_grade:
+        return [], "LLM 채점 꺼짐(--no-llm-grade)"
+    grades = [
+        grade_run(r, skill_dir=skill_dir, request=case.prompt, model=args.grader_model, timeout=args.timeout)
+        if r.passed and not r.error else None
+        for r in cr.runs
+    ]
+    return grades, summarize(grades)
+
+
 def _case_record(o: Outcome) -> dict:
     return {"case": o.result.case, "model": o.result.model, "verdict": o.judgement.verdict.value,
             "reason": o.judgement.reason, "grader": o.case.grader, "review_focus": o.case.review_focus,
             "pass": o.result.pass_count, "total": len(o.result.runs),
-            "cost": _cost_json(total_cost(o.result.runs))}
+            "cost": _cost_json(total_cost(o.result.runs)), "grade_cost": _cost_json(o.grade_cost())}
 
 
 def main() -> int:
@@ -212,6 +257,10 @@ def main() -> int:
                     help="이 비율보다 적게 통과하면 FAIL (기본 1.0 = 전 run 통과). 넘었지만 일부 run이 "
                          "실패하면 REVIEW")
     ap.add_argument("--keep-temp", action="store_true", help="임시 디렉토리 보존 (디버깅)")
+    ap.add_argument("--grader-model", default="sonnet",
+                    help='GRADER="llm" 케이스를 채점할 모델 (기본 sonnet)')
+    ap.add_argument("--no-llm-grade", action="store_true",
+                    help="LLM 채점을 건너뛴다(그 케이스는 REVIEW로 남는다). 모델 매트릭스·재실행용")
     ap.add_argument("--runs-dir", type=Path,
                     help="REVIEW·FAIL 산출물을 둘 곳 (기본: 스킬이 든 레포 루트의 .eval-runs)")
     ap.add_argument("--json", dest="json_out", nargs="?", const="-",

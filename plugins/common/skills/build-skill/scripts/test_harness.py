@@ -72,6 +72,10 @@ class UnusedBundleTests(unittest.TestCase):
         unused = self.unused(run_result(), run_result(files_read=["/x/assets/t.md"]))
         self.assertNotIn("assets/t.md", unused)
 
+    def test_grader_rubric_is_never_listed(self):
+        (self.skill / "references" / "review-rubric.md").write_text("x", encoding="utf-8")
+        self.assertNotIn("references/review-rubric.md", self.unused(run_result()))
+
     def test_test_and_private_files_are_never_listed(self):
         unused = self.unused(run_result())
         self.assertNotIn("scripts/test_run.py", unused)
