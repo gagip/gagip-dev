@@ -34,19 +34,18 @@ def _run_record(r: RunResult, extra: dict | None) -> dict:
         "passed": r.passed, "reason": r.reason, "error": r.error, "skill_fired": r.skill_fired,
         "tools": r.tool_names, "bash_cmds": r.bash_cmds, "files_read": r.files_read,
         "cost": None if r.cost is None else asdict(r.cost),
-        "changed_files": r.changed_files(),
         **(extra or {}),
     }
 
 
 def _save_run(dest: Path, r: RunResult, extra: dict | None) -> None:
     dest.mkdir(parents=True, exist_ok=True)
+    changed = r.changed_files()
     (dest / "result.json").write_text(
-        json.dumps(_run_record(r, extra), ensure_ascii=False, indent=2), encoding="utf-8")
+        json.dumps({**_run_record(r, extra), "changed_files": changed}, ensure_ascii=False, indent=2),
+        encoding="utf-8")
     (dest / "final.md").write_text(r.final_text, encoding="utf-8")
-    if r.workdir is None:
-        return
-    for rel in r.changed_files():
+    for rel in changed:
         target = dest / "files" / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(r.workdir / rel, target)

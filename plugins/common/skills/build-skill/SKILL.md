@@ -152,7 +152,7 @@ PERMISSION_MODE = "bypassPermissions"   # 선택, 기본값
 FOLLOWUPS = ["권장안으로 해줘"]         # 선택, 첫 응답 뒤 같은 세션(--resume)에 차례로 보낼 답. 묻고 답받는 스킬용
 GRADER = "code"                   # 선택, "code" | "llm". llm이면 통과한 run을 루브릭으로 채점하고 REVIEW로 올린다
 REVIEW_FOCUS = "근거 없는 단정"     # 선택, REVIEW일 때 사람이 볼 곳 한 줄
-SOFT_MAX_TURNS = 30               # 선택, 넘으면 REVIEW (SOFT_MAX_TOKENS도 같다)
+SOFT_MAX_TURNS = 30               # 선택, run 평균이 넘으면 REVIEW (SOFT_MAX_TOKENS는 캐시 포함 입출력 합)
 
 def check(ctx):
     assert ctx.skill_fired(), f"미발동: {ctx.skill_invocations()}"
@@ -267,7 +267,7 @@ FAIL은 실행 오류가 있거나 통과율이 임계값 미만일 때다. REVI
 - REVIEW·FAIL 케이스의 산출물(바뀐 파일·마지막 응답·run 기록·판정)은 러너가 레포 루트
   `.eval-runs/<날짜시각>/<스킬>/<케이스>/`에 남기고 콘솔에 경로를 찍는다(`--runs-dir`로 바꿀 수 있다).
   레포 `.gitignore`가 이 경로를 무시하므로 공개되지 않는다. PASS 케이스의 임시 폴더는 바로 지운다.
-- 실행 결과 JSON을 `--json`으로 받아 `final_text`와 출력물을, 검수 에이전트 채점표와 함께 사용자에게
+- 실행 결과 JSON을 `--json`으로 받아 `final_text`와 출력물을, LLM 채점 결과(`runs[].llm`)와 함께 사용자에게
   보여 주고 최종 판정을 요청한다: "이렇게 나왔고 채점은 이런데, 쓸 만해? 뭘 바꿀까?"
 
 ---

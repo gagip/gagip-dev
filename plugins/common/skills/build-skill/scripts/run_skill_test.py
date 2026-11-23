@@ -37,7 +37,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _harness import (  # noqa: E402
     Case, CaseResult, RunCost, RunResult, applies_to_model, discover_cases, discover_skills,
-    load_case, run_case, unused_bundle_files,
+    load_case, run_case, sum_costs, unused_bundle_files,
 )
 from _artifacts import find_runs_root, save_case  # noqa: E402
 from _llm_grade import Grade, grade_run, summarize  # noqa: E402
@@ -53,29 +53,18 @@ class Outcome:
     grades: list[Grade | None] = field(default_factory=list)
 
     def grade_cost(self) -> RunCost | None:
-        costs = [g.cost for g in self.grades if g is not None and g.cost is not None]
-        if not costs:
-            return None
-        out = RunCost()
-        for c in costs:
-            out += c
-        return out
+        return sum_costs(g.cost for g in self.grades if g is not None)
 
 
 def total_cost(runs: list[RunResult]) -> RunCost | None:
-    costs = [r.cost for r in runs if r.cost is not None]
-    if not costs:
-        return None
-    out = RunCost()
-    for c in costs:
-        out += c
-    return out
+    return sum_costs(r.cost for r in runs)
 
 
 def fmt_cost(cost: RunCost | None) -> str:
     if cost is None:
         return "비용 모름"
-    return (f"{cost.duration_ms / 1000:.1f}s · 입력 {cost.input_tokens:,} / 출력 {cost.output_tokens:,} 토큰"
+    return (f"{cost.duration_ms / 1000:.1f}s · 입력 {cost.input_tokens:,}(+캐시 {cost.cache_tokens:,})"
+            f" / 출력 {cost.output_tokens:,} 토큰"
             f" · 턴 {cost.turns} · ${cost.usd:.3f}")
 
 
@@ -112,8 +101,7 @@ def matrix_markdown(skill_reports: list[dict], models: list[str]) -> str:
     for rep in skill_reports:
         model = rep.get("model") or "(기본)"
         for c in rep["cases"]:
-            verdict = c.get("verdict") or ("PASS" if c["pass"] == c["total"] else "FAIL")
-            cell = f"{c['pass']}/{c['total']}" + _MATRIX_MARK[verdict]
+            cell = f"{c['pass']}/{c['total']}" + _MATRIX_MARK[c["verdict"]]
             by_skill.setdefault(rep["skill"], {}).setdefault(c["case"], {})[model] = cell
     lines: list[str] = []
     for skill, cases in by_skill.items():
@@ -266,6 +254,9 @@ def main() -> int:
     ap.add_argument("--json", dest="json_out", nargs="?", const="-",
                     help="전체 결과를 JSON으로 (경로 없으면 stdout)")
     args = ap.parse_args()
+    if not 0.0 <= args.threshold <= 1.0:
+        print("오류: --threshold는 0~1 사이다", file=sys.stderr)
+        return 2
 
     if args.all:
         root = (args.skill_dir or Path.cwd()).resolve()

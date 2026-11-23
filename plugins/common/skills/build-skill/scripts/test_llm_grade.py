@@ -100,6 +100,11 @@ class GradeRunTests(unittest.TestCase):
             raise subprocess.TimeoutExpired(["claude"], kwargs["timeout"])
         self.assertEqual("시간 초과 60초", self.grade(runner).error)
 
+    def test_os_error_is_a_grading_failure(self):
+        def runner(prompt, workdir, **kwargs):
+            raise OSError(7, "Argument list too long")
+        self.assertIn("호출 실패", self.grade(runner).error)
+
     def test_missing_rubric(self):
         (self.skill / "references" / "review-rubric.md").unlink()
         runner, seen = answer("")
@@ -169,6 +174,15 @@ class GradeCaseTests(unittest.TestCase):
 class RubricNumbersTests(unittest.TestCase):
     def test_reads_table_rows(self):
         self.assertEqual([1, 2], _llm_grade.rubric_item_numbers(RUBRIC))
+
+    def test_every_llm_graded_case_has_a_rubric(self):
+        from _harness import load_case
+        skills = Path(__file__).resolve().parents[2]
+        llm_cases = [p for p in skills.glob("*/evals/*.py") if load_case(p).grader == "llm"]
+        self.assertTrue(llm_cases)
+        for p in llm_cases:
+            with self.subTest(case=f"{p.parent.parent.name}/{p.stem}"):
+                self.assertTrue((p.parent.parent / _llm_grade.RUBRIC_PATH).is_file())
 
     def test_repo_rubrics_have_items(self):
         skills = Path(__file__).resolve().parents[2]

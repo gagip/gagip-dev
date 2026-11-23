@@ -85,7 +85,7 @@ class VerdictTableTests(unittest.TestCase):
 
     def test_llm_grader_never_fails_a_structurally_passing_case(self):
         j = self.verdict(case(grader="llm"), result([run()] * 3), llm_summary="LLM 0/3 통과")
-        self.assertIsNot(Verdict.FAIL, j.verdict)
+        self.assertEqual((Verdict.REVIEW, "LLM 0/3 통과"), (j.verdict, j.reason))
 
     def test_structural_failure_still_fails_llm_case(self):
         j = self.verdict(case(grader="llm"), result([run(False)] * 3), llm_summary="무관")

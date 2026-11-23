@@ -116,7 +116,8 @@ class MatrixTests(unittest.TestCase):
     def test_table_has_a_column_per_model_and_marks_failures(self):
         def rep(model, passed):
             return {"skill": "/p/skills/demo", "model": model,
-                    "cases": [{"case": "fires", "pass": passed, "total": 3}]}
+                    "cases": [{"case": "fires", "pass": passed, "total": 3,
+                               "verdict": "PASS" if passed == 3 else "FAIL"}]}
 
         table = run_skill_test.matrix_markdown(
             [rep("haiku", 2), rep("sonnet", 3)], ["haiku", "sonnet"])
@@ -130,7 +131,7 @@ class MatrixTests(unittest.TestCase):
         self.assertIn("| c | 3/3 △ |", run_skill_test.matrix_markdown([rep], ["haiku"]))
 
     def test_missing_cell_is_dash(self):
-        rep = {"skill": "/p/demo", "model": "haiku", "cases": [{"case": "c", "pass": 1, "total": 1}]}
+        rep = {"skill": "/p/demo", "model": "haiku", "cases": [{"case": "c", "pass": 1, "total": 1, "verdict": "PASS"}]}
         self.assertIn("| c | 1/1 | - |", run_skill_test.matrix_markdown([rep], ["haiku", "opus"]))
 
 
@@ -162,7 +163,8 @@ class CostTests(unittest.TestCase):
     def test_sums_every_result_event_including_followups(self):
         cost = _harness.cost_from_events([result_event(), {"type": "assistant"}, result_event(turns=3)])
         self.assertEqual(2000, cost.duration_ms)
-        self.assertEqual(30, cost.input_tokens)   # 캐시 생성 토큰 포함
+        self.assertEqual(20, cost.input_tokens)
+        self.assertEqual(10, cost.cache_tokens)
         self.assertEqual(6, cost.output_tokens)
         self.assertEqual(5, cost.turns)
         self.assertAlmostEqual(0.02, cost.usd)

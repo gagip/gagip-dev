@@ -13,9 +13,9 @@ import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from _harness import RunCost, RunResult, cost_from_events, run_claude
+from _harness import GRADER_RUBRIC, RunCost, RunResult, cost_from_events, run_claude
 
-RUBRIC_PATH = Path("references") / "review-rubric.md"
+RUBRIC_PATH = Path(GRADER_RUBRIC)
 
 # 결정: 산출물은 프롬프트 인자로 넘기므로 합계를 글자 수로 자른다. Linux는 인자 하나가 128KB를 넘으면
 #   실행 자체가 실패하고(한글 1자 = 3바이트), 생성 문서는 보통 수천 자라 이 상한에 잘 닿지 않는다.
@@ -113,7 +113,10 @@ def grade_run(run: RunResult, *, skill_dir: Path, request: str, model: str, time
     rubric_file = skill_dir / RUBRIC_PATH
     if not rubric_file.is_file():
         return Grade(error=f"루브릭 없음: {RUBRIC_PATH.as_posix()}")
-    rubric = rubric_file.read_text(encoding="utf-8")
+    try:
+        rubric = rubric_file.read_text(encoding="utf-8")
+    except UnicodeError as e:
+        return Grade(error=f"루브릭을 읽지 못함: {e}")
     expected = rubric_item_numbers(rubric)
     if not expected:
         return Grade(error="루브릭에 번호 붙은 항목 행이 없다")
@@ -129,14 +132,15 @@ def grade_run(run: RunResult, *, skill_dir: Path, request: str, model: str, time
             )
         except subprocess.TimeoutExpired:
             return Grade(error=f"시간 초과 {timeout}초")
-        except RuntimeError as e:
+        except (RuntimeError, OSError) as e:   # OSError: claude 없음, 인자 길이 초과(E2BIG) 등
             return Grade(error=f"호출 실패: {str(e)[:200]}")
 
     cost = cost_from_events(events)
     if any(e.get("type") == "result" and e.get("is_error") for e in events):
         return Grade(error="채점 호출이 오류로 끝남", cost=cost)
     texts = [c.get("text", "") for e in events if e.get("type") == "assistant"
-             for c in e.get("message", {}).get("content", []) if c.get("type") == "text"]
+             for c in e.get("message", {}).get("content", [])
+             if isinstance(c, dict) and c.get("type") == "text"]
     items, error = parse_grade(texts[-1] if texts else "", expected)
     return Grade(items=items, error=error, cost=cost)
 

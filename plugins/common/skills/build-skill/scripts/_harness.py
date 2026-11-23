@@ -262,19 +262,27 @@ def run_claude(prompt: str, workdir: Path, *, extra_args: list[str], permission_
 class RunCost:
     """claude -p 호출 비용. result 이벤트 값의 합이다."""
     duration_ms: int = 0
-    input_tokens: int = 0    # 캐시 생성·읽기 토큰 포함
+    input_tokens: int = 0    # usage.input_tokens 그대로(캐시 제외)
+    cache_tokens: int = 0    # 캐시 생성 + 캐시 읽기
     output_tokens: int = 0
     turns: int = 0
     usd: float = 0.0
 
     @property
     def tokens(self) -> int:
-        return self.input_tokens + self.output_tokens
+        """SOFT_MAX_TOKENS와 비교하는 값: 캐시를 포함한 입출력 전체."""
+        return self.input_tokens + self.cache_tokens + self.output_tokens
 
     def __add__(self, other: "RunCost") -> "RunCost":
         return RunCost(self.duration_ms + other.duration_ms, self.input_tokens + other.input_tokens,
-                       self.output_tokens + other.output_tokens, self.turns + other.turns,
-                       self.usd + other.usd)
+                       self.cache_tokens + other.cache_tokens, self.output_tokens + other.output_tokens,
+                       self.turns + other.turns, self.usd + other.usd)
+
+
+def sum_costs(costs) -> RunCost | None:
+    """None(비용 모름)을 뺀 합. 하나도 없으면 None."""
+    known = [c for c in costs if c is not None]
+    return sum(known, RunCost()) if known else None
 
 
 def cost_from_events(events: list[dict]) -> RunCost | None:
@@ -290,8 +298,8 @@ def cost_from_events(events: list[dict]) -> RunCost | None:
         usage = e.get("usage") or {}
         total += RunCost(
             duration_ms=int(e.get("duration_ms") or 0),
-            input_tokens=int(usage.get("input_tokens") or 0)
-            + int(usage.get("cache_creation_input_tokens") or 0)
+            input_tokens=int(usage.get("input_tokens") or 0),
+            cache_tokens=int(usage.get("cache_creation_input_tokens") or 0)
             + int(usage.get("cache_read_input_tokens") or 0),
             output_tokens=int(usage.get("output_tokens") or 0),
             turns=int(e.get("num_turns") or 0),
@@ -484,9 +492,6 @@ class CaseResult:
     def baseline_pass_count(self) -> int:
         return sum(1 for r in self.baseline if r.passed)
 
-    def ok(self, threshold: float = 1.0) -> bool:
-        return bool(self.runs) and (self.pass_count / len(self.runs)) >= threshold
-
     def discard(self) -> None:
         for r in [*self.runs, *self.baseline]:
             r.discard()
@@ -499,8 +504,14 @@ def _one_run(case: Case, loader: SkillLoader, *, with_skill: bool, model: str | 
              max_turns: int, timeout: int, keep_temp: bool) -> RunResult:
     tmp = Path(tempfile.mkdtemp(prefix=f"buildskill-{case.name}-"))
     snapshot: dict[str, str] = {}
-    result = _run_in(tmp, snapshot, case, loader, with_skill=with_skill, model=model,
-                     max_turns=max_turns, timeout=timeout)
+    try:
+        result = _run_in(tmp, snapshot, case, loader, with_skill=with_skill, model=model,
+                         max_turns=max_turns, timeout=timeout)
+    except BaseException:
+        # RunResult가 없으면 호출자가 지울 수 없으므로 여기서 지운다
+        if not keep_temp:
+            shutil.rmtree(tmp, ignore_errors=True)
+        raise
     result.workdir, result.snapshot = tmp, snapshot
     if keep_temp:
         print(f"  [keep-temp] {tmp}", file=sys.stderr)
@@ -563,25 +574,27 @@ def _run_in(tmp: Path, snapshot: dict[str, str], case: Case, loader: SkillLoader
 
 def run_case(skill_dir: Path, case: Case, *, baseline: bool, model: str | None,
              max_turns: int, timeout: int, keep_temp: bool) -> CaseResult:
-    with SkillLoader(skill_dir) as loader:
-        runs = [
-            _one_run(case, loader, with_skill=True, model=model, max_turns=max_turns,
-                     timeout=timeout, keep_temp=keep_temp)
-            for _ in range(case.runs)
-        ]
-        base: list[RunResult] = []
-        if baseline:
-            base = [
-                _one_run(case, loader, with_skill=False, model=model, max_turns=max_turns,
-                         timeout=timeout, keep_temp=keep_temp)
-            ]
-    return CaseResult(case=case.name, runs=runs, baseline=base, model=model)
+    result = CaseResult(case=case.name, runs=[], baseline=[], model=model)
+    try:
+        with SkillLoader(skill_dir) as loader:
+            for _ in range(case.runs):
+                result.runs.append(_one_run(case, loader, with_skill=True, model=model, max_turns=max_turns,
+                                            timeout=timeout, keep_temp=keep_temp))
+            if baseline:
+                result.baseline.append(_one_run(case, loader, with_skill=False, model=model,
+                                                max_turns=max_turns, timeout=timeout, keep_temp=keep_temp))
+    except BaseException:
+        # 중간에 끊기면 CaseResult가 호출자에게 가지 않으므로 끝난 run의 임시 폴더를 여기서 지운다
+        if not keep_temp:
+            result.discard()
+        raise
+    return result
 
 
 # 번들 파일을 찾는 디렉터리. test_*·_*로 시작하는 파일은 러너·테스트 전용이라 Claude가 열 일이 없어 뺀다
 _BUNDLE_DIRS = ("references", "assets", "scripts")
 # LLM 채점기가 읽는 루브릭은 스킬 run이 열지 않아도 쓰이는 파일이다
-_GRADER_RUBRIC = "references/review-rubric.md"
+GRADER_RUBRIC = "references/review-rubric.md"
 
 
 def unused_bundle_files(skill_dir: Path, results: list[CaseResult]) -> list[str]:
@@ -604,7 +617,7 @@ def unused_bundle_files(skill_dir: Path, results: list[CaseResult]) -> list[str]
             if f.name.startswith(("test_", "_")):
                 continue
             rel = f.relative_to(skill_dir).as_posix()
-            if rel == _GRADER_RUBRIC:
+            if rel == GRADER_RUBRIC:
                 continue
             if any(p.endswith("/" + rel) or p == rel for p in reads):
                 continue
