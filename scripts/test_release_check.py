@@ -122,7 +122,7 @@ class FailedCasesTest(unittest.TestCase):
         failed = release_check.failed_cases(Path("alpha"), self.fake_run((1, report), {"flaky": 0}))
 
         self.assertEqual(failed, [])
-        self.assertEqual(self.calls, [["--runs", "1"], ["--case", "flaky"]])
+        self.assertEqual(self.calls, [["--runs", "1"], ["--case", "flaky", "--no-llm-grade"]])
 
     def test_failed_retry_is_reported(self) -> None:
         report = {"cases": [{"case": "broken", "pass": 0, "total": 1}]}

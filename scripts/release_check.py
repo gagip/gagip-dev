@@ -142,7 +142,8 @@ def failed_cases(skill_dir: Path, run: Callable[[Path, list[str]], tuple[int, di
     still_failed = []
     for case in failing:
         print(f"재실행: {skill_dir.name}/{case}")
-        retry_code, _ = run(skill_dir, ["--case", case])
+        # 재실행은 구조 검사의 흔들림만 다시 본다. LLM 채점은 판정을 FAIL로 만들지 않으므로 끈다
+        retry_code, _ = run(skill_dir, ["--case", case, "--no-llm-grade"])
         if retry_code != 0:
             still_failed.append(f"{skill_dir.name}/{case}")
     return still_failed

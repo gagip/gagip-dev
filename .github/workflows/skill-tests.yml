@@ -69,7 +69,7 @@ jobs:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           python3 plugins/common/skills/build-skill/scripts/run_skill_test.py \
-            --all --models haiku,sonnet,opus --runs 1 --matrix-md model-matrix.md || true
+            --all --models haiku,sonnet,opus --runs 1 --no-llm-grade --matrix-md model-matrix.md || true
           if [ -f model-matrix.md ]; then cat model-matrix.md >> "$GITHUB_STEP_SUMMARY"; fi
 
       - name: upload matrix
