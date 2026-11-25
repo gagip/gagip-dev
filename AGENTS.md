@@ -78,5 +78,5 @@ Claude Code에서는 Bash 커밋 직전 훅이 검사를 강제한다. 다른 �
   기록으로 동결되어 있으므로 갱신하지 않는다.
 - CHANGELOG bullet은 앞선 구현 커밋 short hash를 참조한다.
 - 구현 커밋과 릴리스 커밋(두 매니페스트 버전 + 플러그인 CHANGELOG)을 분리한다.
-- 릴리스 전 `python3 scripts/release_check.py --plugin <plugin>`을 실행한다. 일관성·구조 검사, 전체 단위 테스트, 바뀐 스킬의 평가를 돌린다.
+- 릴리스 전 `python3 scripts/release_check.py --free`를 실행한다. 일관성·구조 검사, 전체 단위 테스트를 돌린다. 바뀐 스킬의 평가(`--plugin <plugin>`, 비용 발생)는 사용자가 요청할 때만 돌린다. `description`이 바뀐 스킬은 `release` 스킬의 절차대로 발동 케이스 하나만 한 번 돌린다.
 - 태그는 `<plugin>/v<version>` 형식을 사용한다.
