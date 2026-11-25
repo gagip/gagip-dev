@@ -1,13 +1,11 @@
 name: skill-tests
 
 # common:build-skill의 결정론적 러너로 레포 전체 스킬 eval을 돌린다.
-# PR 게이트가 아니라(이 레포는 main-only) 모델 변화로 인한 drift를 잡는 주간 점검이다.
-# 매 run이 실제 `claude -p` 호출이므로 자동 push 트리거는 두지 않는다.
+# PR 게이트가 아니라(이 레포는 main-only) 모델 변화로 인한 drift를 볼 때 손으로 돌리는 점검이다.
+# 매 run이 실제 `claude -p` 호출이므로 예약·push 트리거는 두지 않는다.
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 3 * * 6'  # 매주 토요일 12:00 KST (03:00 UTC)
 
 jobs:
   test:
@@ -46,7 +44,7 @@ jobs:
             .eval-runs/
           include-hidden-files: true
 
-  # 모델별 편차를 보는 참고용 점검이다. 호출이 모델 수만큼 늘어 주간으로만 돌리고,
+  # 모델별 편차를 보는 참고용 점검이다. 호출이 모델 수만큼 늘어난다.
   # 실패해도 위 test 잡의 판정에는 영향을 주지 않는다(표는 실행 요약에 남는다).
   model-matrix:
     runs-on: ubuntu-latest

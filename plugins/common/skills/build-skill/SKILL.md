@@ -179,7 +179,7 @@ def check(ctx):
 
 **RUNS 기본값 3** — Claude는 같은 프롬프트에도 매번 다르게 움직여서 1회 통과로는 스킬이 옳은지 운이
 좋았는지 가를 수 없다. 3회면 "항상 되는가"를 싸게 가늠하고, 기본 임계값 1.0이 한 번의 실패도 놓치지
-않게 한다. 개발 중에는 `--runs 1`로 방향만 확인하고, 신뢰가 필요할 때(릴리스 전, 주간 CI)만 기본값으로
+않게 한다. 개발 중에는 `--runs 1`로 방향만 확인하고, 흔들림까지 가려야 할 때만 기본값으로
 돌린다. 일부러 불안정한 동작을 재는 케이스면 RUNS를 늘리고 `--threshold`를 낮춰 비율로 판정한다.
 
 ### ctx 헬퍼 (`scripts/_harness.py` 참조)
@@ -227,7 +227,7 @@ python3 <이 스킬>/scripts/lint_skill.py --all <스캔 루트>           # 전
 
 ```bash
 python3 <이 스킬>/scripts/run_skill_test.py <대상 스킬 디렉토리> [옵션]
-python3 <이 스킬>/scripts/run_skill_test.py --all           # 레포 전체 스킬 (CI 주간 실행)
+python3 <이 스킬>/scripts/run_skill_test.py --all           # 레포 전체 스킬 (비용이 커서 요청받았을 때만)
 ```
 
 | 옵션 | 의미 |
@@ -237,7 +237,7 @@ python3 <이 스킬>/scripts/run_skill_test.py --all           # 레포 전체 �
 | `--baseline` | 스킬 없이 동일 프롬프트도 1회 → "스킬이 차이를 만드나" 대조. 신규 스킬 평가에 권장 |
 | `--runs N` | RUNS 덮어씀 (개발 중 `--runs 1`) |
 | `--model <id>` | 현재 세션 모델과 맞추려면 지정 |
-| `--models a,b,c` | 모델마다 전체를 돌려 케이스 × 모델 pass/total 표를 낸다 (예: `haiku,sonnet,opus`). 호출이 모델 수만큼 늘어나므로 주간 CI처럼 가끔만 쓴다. 케이스의 `MODELS = ["sonnet", "opus"]` 선언에 없는 모델은 건너뛰고 표에 `-`로 남는다 (쓸 계획이 없는 모델을 실패로 세지 않으려고) |
+| `--models a,b,c` | 모델마다 전체를 돌려 케이스 × 모델 pass/total 표를 낸다 (예: `haiku,sonnet,opus`). 호출이 모델 수만큼 늘어나므로 가끔만 쓴다. 케이스의 `MODELS = ["sonnet", "opus"]` 선언에 없는 모델은 건너뛰고 표에 `-`로 남는다 (쓸 계획이 없는 모델을 실패로 세지 않으려고) |
 | `--matrix-md <경로>` | `--models` 표를 마크다운 파일로 저장 (CI 요약용) |
 | `--threshold 0.66` | 통과 판정 비율 (기본 1.0 = 전 run 통과) |
 | `--json [경로]` | 전체 결과 JSON (툴 순서·final_text 포함) |
@@ -255,9 +255,8 @@ FAIL은 실행 오류가 있거나 통과율이 임계값 미만일 때다. REVI
 지우거나 링크를 눈에 띄게 고친다.
 
 **모델 매트릭스** — 스킬은 쓸 모델마다 효과가 다르다. Haiku는 안내가 충분한지, Opus는 과하게 설명하지
-않는지를 본다. 수정할 때마다 3배 비용을 내지 않도록, 매번은 한 모델로 돌리고 `--models`는 주간 CI
-(`.github/workflows/skill-tests.yml`)에서 한 번씩만 돌려 모델별 편차를 본다. 신규 스킬을 처음
-평가할 때 수동으로 한 번 돌려 봐도 좋다.
+않는지를 본다. 수정할 때마다 3배 비용을 내지 않도록, 매번은 한 모델로 돌리고 `--models`는 모델별
+편차를 봐야 할 때만 손으로 돌린다(`.github/workflows/skill-tests.yml`의 수동 실행도 된다).
 
 - `<plugin>/skills/<skill>/` 레이아웃이면 `--setting-sources project --plugin-dir <plugin루트>`로
   **워킹트리 파일을 직접** 격리 실행한다 (설치본과 충돌 없음). 단독 스킬 디렉토리면
@@ -300,5 +299,5 @@ FAIL은 실행 오류가 있거나 통과율이 임계값 미만일 때다. REVI
 - `python3 scripts/check_consistency.py` 통과 확인.
 - **`release` 스킬**로 버전 범프(Claude+Codex plugin.json 동시) · CHANGELOG · 태그 · push.
   구현 커밋과 릴리스 커밋을 분리한다.
-- 케이스를 추가했으면 그걸로 끝이다 — `.github/workflows/skill-tests.yml`가 매주 토요일
-  `--all`로 레포 전체를 돌린다. 별도 CI 등록은 불필요하다.
+- 레포 전체 평가는 자동으로 돌지 않는다. 사용자가 요청하면 `.github/workflows/skill-tests.yml`을 수동 실행한다.
+  케이스를 추가해도 별도 CI 등록은 불필요하다.

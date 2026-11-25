@@ -8,7 +8,7 @@
 케이스 파일의 check(ctx)로 결과를 검증한다. check는 코드다. 케이스마다 PASS / FAIL / REVIEW를
 판정하고 근거 한 줄과 비용(시간·토큰·턴)을 함께 낸다(판정 규칙은 _verdict.judge).
 `--all`은 SKILL.md와 실행 가능한 evals/*.py를 함께 가진 디렉터리를 모두 찾아 순회한다
-(CI 주간 실행용). `--json`은 이때 {"all_ok", "skills": [...]} 형태로 나온다.
+(비용이 커서 손으로만 돌린다). `--json`은 이때 {"all_ok", "skills": [...]} 형태로 나온다.
 
 케이스 파일 형식 (evals/basic.py):
 
@@ -236,7 +236,7 @@ def main() -> int:
     ap.add_argument("--model", help="claude -p 모델 (기본: 사용자 설정). 현재 세션과 맞추려면 지정")
     ap.add_argument("--models",
                     help="쉼표로 구분한 모델 목록(예: haiku,sonnet,opus). 모델마다 전체를 돌려 "
-                         "케이스 × 모델 표를 낸다. 호출이 모델 수만큼 늘어나므로 주간 CI처럼 가끔만 쓴다")
+                         "케이스 × 모델 표를 낸다. 호출이 모델 수만큼 늘어나므로 가끔만 쓴다")
     ap.add_argument("--matrix-md", type=Path,
                     help="--models 결과 표를 마크다운 파일로 저장 (CI 요약용)")
     ap.add_argument("--max-turns", type=int, default=40)
