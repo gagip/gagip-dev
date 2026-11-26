@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.73.0] - 2026-11-26
+
+### ♻️ Refactor
+- **dev·work-plan·write-docs**: 삭제한다. 구현·계획 승인은 product-d3의 `deliver-work`, 제품 방향·PRD는 `set-direction`·`discover-problem`이 맡는다. `references/product-process.md`도 지운다 (`6933ce4`)
+- **loop 장치**: `work-plan`의 `loop.md`는 `references/`, `loop_ledger.py`와 테스트는 `scripts/`로 옮긴다 (`6933ce4`)
+- **grill**: 제품 방향·결과 판정 절과 그 eval 2개를 지우고, 계획서 인계 문장을 일반화한다 (`6933ce4`)
+- **compare-mockups**: `SPEC.md` 대신 기능 PRD에서 문제·근거를 찾고, 고른 안은 기능의 `DESIGN.md`에 적는다 (`6933ce4`, `d2500db`)
+- **coding-philosophy·plan-reviewer**: product-d3로 옮긴다 (`71c191e`)
+
 ## [0.72.0] - 2026-11-26
 
 ### ✨ Feat
