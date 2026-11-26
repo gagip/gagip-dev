@@ -8,6 +8,11 @@
       "name": "common",
       "source": "./plugins/common",
       "description": "언어/플랫폼 무관 공통 개발 워크플로 도구"
+    },
+    {
+      "name": "product-d3",
+      "source": "./plugins/product-d3",
+      "description": "Product D3(Direction·Discovery·Delivery) 제품 개발 워크플로 스킬"
     }
   ]
 }
