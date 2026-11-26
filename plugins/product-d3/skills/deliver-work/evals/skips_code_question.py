@@ -1,4 +1,4 @@
-"""skips_code_question — 고칠 거리를 묻기만 하는 질문에는 dev가 열리지 않는다."""
+"""skips_code_question — 고칠 거리를 묻기만 하는 질문에는 deliver-work가 열리지 않는다."""
 
 PROMPT = "greet.py에 오타 있어?"
 RUNS = 3

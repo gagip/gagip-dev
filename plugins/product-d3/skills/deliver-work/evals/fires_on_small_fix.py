@@ -1,4 +1,4 @@
-"""fires_on_small_fix — 계획서 없는 작은 수정 요청에도 dev가 열린다."""
+"""fires_on_small_fix — 계획서 없는 작은 수정 요청에도 deliver-work가 열린다."""
 
 PROMPT = "greet.py에서 인사 문구 오타 고쳐줄래?"
 RUNS = 3
