@@ -13,3 +13,4 @@ def check(ctx):
     assert ctx.skill_fired(), f"미발동: {ctx.skill_invocations()}"
     assert ctx.re_search(ctx.final_text, r"결함|버그 수정|Bug Fix"), "동작 결함으로 분류하지 않음"
     assert ctx.sh("git diff --quiet -- PRODUCT.md").returncode == 0, "방향 문서를 고침"
+    assert not ctx.re_search(ctx.final_text, r"방향(을)? (바꾸|변경하)(는 것을|기를|자고) 권|방향 변경을 권장"), "결함 근거가 있는데 방향 변경을 권함"

@@ -110,12 +110,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Product D3 뼈대를 만든다.")
     parser.add_argument("--root", default=".", help="프로젝트 루트(기본: 현재 폴더)")
     parser.add_argument("--dry-run", action="store_true", help="만들지 않고 계획만 출력")
+    # 하위 명령 뒤에 써도 받는다. SUPPRESS라 하위 명령 쪽에서 안 쓰면 최상위 값이 남는다.
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--root", default=argparse.SUPPRESS)
+    common.add_argument("--dry-run", action="store_true", default=argparse.SUPPRESS)
     sub = parser.add_subparsers(dest="command", required=True)
-    p_init = sub.add_parser("init")
+    p_init = sub.add_parser("init", parents=[common])
     p_init.add_argument("--verify-command")
-    p_feature = sub.add_parser("feature")
+    p_feature = sub.add_parser("feature", parents=[common])
     p_feature.add_argument("slug")
-    p_exp = sub.add_parser("experiment")
+    p_exp = sub.add_parser("experiment", parents=[common])
     p_exp.add_argument("slug")
     p_exp.add_argument("--feature", required=True)
     p_exp.add_argument("--date", default=None)
@@ -132,7 +136,13 @@ def main() -> int:
     if args.command == "feature":
         return feature(writer, args.slug)
     if args.command == "experiment":
-        return experiment(writer, args.slug, args.feature, args.date or date.today().isoformat())
+        day = args.date or date.today().isoformat()
+        try:
+            date.fromisoformat(day)
+        except ValueError:
+            print(f"날짜 형식이 틀렸다(YYYY-MM-DD): {day}", file=sys.stderr)
+            return 2
+        return experiment(writer, args.slug, args.feature, day)
     raise AssertionError(f"알 수 없는 하위 명령: {args.command}")
 
 

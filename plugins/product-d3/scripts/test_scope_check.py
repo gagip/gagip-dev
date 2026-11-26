@@ -138,3 +138,21 @@ def test_rename_of_test_file_is_not_deletion(repo):
 
     assert "삭제" not in result.stdout
     assert result.returncode == 0
+
+
+def test_non_ascii_untracked_test_file_with_skip_is_error(repo):
+    write(repo, "tests/test_한글.py", "import pytest\n@pytest.mark.skip\ndef test_b():\n    assert 1\n")
+
+    result = run(repo)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "test_한글.py" in result.stdout
+
+
+def test_non_ascii_path_matches_allow_glob(repo):
+    write(repo, "src/문서.py", "y = 2\n")
+
+    result = run(repo, "--allow", "src/*")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+

@@ -5,12 +5,13 @@ description: >
   대조해 표본·기간이 충분한지 가르고, 관찰을 출처·시점과 함께 RESEARCH.md에 남기고, 원인을 구현 결함 → 해결책 효과 →
   문제·사용자 가설 → 방향 순서로 분류해 다음 행동과 그 일을 맡을 곳을 낸다. "출시했는데 어때?", "성과 확인해줘",
   "기능 결과 보고 유지할지 정하자", "사용자 피드백 정리해줘", "왜 이 문제가 생겼지", "성과 낮은데 방향 바꿀까"에
-  사용한다. 방향 문서 수정은 set-direction, 새 문제 탐색은 discover-problem, 수정 구현은 deliver-work가 맡는다.
+  사용한다. 근거가 출시 뒤 관찰일 때 쓴다. 방향 문서와의 대조로 기능을 점검하거나 PRODUCT.md를 고치는 일은
+  set-direction, 새 문제 탐색은 discover-problem, 수정 구현은 deliver-work가 맡는다.
 ---
 
 # observe-outcome
 
-완료는 「제대로 만들었나」, 성과는 「만들 가치가 있었나」다. 이 스킬은 성과를 본다. 기준은
+기준은
 [verification-system.md](../../references/verification-system.md)의 성과 조건, 원인 분기는
 [change-propagation.md](../../references/change-propagation.md), 경로는 [paths-and-templates.md](../../references/paths-and-templates.md)를 따른다.
 
@@ -29,17 +30,18 @@ PRD의 Success Criteria에서 대상 사용자, 관찰 항목, 성공으로 볼 
 
 ## 3. 원인 분류
 
-문제나 새 근거를 이 순서로 묻고 처음 「아니오」가 나온 곳에서 멈춘다.
+문제나 새 근거를 이 순서로 묻는다.
 
-| 질문 | 아니오면 | 다음을 맡는 곳 |
-|---|---|---|
-| 의도된 동작대로 작동하나 | 구현·계약 결함 | Bug Fix(`deliver-work`) |
-| 사용자가 쓸 수 있고 해결책이 효과적인가 | 사용성·해결책 문제 | Enhancement(`deliver-work`) 또는 해결책 재탐색(`discover-problem`) |
-| 문제·사용자 가설이 맞나 | 문제 가설 실패 | `discover-problem` |
-| 방향을 유지할 수 있나 | 방향 근거 | `set-direction` |
+| 순서 | 질문 | 아니오면 | 다음을 맡는 곳 |
+|---|---|---|---|
+| 1 | 의도된 동작대로 작동하나 | 구현·계약 결함 | Bug Fix(`deliver-work`) |
+| 2 | 사용자가 쓸 수 있고 해결책이 효과적인가 | 사용성 문제 또는 해결책 효과 부족 | Enhancement(`deliver-work`) 또는 해결책 재탐색(`discover-problem`) |
+| 3 | 문제·사용자 가설이 맞나 | 4로 간다 | — |
+| 4 | 대상 사용자·핵심 문제·가치가 틀렸다는 관찰이 쌓였거나, 방향을 유지할 수 없는 제약이 확인됐나 | 문제 가설만 다시 세움 | 예면 `set-direction`, 아니오면 `discover-problem` |
 
+- 1·2가 아니오면 거기서 멈춘다. 셋 다 예면 방향을 유지하고 개선 후보를 적는다.
 - 근거가 부족해 어느 칸인지 가를 수 없으면 조사·검증을 먼저 제안한다.
-- 성과가 낮다는 사실만으로 방향 변경을 권하지 않는다. 앞 세 칸을 근거로 배제한 뒤에만 방향 칸으로 간다.
+- 성과가 낮다는 사실만으로 방향 변경을 권하지 않는다.
 
 ## 4. 판정과 반영
 

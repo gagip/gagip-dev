@@ -10,7 +10,7 @@ description: >
 
 # review-change
 
-변경을 만든 쪽의 설명을 믿지 않고, 변경 자체와 요청만으로 판정한다. 기준은
+변경 자체와 요청만으로 판정하고, 만든 쪽의 설명은 대조할 주장으로만 쓴다. 기준은
 [verification-system.md](../../references/verification-system.md), [change-propagation.md](../../references/change-propagation.md),
 [work-contract.md](../../references/work-contract.md)다. 이 스킬은 파일과 git 상태를 바꾸지 않는다.
 
@@ -56,14 +56,14 @@ PRD·`PRODUCT.md`가 바뀌었으면 `check_d3_docs.py --root <프로젝트>`도
 
 ## 4. 판정
 
-code-review-criteria.md 4절대로 보고를 대조한다. 보고가 밝힌 HEAD가 다르면 버리고 다시 띄운다. 🔴 후보는 코드를 직접
+code-review-criteria.md 4절대로 보고를 대조한다. 보고가 밝힌 HEAD가 다르면 버리고 다시 띄운다. 결함 후보(code-review-criteria.md의 🔴)는 코드를 직접
 다시 읽어 확인한다. 결과를 셋으로 나눠 대화에 낸다.
 
 | 분류 | 담는 것 |
 |---|---|
-| 결함 | 🔴로 확인된 지적. `파일:줄`, 문제, 수정안 |
+| 결함 | 결함으로 확인된 지적. `파일:줄`, 문제, 수정안 |
 | 요청에 없는 변경 | 범위 밖 파일·기능, 빼도 요청이 지켜지는 이유 |
 | 미확인 | 실행해야 알 수 있는 것, 증거가 없는 검증 주장 |
 
 D3 점검 7항목의 통과·지적·미확인을 표 한 장으로 붙인다. 범위를 넓혀야 고칠 수 있는 지적은 사람이 정할 목록으로 따로
-적는다. 🟡는 한 줄씩 「발견했으나 결함 아님」으로 남긴다. 지적 반영은 구현(`deliver-work`)이 맡는다.
+적는다. 그 밖의 지적(🟡)은 한 줄씩 「발견했으나 결함 아님」으로 남긴다. 지적 반영은 구현(`deliver-work`)이 맡는다.

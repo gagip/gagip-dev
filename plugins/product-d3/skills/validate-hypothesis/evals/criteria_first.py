@@ -10,7 +10,8 @@ def check(ctx):
     assert ctx.skill_fired(), f"미발동: {ctx.skill_invocations()}"
     log = ctx.read("**/EXPERIMENTS.md")
     assert log, "EXPERIMENTS.md가 없음"
-    line = re.search(r"판정선\s*[:：]\s*(.+)", log)
-    assert line and line.group(1).strip(), "판정선을 적지 않음"
+    line = re.search(r"판정선[ \t]*[:：][ \t]*(.*)", log)
+    value = re.sub(r"<!--.*?-->", "", line.group(1)).strip() if line else ""
+    assert value, "판정선을 적지 않음"
     assert not re.search(r"판정\s*[:：]\s*(통과|실패)", log), "실행 전에 판정을 채움"
-    assert ctx.sh("git diff --quiet -- src").returncode == 0, "실험 설계에 제품 코드를 바꿈"
+    assert ctx.sh("git status --porcelain -- src").stdout.strip() == "", "실험 설계에 제품 코드를 바꿈"

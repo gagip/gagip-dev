@@ -131,3 +131,29 @@ def test_experiment_rejects_bad_date_with_exit_2(tmp_path):
     result = run(tmp_path, "experiment", "a", "--feature", "f", "--date", "01-02")
 
     assert result.returncode == 2
+
+
+def test_root_after_subcommand_as_documented(tmp_path):
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "feature", "carry", "--root", str(tmp_path)], capture_output=True, text=True
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (tmp_path / "docs/features/carry/PRD.md").exists()
+
+
+def test_scaffolded_docs_pass_check_d3_docs(tmp_path):
+    run(tmp_path, "init")
+    run(tmp_path, "feature", "carry")
+    run(tmp_path, "experiment", "voice", "--feature", "carry", "--date", "2026-11-26")
+    check = subprocess.run(
+        [sys.executable, str(SCRIPT.parent / "check_d3_docs.py"), "--root", str(tmp_path)], capture_output=True, text=True
+    )
+
+    assert check.returncode == 0, check.stdout + check.stderr
+
+
+def test_invalid_experiment_date_exits_2(tmp_path):
+    result = run(tmp_path, "experiment", "voice", "--feature", "carry", "--date", "2026-13-45")
+
+    assert result.returncode == 2

@@ -13,5 +13,5 @@ def check(ctx):
     assert ctx.skill_fired(), f"미발동: {ctx.skill_invocations()}"
     prds = ctx.sh("find docs/features -name PRD.md").stdout.split()
     assert prds, "PRD 초안이 없음"
-    assert ctx.sh("git diff --quiet -- src").returncode == 0, "탐색 단계에서 제품 코드를 바꿈"
-    assert ctx.re_search(ctx.final_text, r"보류|실험|구현"), "다음 활동을 판정하지 않음"
+    assert ctx.sh("git status --porcelain -- src").stdout.strip() == "", "탐색 단계에서 제품 코드를 바꿈"
+    assert ctx.re_search(ctx.final_text, r"validate-hypothesis|deliver-work|보류"), "다음 활동과 맡을 곳을 판정하지 않음"

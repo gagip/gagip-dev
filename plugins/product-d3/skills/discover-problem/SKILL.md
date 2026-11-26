@@ -5,8 +5,8 @@ description: >
   대입하고, 사용 기록·관찰에서 근거를 찾아 사실과 가설을 나누고, 해결책 후보를 비교해 결정을 바꿀
   가정 하나를 고른 뒤 기능 PRD 초안을 쓰고 보류·실험·구현 중 다음 활동을 판정한다. "이 아이디어 해볼까",
   "이 기능 넣을 만해?", "다음에 뭘 풀지 정하자", "사용자 문제 찾아줘", "새 기능 검토해줘"에 사용한다.
-  가정을 실험으로 확인하는 일은 validate-hypothesis, 구현은 deliver-work, 방향 자체를 고치는 일은
-  set-direction이 맡는다.
+  방향에 맞는지만 묻는 요청과 방향 자체를 고치는 일은 set-direction, 가정을 실험으로 확인하는 일은
+  validate-hypothesis, 구현은 deliver-work가 맡는다.
 ---
 
 # discover-problem

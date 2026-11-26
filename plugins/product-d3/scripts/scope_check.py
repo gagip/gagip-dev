@@ -26,7 +26,7 @@ class GitError(Exception):
 
 def git(root: Path, *args: str) -> str:
     result = subprocess.run(
-        ["git", "-C", str(root), *args], capture_output=True, text=True, encoding="utf-8"
+        ["git", "-C", str(root), "-c", "core.quotepath=off", *args], capture_output=True, text=True, encoding="utf-8"
     )
     if result.returncode != 0:
         raise GitError(result.stderr.strip() or f"git {' '.join(args)} 실패")
@@ -63,8 +63,15 @@ def added_removed_lines(root: Path, base: str, status: str, path: str, old: str)
         return text.splitlines(), []
     diff = git(root, "diff", "-M", "-U0", base, "--", path, old)
     added, removed = [], []
+    in_hunk = False
     for line in diff.splitlines():
-        if line.startswith("+++") or line.startswith("---"):
+        if line.startswith("@@"):
+            in_hunk = True
+            continue
+        if line.startswith("diff --git"):
+            in_hunk = False
+            continue
+        if not in_hunk:
             continue
         if line.startswith("+"):
             added.append(line[1:])
