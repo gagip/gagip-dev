@@ -8,7 +8,8 @@ Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인
 
 | 플러그인 | 설명 | 상세 |
 |---|---|---|
-| `common` | 계획·구현·리뷰·커밋·PR·회고 등 개발 워크플로 스킬 | [plugins/common/README.md](plugins/common/README.md) |
+| `common` | 요구사항 인터뷰·시안 비교·조사·스킬 제작·세션 문서·회고 등 범용 도구 | [plugins/common/README.md](plugins/common/README.md) |
+| `product-d3` | Product D3(Direction·Discovery·Delivery) 순환: 방향 문서, 문제 탐색, 가설 실험, 구현·리뷰·PR, 성과 관찰. `common` 필요 | [plugins/product-d3/README.md](plugins/product-d3/README.md) |
 
 ## 설치
 
@@ -17,6 +18,7 @@ Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인
 ```text
 /plugin marketplace add gagip/gagip-dev
 /plugin install common@gagip-dev
+/plugin install product-d3@gagip-dev
 ```
 
 ### Codex CLI
@@ -24,6 +26,7 @@ Claude Code와 Codex에서 함께 쓰는 개인 개발 워크플로 플러그인
 ```bash
 codex plugin marketplace add gagip/gagip-dev
 codex plugin add common@gagip-dev
+codex plugin add product-d3@gagip-dev
 ```
 
 Codex는 저장소의 marketplace를 현재 작업 디렉터리만으로 자동 등록하지 않으므로 최초 한 번
@@ -32,7 +35,7 @@ Codex는 저장소의 marketplace를 현재 작업 디렉터리만으로 자동 
 
 ## 호환성
 
-- 배포 스킬 12개 모두 Claude Code와 Codex에서 사용할 수 있다.
+- 배포 스킬 16개 모두 Claude Code와 Codex에서 사용할 수 있다.
 - `common:build-skill`의 워크플로는 두 하네스에서 쓰지만, 번들된 테스트 러너(`run_skill_test.py`)는
   `claude` CLI가 필요하다. 없는 하네스에서는 테스트 케이스를 수동 실행하고 사람이 확인한다.
 - `allowed-tools`, `argument-hint`, `model` 같은 Claude Code frontmatter는 그대로 유지한다.
