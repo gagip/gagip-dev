@@ -53,5 +53,6 @@ def check(ctx):
     files = sorted(ctx.sh("find . -name '*.html'").stdout.split())
     assert files == ["./mockups/1.html", "./mockups/2.html", "./mockups/3.html"], f"네 번째 시안을 그림: {files}"
     assert re.search(r"세 번|3번|3회|네 번째|3/3", ctx.final_text), "세 번 제한을 밝히지 않음"
-    assert re.search(r"질문", ctx.final_text), "질문을 다시 정하자고 하지 않음"
-    assert ctx.sh("git diff --quiet -- docs/features/home/PRD.md").returncode != 0, "PRD Rationale에 못 고른 이유를 남기지 않음"
+    assert re.search(r"질문.{0,20}(다시|재)|다시 정", ctx.final_text), "질문을 다시 정하자고 하지 않음"
+    added = ctx.sh("git diff -U0 $(git rev-list --max-parents=0 HEAD) -- docs/features/home/PRD.md").stdout
+    assert re.search(r"^\+.*(고르지 못|못 고|못 골)", added, re.M), "PRD Rationale에 못 고른 이유를 남기지 않음"

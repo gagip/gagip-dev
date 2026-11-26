@@ -1,8 +1,8 @@
 # 검증·이해를 다루는 스킬의 평가
 
 완료 판정이나 학습자 이해를 다루는 스킬(예: product-d3의 `deliver-work`)은 절차를 밟았는지만 보면 부족하다. 위험한 쪽은
-**틀렸는데 완료했다고 말하는 경우**라서, 그런 경우를 일부러 만들어 평가한다. 예시는 `deliver-work`의
-`evals/verification_*.py`와 `scripts/test_verify.py`다.
+**틀렸는데 완료했다고 말하는 경우**라서, 그런 경우를 일부러 만들어 평가한다. 예시는 product-d3 플러그인 `deliver-work` 스킬의
+evals/verification_*.py와 scripts/test_verify.py다.
 
 ## 평가할 실패 유형
 
