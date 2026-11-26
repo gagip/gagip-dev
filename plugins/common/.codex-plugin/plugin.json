@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "Common Development Workflows",
     "shortDescription": "플랫폼에 독립적인 개발 워크플로 스킬",
-    "longDescription": "계획, 리뷰, 커밋, 보고와 프로젝트 운영에 쓰는 공통 개발 워크플로 스킬 모음입니다.",
+    "longDescription": "요구사항 인터뷰, 시안 비교, 조사, 스킬 제작, 세션 문서, 회고에 쓰는 공통 개발 워크플로 스킬 모음입니다.",
     "developerName": "gagip",
     "category": "Developer Tools",
     "capabilities": [
@@ -27,7 +27,7 @@
     ],
     "defaultPrompt": [
       "변경사항을 검토하고 안전하게 커밋해줘",
-      "이 작업의 구현 계획서를 작성해줘",
+      "이 요구사항 캐물어서 명세로 정리해줘",
       "현재 작업을 마무리하고 결과를 보고해줘"
     ]
   }

@@ -1,6 +1,6 @@
 # 반복 검토 루프
 
-고치고 → 검토받고 → 다시 고치는 일을 두 번 넘게 돌 작업에 쓴다. 리뷰 반영, 문서 검증, 문구·시안 다듬기가 여기에 든다. 계획서에 「한 회차」와 「루프 장치」 두 절을 더하고, 실행 중에는 `scripts/loop_ledger.py`로 회차를 기록한다.
+고치고 → 검토받고 → 다시 고치는 일을 두 번 넘게 돌 작업에 쓴다. 리뷰 반영, 문서 검증, 문구·시안 다듬기가 여기에 든다. 계획서에 「한 회차」와 「루프 장치」 두 절을 더하고, 실행 중에는 `../scripts/loop_ledger.py`로 회차를 기록한다.
 
 ## 한 회차
 
@@ -33,16 +33,16 @@
 
 ```bash
 L=<작업 폴더>/loop.json
-python3 <스킬>/scripts/loop_ledger.py init $L --max-rounds 3 --guards "심각도 근거,범위 밖,끝 검토,대상 수 대조"
-python3 <스킬>/scripts/loop_ledger.py start $L
-python3 <스킬>/scripts/loop_ledger.py check $L <대상> --severity medium
-python3 <스킬>/scripts/loop_ledger.py change $L <대상...>
-python3 <스킬>/scripts/loop_ledger.py guard $L "심각도 근거" --fired --note "근거 없는 중간 2건을 낮음으로"
-python3 <스킬>/scripts/loop_ledger.py end $L --high 0 --medium 2
-python3 <스킬>/scripts/loop_ledger.py report $L
+python3 <common 플러그인>/scripts/loop_ledger.py init $L --max-rounds 3 --guards "심각도 근거,범위 밖,끝 검토,대상 수 대조"
+python3 <common 플러그인>/scripts/loop_ledger.py start $L
+python3 <common 플러그인>/scripts/loop_ledger.py check $L <대상> --severity medium
+python3 <common 플러그인>/scripts/loop_ledger.py change $L <대상...>
+python3 <common 플러그인>/scripts/loop_ledger.py guard $L "심각도 근거" --fired --note "근거 없는 중간 2건을 낮음으로"
+python3 <common 플러그인>/scripts/loop_ledger.py end $L --high 0 --medium 2
+python3 <common 플러그인>/scripts/loop_ledger.py report $L
 ```
 
-`<스킬>`은 work-plan 폴더다. 종료 코드 3은 멈추고 사람에게 올린다는 뜻이다. 대상 이름은 번역 키, 파일 경로, 문서 절처럼 회차가 바뀌어도 같은 것을 가리키는 이름으로 쓴다. `guard`는 안 걸린 장치도 `--quiet`로 남긴다. 사람이 승인한 재변경만 `change --approved`로 남긴다.
+종료 코드 3은 멈추고 사람에게 올린다는 뜻이다. 대상 이름은 번역 키, 파일 경로, 문서 절처럼 회차가 바뀌어도 같은 것을 가리키는 이름으로 쓴다. `guard`는 안 걸린 장치도 `--quiet`로 남긴다. 사람이 승인한 재변경만 `change --approved`로 남긴다.
 
 ## 끝 보고
 
