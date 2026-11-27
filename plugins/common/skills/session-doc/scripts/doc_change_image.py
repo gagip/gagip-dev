@@ -8,6 +8,8 @@
 바뀐 줄 앞뒤로 그대로인 줄을 --context개(기본 1, 빈 줄 제외)씩 흐리게 함께 보여 어디에 들어갔는지 알 수 있게 한다.
 바뀐 줄이 20줄을 넘으면 절(가장 가까운 제목)별로 나눠 <결과>_2.png, <결과>_3.png …를 만든다.
 """
+from __future__ import annotations
+
 import argparse
 import difflib
 import html
