@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.73.1] - 2026-11-27
+
+### 🐛 Fix
+- **session-doc**: `doc_change_image.py`가 Python 3.9에서 `str | None` 주석 때문에 TypeError로 죽던 문제를 `from __future__ import annotations`로 고친다 (`a74927d`)
+
 ## [0.73.0] - 2026-11-26
 
 ### ♻️ Refactor
