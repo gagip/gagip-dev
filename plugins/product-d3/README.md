@@ -26,7 +26,7 @@ Verify → Finalize)를 건다.
 | 화면 방향을 시안으로 비교 | `compare-mockups` |
 | 원자료가 남는 시장 조사 | `market-research` |
 | 스킬 자체의 반복 평가 | `build-skill` |
-| 세션 문서·회고 | `session-doc`, `retrospective` |
+| 회고 | `retrospective` |
 
 ## 에이전트
 
